@@ -19,11 +19,11 @@ from re import *
 
 
 def _NCNameChar(x):
-    return x.isalpha() or x.isdigit() or x=="." or x=='-' or x=="_" 
+    return x.isalpha() or x.isdigit() or x=="." or x=='-' or x=="_"
 
 
 def _NCNameStartChar(x):
-    return x.isalpha() or x=="_" 
+    return x.isalpha() or x=="_"
 
 
 def _toUnicodeHex(x):
@@ -37,14 +37,14 @@ def _toUnicodeHex(x):
     elif (hexlen==5): hexval = "000" + hexval
     elif (hexlen==6): hexval = "00"  + hexval
     elif (hexlen==7): hexval = "0"   + hexval
-    elif (hexlen==8): hexval = ""    + hexval    
+    elif (hexlen==8): hexval = ""    + hexval
     else: raise Exception, "Illegal Value returned from hex(ord(x))"
-    
+
     return "_x"+ hexval + "_"
 
 
 def _fromUnicodeHex(x):
-    return eval( r'u"\u'+x[2:-1]+'"' ) 
+    return eval( r'u"\u'+x[2:-1]+'"' )
 
 
 def toXMLname(string):
@@ -54,7 +54,7 @@ def toXMLname(string):
     else:
         prefix = None
         localname = string
-    
+
     T = unicode(localname)
 
     N = len(localname)
@@ -71,7 +71,7 @@ def toXMLname(string):
             X.append(_toUnicodeHex(T[i]))
         else:
             X.append(T[i])
-    
+
     if prefix:
         return "%s:%s" % (prefix, u''.join(X))
     return u''.join(X)
@@ -86,5 +86,5 @@ def fromXMLname(string):
         return _fromUnicodeHex( matchobj.group(0) )
 
     retval = sub(r'_x[0-9A-Za-z]+_', fun, retval )
-        
+
     return retval

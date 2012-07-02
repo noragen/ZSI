@@ -26,7 +26,7 @@ class MIMEMessage:
         self._boundary = ""
 
     def makeBoundary(self):
-        #create the boundary 
+        #create the boundary
         msgparts = []
         msgparts.append(self._xmlMessage)
         for i in self._files:
@@ -61,7 +61,7 @@ class MIMEMessage:
             file.seek(0)
             returnstr += file.read() + NL
         #closing boundary
-        returnstr += "--" + self._boundary + "--" + NL 
+        returnstr += "--" + self._boundary + "--" + NL
         return returnstr
 
     def attachFile(self, file):
@@ -78,7 +78,7 @@ class MIMEMessage:
 
     def getBoundary(self):
         '''
-        this function returns the string used in the mime message as a 
+        this function returns the string used in the mime message as a
         boundary. First the write method as to be called
         '''
         return self._boundary

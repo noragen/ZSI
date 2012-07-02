@@ -44,7 +44,7 @@ def generate_response(chaldict,uri,username,passwd,method='GET',cnonce=None):
   Note. Use build_authorization_arg() to turn an authdict into the final Authorization
   header value.
   """
-  authdict = {} 
+  authdict = {}
   qop = dict_fetch(chaldict,'qop')
   domain = dict_fetch(chaldict,'domain')
   nonce = dict_fetch(chaldict,'nonce')
@@ -73,13 +73,13 @@ def generate_response(chaldict,uri,username,passwd,method='GET',cnonce=None):
   authdict['qop'] = '"%s"' % qop
   authdict['nc'] = nc
   authdict['cnonce'] = '"%s"' % cnonce
-  
+
   return authdict
 
 
 def fetch_challenge(http_header):
-  """ apparently keywords Basic and Digest are not being checked 
-  anywhere and decisions are being made based on authorization 
+  """ apparently keywords Basic and Digest are not being checked
+  anywhere and decisions are being made based on authorization
   configuration of client, so I guess you better know what you are
   doing.  Here I am requiring one or the other be specified.
 
@@ -96,7 +96,7 @@ def fetch_challenge(http_header):
       k,v = http_header[m.start():m.end()].split('=')
       d[k.lower()] = v[1:-1]
       m = fetch_challenge.auth_param_re.search(http_header, m.end())
-       
+
   return d
 
 fetch_challenge.wwwauth_header_re = re.compile(r'\s*([bB]asic|[dD]igest)\s+(?:[\w]+="[^"]+",?\s*)?')

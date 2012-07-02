@@ -210,7 +210,7 @@ class ParsedSoap:
             if t != _Node.ELEMENT_NODE:
                 if t == _Node.TEXT_NODE and n.nodeValue.strip() == "":
                     continue
-                raise ParseException("Non-element child in " + name, 
+                raise ParseException("Non-element child in " + name,
                         inheader, elt, self.dom)
             if mustqualify and not n.namespaceURI:
                 raise ParseException('Unqualified element "' + \
@@ -350,7 +350,7 @@ class ParsedSoap:
         lenofwhat = len(ofwhat)
         c, crange = self.header_elements[:], range(len(self.header_elements))
         for i,what in [ (i, ofwhat[i]) for i in range(lenofwhat) ]:
-            if isinstance(what, AnyElement): 
+            if isinstance(what, AnyElement):
                 raise EvaluateException, 'not supporting <any> as child of SOAP-ENC:Header'
 
             v = []

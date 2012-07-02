@@ -8,7 +8,7 @@ Taken from Stefan Schwarzer's ftputil library, available at
 
 
 
-Copyright (C) 1999, Stefan Schwarzer 
+Copyright (C) 1999, Stefan Schwarzer
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

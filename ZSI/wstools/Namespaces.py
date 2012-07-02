@@ -6,14 +6,14 @@
 # WARRANTIES ARE DISCLAIMED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 # WARRANTIES OF TITLE, MERCHANTABILITY, AGAINST INFRINGEMENT, AND FITNESS
 # FOR A PARTICULAR PURPOSE.
-"""Namespace module, so you don't need PyXML 
+"""Namespace module, so you don't need PyXML
 """
 
 ident = "$Id: Namespaces.py 1486 2009-04-07 00:02:02Z lclement $"
 try:
     from xml.ns import SOAP, SCHEMA, WSDL, XMLNS, DSIG, ENCRYPTION
     DSIG.C14N       = "http://www.w3.org/TR/2001/REC-xml-c14n-20010315"
-    
+
 except:
     class SOAP:
         ENV         = "http://schemas.xmlsoap.org/soap/envelope/"
@@ -125,7 +125,7 @@ class OASIS:
     '''
     WSSE    = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
     UTILITY = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"
-    
+
     class X509TOKEN:
         Base64Binary = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary"
         STRTransform = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0"
@@ -133,7 +133,7 @@ class OASIS:
         X509 = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509"
         X509PKIPathv1 = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509PKIPathv1"
         X509v3SubjectKeyIdentifier = "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-x509-token-profile-1.0#X509v3SubjectKeyIdentifier"
-        
+
     LIFETIME = WSRF_V1_2.LIFETIME.XSD_DRAFT1
     PROPERTIES = WSRF_V1_2.PROPERTIES.XSD_DRAFT1
     BASENOTIFICATION = WSRF_V1_2.BASENOTIFICATION.XSD_DRAFT1
@@ -197,7 +197,7 @@ class _WSAW(str):
 WSAW200605 = _WSAW("http://www.w3.org/2006/05/addressing/wsdl")
 
 WSAW_LIST = (WSAW200605,)
- 
+
 class WSP:
     POLICY = "http://schemas.xmlsoap.org/ws/2002/12/policy"
 

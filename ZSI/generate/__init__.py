@@ -21,4 +21,4 @@ class WSISpec:
     R2710 = 'The operations in a wsdl:binding in a DESCRIPTION MUST result in wire signatures that are different from one another.'
     R2717 = 'An rpc-literal binding in a DESCRIPTION MUST have the namespace attribute specified, the value of which MUST be an absolute URI, on contained  soapbind:body elements.'
     R2729 = 'A MESSAGE described with an rpc-literal binding that is a response message MUST have a wrapper element whose name is the corresponding wsdl:operation name suffixed with the string "Response"'
-    
+

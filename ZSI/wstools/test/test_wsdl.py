@@ -42,7 +42,7 @@ class WSDLToolsTestCase(unittest.TestCase):
     def checkXSDCollection(self, tag_name, component, node, key='name'):
         for cnode in DOM.getElements(node, tag_name):
             name = DOM.getAttr(cnode, key)
-            component[name] 
+            component[name]
 
     def test_all(self):
         try:
@@ -90,7 +90,7 @@ class WSDLToolsTestCase(unittest.TestCase):
             raise
 
         try:
-            for key in self.wsdl.types.keys(): 
+            for key in self.wsdl.types.keys():
                 schema = self.wsdl.types[key]
                 self.failUnlessEqual(key, schema.getTargetNamespace())
 
@@ -141,7 +141,7 @@ def setUpOptions(section):
 def getOption(cp, section):
     for name, value in cp.items(section):
         yield value
-    
+
 def makeTestSuite(section='services_by_file'):
     global nameGenerator
 
@@ -155,6 +155,6 @@ def makeTestSuite(section='services_by_file'):
 
 def main():
     unittest.main(defaultTest="makeTestSuite")
-                  
+
 
 if __name__ == "__main__" : main()

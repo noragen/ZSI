@@ -20,7 +20,7 @@ def extractFiles(section, option):
     for file in archives:
         tar = tarfile.open(file)
         if not os.access(tar.membernames[0], os.R_OK):
-            for i in tar.getnames(): 
+            for i in tar.getnames():
                 tar.extract(i)
 
 def makeTestSuite():
@@ -33,5 +33,5 @@ def main():
     unittest.main(defaultTest="makeTestSuite")
 
 if __name__ == "__main__" : main()
-    
+
 

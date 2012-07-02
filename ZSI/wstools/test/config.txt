@@ -4,7 +4,7 @@
 ###########################################################################
 
 ###########################################################################
-# Config file for the unit test framework. 
+# Config file for the unit test framework.
 # Sections below.
 ###########################################################################
 
@@ -12,7 +12,7 @@
 
 ##########################################################################
 # SECTION [files] - archives of wsdl/xsd files.
-# 
+#
 ##########################################################################
 [files]
 archives = ('xmethods.tar.gz', 'schema.tar.gz')
@@ -40,9 +40,9 @@ zip2geo = xmethods/zip2geo.wsdl
 SolveSystem = xmethods/SolveSystem.wsdl.xml
 
 ##########################################################################
-# SECTION  [services_by_http]  - 
+# SECTION  [services_by_http]  -
 ##########################################################################
-[services_by_http] 
+[services_by_http]
 
 # no schemas
 AbysalSendEmail  =  http://www.abysal.com/soap/AbysalEmail.wsdl
@@ -106,7 +106,7 @@ finnwords  =  http://www.nickhodge.com/nhodge/finnwords/finnwords.wsdl
 pop  =  http://www.cosme.nu/services/pop.php?wsdl
 
 
-#simple types 
+#simple types
 
 ABA  =  http://www.webservicex.net/aba.asmx?WSDL
 AmazonBox  =  http://www.xmlme.com/WSAmazonBox.asmx?WSDL
@@ -323,10 +323,10 @@ xmethods_gcd  =  http://samples.bowstreet.com/bowstreet5/webengine/xmethods/gcd/
 
 
 ##########################################################################
-# SECTION  [reader_errors]  - 
+# SECTION  [reader_errors]  -
 #      unable to load file
 ##########################################################################
-[reader_errors] 
+[reader_errors]
 
 BusinessFinder(UDDI)-WebService  =  http://www.esynaps.com/WebServices/BusinessList.asmx?WSDL
 ColdFusionTip-of-the-Day  =  http://www.forta.com/cf/tips/syndicate.cfc?wsdl

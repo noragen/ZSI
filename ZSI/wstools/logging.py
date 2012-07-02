@@ -1,7 +1,7 @@
 # Copyright (c) 2003, The Regents of the University of California,
 # through Lawrence Berkeley National Laboratory (subject to receipt of
 # any required approvals from the U.S. Dept. of Energy).  All rights
-# reserved. 
+# reserved.
 #
 """Logging"""
 ident = "$Id: logging.py 1395 2007-06-14 06:49:35Z boverhof $"
@@ -27,14 +27,14 @@ class ILogger:
     def setLevel(cls, level):
         cls.level = level
     setLevel = classmethod(setLevel)
-    
+
     debugOn = lambda self: self.level >= DEBUG
     warnOn = lambda self: self.level >= WARN
-    
+
 
 class BasicLogger(ILogger):
     last = ''
-    
+
     def __init__(self, msg, out=sys.stdout):
         self.msg, self.out = msg, out
 
@@ -85,9 +85,9 @@ class GridLogger(ILogger):
         gridLog(event=msg %args, level='ERROR', **kw)
 
 
-# 
+#
 # Registry of send functions for gridLog
-# 
+#
 GLRegistry = {}
 
 class GLRecord(dict):
@@ -97,7 +97,7 @@ class GLRecord(dict):
 
     event -- log event name
         Below is EBNF for the event name part of a log message.
-            name	= <nodot> ( "." <name> )? 
+            name	= <nodot> ( "." <name> )?
             nodot	= {RFC3896-chars except "."}
 
         Suffixes:
@@ -108,14 +108,14 @@ class GLRecord(dict):
     ts -- timestamp
     level -- logging level (see levels below)
     status -- integer status code
-    gid -- global grid identifier 
+    gid -- global grid identifier
     gid, cgid -- parent/child identifiers
     prog -- program name
 
 
     More info: http://www.cedps.net/wiki/index.php/LoggingBestPractices#Python
 
-    reserved -- list of reserved names, 
+    reserved -- list of reserved names,
     omitname -- list of reserved names, output only values ('ts', 'event',)
     levels -- dict of levels and description
     """
@@ -144,11 +144,11 @@ class GLRecord(dict):
         s = StringIO(); n = " "
         reserved = self.reserved; omitname = self.omitname; levels = self.levels
 
-        for k in ( list(filter(lambda i: self.has_key(i), reserved)) + 
+        for k in ( list(filter(lambda i: self.has_key(i), reserved)) +
             list(filter(lambda i: i not in reserved, self.keys()))
         ):
             v = self[k]
-            if k in omitname: 
+            if k in omitname:
                 s.write( "%s " %self.format[type(v)](v) )
                 continue
 
@@ -162,10 +162,10 @@ class GLRecord(dict):
 
     class GLDate(str):
         """Grid logging Date Format
-        all timestamps should all be in the same time zone (UTC). 
+        all timestamps should all be in the same time zone (UTC).
         Grid timestamp value format that is a highly readable variant of the ISO8601 time standard [1]:
 
-	YYYY-MM-DDTHH:MM:SS.SSSSSSZ 
+	YYYY-MM-DDTHH:MM:SS.SSSSSSZ
 
         """
         def __new__(self, args=None):
@@ -173,7 +173,7 @@ class GLRecord(dict):
             """
             import datetime
             args = args or datetime.datetime.utcnow()
-            l = (args.year, args.month, args.day, args.hour, args.minute, args.second, 
+            l = (args.year, args.month, args.day, args.hour, args.minute, args.second,
                  args.microsecond, args.tzinfo or 'Z')
 
             return str.__new__(self, "%04d-%02d-%02dT%02d:%02d:%02d.%06d%s" %l)
@@ -197,10 +197,10 @@ def gridLog(**kw):
         return
 
     url = os.environ.get('GRIDLOG_DEST')
-    if url is None: 
+    if url is None:
         return
 
-    ## NOTE: urlparse problem w/customized schemes 
+    ## NOTE: urlparse problem w/customized schemes
     try:
         scheme = url[:url.find('://')]
         send = GLRegistry[scheme]
@@ -225,7 +225,7 @@ GLRegistry["file"] = writeToFile
 
 
 def setBasicLogger():
-    '''Use Basic Logger. 
+    '''Use Basic Logger.
     '''
     setLoggerClass(BasicLogger)
     BasicLogger.setLevel(0)

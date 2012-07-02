@@ -28,7 +28,7 @@ def SetPyclassMetaclass(option, opt, value, parser, *args, **kwargs):
     """set up pyclass metaclass for complexTypes"""
     from ZSI.generate.containers import ServiceHeaderContainer,\
         TypecodeContainerBase, TypesHeaderContainer
-        
+
     TypecodeContainerBase.metaclass = kwargs['metaclass']
     TypesHeaderContainer.imports.append(\
             'from %(module)s import %(metaclass)s' %kwargs
@@ -40,32 +40,32 @@ def SetPyclassMetaclass(option, opt, value, parser, *args, **kwargs):
 def SetUpLazyEvaluation(option, opt, value, parser, *args, **kwargs):
     from ZSI.generate.containers import TypecodeContainerBase
     TypecodeContainerBase.lazy = True
-    
+
 
 
 def wsdl2py(args=None):
     """Utility for automatically generating client/service interface code from
-    a wsdl definition, and a set of classes representing element declarations 
-    and type definitions.  By default invoking this script produces three files, 
+    a wsdl definition, and a set of classes representing element declarations
+    and type definitions.  By default invoking this script produces three files,
     each named after the wsdl definition name, in the current working directory.
-    
+
     Generated Modules Suffix:
         _client.py -- client locator, rpc proxy port, messages
-        _types.py  -- typecodes representing 
+        _types.py  -- typecodes representing
         _server.py -- server-side bindings
-        
+
     Parameters:
-        args -- optional can provide arguments, rather than parsing 
+        args -- optional can provide arguments, rather than parsing
             command-line.
-            
+
     return:
         Default behavior is to return None, if args are provided then
         return names of the generated files.
-                                                    
+
     """
     op = optparse.OptionParser(usage="USAGE: %wsdl2py [options] WSDL",
                  description=wsdl2py.__doc__)
-    
+
     # Basic options
     op.add_option("-x", "--schema",
                   action="store_true", dest="schema", default=False,
@@ -74,43 +74,43 @@ def wsdl2py(args=None):
     op.add_option("-d", "--debug",
                   action="callback", callback=SetDebugCallback,
                   help="debug output")
-                  
+
     # WS Options
     op.add_option("-a", "--address",
                   action="store_true", dest="address", default=False,
                   help="ws-addressing support, must include WS-Addressing schema.")
-                  
-    # pyclass Metaclass 
+
+    # pyclass Metaclass
     op.add_option("-b", "--complexType",
-                  action="callback", callback=SetPyclassMetaclass, 
-                  callback_kwargs={'module':'ZSI.generate.pyclass', 
+                  action="callback", callback=SetPyclassMetaclass,
+                  callback_kwargs={'module':'ZSI.generate.pyclass',
                       'metaclass':'pyclass_type'},
                   help="add convenience functions for complexTypes, including Getters, Setters, factory methods, and properties (via metaclass). *** DONT USE WITH --simple-naming ***")
-    
+
     # Lazy Evaluation of Typecodes (done at serialization/parsing when needed).
     op.add_option("-l", "--lazy",
-                  action="callback", callback=SetUpLazyEvaluation, 
+                  action="callback", callback=SetUpLazyEvaluation,
                   callback_kwargs={},
                   help="EXPERIMENTAL: recursion error solution, lazy evalution of typecodes")
-    
+
     # Use Twisted
     op.add_option("-w", "--twisted",
                   action="store_true", dest='twisted', default=False,
                   help="generate a twisted.web client/server, dependencies python>=2.4, Twisted>=2.0.0, TwistedWeb>=0.5.0")
-    
+
     op.add_option("-o", "--output-dir",
                   action="store", dest="output_dir", default=".", type="string",
                   help="save files in directory")
-    
+
     op.add_option("-s", "--simple-naming",
                   action="store_true", dest="simple_naming", default=False,
                   help="map element names directly to python attributes")
-    
+
     op.add_option("-p", "--pydoc",
                   action="store_true", dest="pydoc", default=False,
                   help="top-level directory for pydoc documentation.")
-    
-    setBasicLoggerWARN()    
+
+    setBasicLoggerWARN()
     is_cmdline = args is None
     if is_cmdline:
         (options, args) = op.parse_args()
@@ -120,7 +120,7 @@ def wsdl2py(args=None):
     if len(args) != 1:
         print>>sys.stderr, 'Expecting a file/url as argument (WSDL).'
         sys.exit(os.EX_USAGE)
-        
+
     location = args[0]
     if options.schema is True:
         reader = XMLSchema.SchemaReader(base_url=location)
@@ -139,22 +139,22 @@ def wsdl2py(args=None):
         # exit code UNIX specific, Windows?
         if hasattr(os, 'EX_NOINPUT'): sys.exit(os.EX_NOINPUT)
         sys.exit("error loading %s" %location)
-  
-    if isinstance(wsdl, XMLSchema.XMLSchema): 
+
+    if isinstance(wsdl, XMLSchema.XMLSchema):
         wsdl.location = location
         files = _wsdl2py(options, wsdl)
     else:
         files = _wsdl2py(options, wsdl)
         files.append(_wsdl2dispatch(options, wsdl))
-    
+
     if getattr(options, 'pydoc', False):
         _writepydoc(os.path.join('docs', 'API'), *files)
-        
+
     if is_cmdline:
         return
-    
+
     return files
-    
+
 
 #def wsdl2dispatch(args=None):
 #    """Deprecated: wsdl2py now generates everything
@@ -177,16 +177,16 @@ def wsdl2py(args=None):
 #    op.add_option("-s", "--simple-naming",
 #                  action="store_true", dest="simple_naming", default=False,
 #                  help="Simplify generated naming.")
-#    
+#
 #    if args is None:
 #        (options, args) = op.parse_args()
 #    else:
 #        (options, args) = op.parse_args(args)
-#        
+#
 #    if len(args) != 1:
 #        print>>sys.stderr, 'Expecting a file/url as argument (WSDL).'
 #        sys.exit(os.EX_USAGE)
-#        
+#
 #    reader = WSDLTools.WSDLReader()
 #    if isfile(args[0]):
 #        _wsdl2dispatch(options, reader.loadFromFile(args[0]))
@@ -232,14 +232,14 @@ def _wsdl2py(options, wsdl):
         fd = open(client_file, 'w+')
         wsm.writeClient(fd)
         fd.close()
-    
+
     types_mod = wsm.getTypesModuleName()
     types_file = join(options.output_dir, '%s.py' %types_mod)
     append(types_file)
     fd = open(types_file, 'w+' )
     wsm.writeTypes(fd)
     fd.close()
-    
+
     return files
 
 
@@ -265,7 +265,7 @@ def _wsdl2dispatch(options, wsdl):
     fd = open( join(options.output_dir, file_name), 'w+')
     ss.write(fd)
     fd.close()
-    
+
     return file_name
 
 
@@ -280,10 +280,10 @@ class _XMLSchemaAdapter:
         """
         self.name = '_'.join(split(location)[-1].split('.'))
         self.types = {schema.targetNamespace:schema}
-        
-        
-        
-        
+
+
+
+
 import os, pydoc, sys, warnings, inspect
 import  os.path
 
@@ -298,7 +298,7 @@ from ZSI.schema import ElementDeclaration, TypeDefinition
 #from pyGridWare.utility.generate.Modules import CLIENT, TYPES
 
 #def find_packages_modules(where='.'):
-#    #pack,mod,mod_file 
+#    #pack,mod,mod_file
 #    """Return a list all Python packages found within directory 'where'
 #    """
 #    out = []
@@ -316,11 +316,11 @@ from ZSI.schema import ElementDeclaration, TypeDefinition
 #                stack.append((fn,prefix+name+'.'))
 #                continue
 #
-#            if name == '__init__.py' or not name.endswith('.py'): 
+#            if name == '__init__.py' or not name.endswith('.py'):
 #                continue
 #
-#            out.append((prefix, name.split('.py')[0])) 
-#            
+#            out.append((prefix, name.split('.py')[0]))
+#
 #    return out
 
 
@@ -338,7 +338,7 @@ def _writedoc(doc, thing, forceload=0):
         traceback.print_exc(sys.stderr)
     else:
         return name + '.html'
-        
+
 
 def _writeclientdoc(doc, thing, forceload=0):
     """Write HTML documentation to a file in the current directory.
@@ -379,7 +379,7 @@ def _writetypesdoc(doc, thing, forceload=0):
     except (ImportError, pydoc.ErrorDuringImport), value:
         log.debug(str(value))
         return
-        
+
     # inner classes
     cdict = {}
     fdict = {}
@@ -388,13 +388,13 @@ def _writetypesdoc(doc, thing, forceload=0):
     for kname,klass in inspect.getmembers(thing, inspect.isclass):
         if thing is not inspect.getmodule(klass):
             continue
-        
+
         cdict[kname] = inspect.getmembers(klass, inspect.isclass)
         for iname,iklass in cdict[kname]:
             key = (kname,iname)
             fdict[key] = _writedoc(doc, iklass)
             if issubclass(iklass, ElementDeclaration):
-                
+
                 try:
                     typecode = iklass()
                 except (AttributeError,RuntimeError), ex:
@@ -402,7 +402,7 @@ def _writetypesdoc(doc, thing, forceload=0):
                     continue
 
                 elements_dict[iname] = None
-                if typecode.pyclass is not None:                        
+                if typecode.pyclass is not None:
                     elements_dict[iname] = _writedoc(doc, typecode.pyclass)
 
                 continue
@@ -419,8 +419,8 @@ def _writetypesdoc(doc, thing, forceload=0):
                     types_dict[iname] = _writedoc(doc, typecode.pyclass)
 
                 continue
-                        
-                
+
+
     def strongarm(self, object, name=None, mod=None, funcs={}, classes={}, *ignored):
         """Produce HTML documentation for a class object."""
         realname = object.__name__
@@ -432,17 +432,17 @@ def _writetypesdoc(doc, thing, forceload=0):
         if name == realname:
             title = '<a name="%s">class <strong>%s</strong></a>' % (
                 name, realname)
-        else:   
+        else:
             title = '<strong>%s</strong> = <a name="%s">class %s</a>' % (
                 name, name, realname)
-                
+
         mdict = {}
         if bases:
             parents = []
             for base in bases:
                 parents.append(self.classlink(base, object.__module__))
             title = title + '(%s)' % pydoc.join(parents, ', ')
-            
+
         doc = self.markup(pydoc.getdoc(object), self.preformat, funcs, classes, mdict)
         doc = doc and '<tt>%s<br>&nbsp;</tt>' % doc
         for iname,iclass in cdict[name]:
@@ -467,13 +467,13 @@ def _writetypesdoc(doc, thing, forceload=0):
                     push('</ul>')
             else:
                 push('class <a href="%s">%s</a>: TODO not sure what this is<br/>' %(fname,iname))
-                
+
         contents = ''.join(contents)
-        return self.section(title, '#000000', '#ffc8d8', contents, 3, doc) 
-    
+        return self.section(title, '#000000', '#ffc8d8', contents, 3, doc)
+
     doclass = pydoc.HTMLDoc.docclass
     pydoc.HTMLDoc.docclass = strongarm
-            
+
     try:
         page = pydoc.html.page(pydoc.describe(object), pydoc.html.document(object, name))
         file = open(name, 'w')
@@ -481,11 +481,11 @@ def _writetypesdoc(doc, thing, forceload=0):
         file.close()
     except (ImportError, pydoc.ErrorDuringImport), value:
         log.debug(str(value))
-        
-    pydoc.HTMLDoc.docclass = doclass
-    
 
-        
+    pydoc.HTMLDoc.docclass = doclass
+
+
+
 def _writebrokedoc(doc, ex, name, forceload=0):
     try:
         fname = os.path.join(doc, name + '.html')
@@ -495,7 +495,7 @@ def _writebrokedoc(doc, ex, name, forceload=0):
         file.close()
     except (ImportError, pydoc.ErrorDuringImport), value:
         log.debug(str(value))
-        
+
     return name + '.html'
 
 def _writepydoc(doc, *args):
@@ -506,7 +506,7 @@ def _writepydoc(doc, *args):
     ok = True
     if not os.path.isdir(doc):
         os.makedirs(doc)
-    
+
     if os.path.curdir not in sys.path:
         sys.path.append(os.path.curdir)
 
@@ -519,16 +519,16 @@ def _writepydoc(doc, *args):
             raise
 #            _writebrokedoc(doc, ex, name)
 #            continue
-   
+
         if name.endswith('_client'):
             _writeclientdoc(doc, e)
             continue
-    
+
         if name.endswith('_types'):
             _writetypesdoc(doc, e)
             continue
-  
-        try: 
+
+        try:
             _writedoc(doc, e)
         except IndexError,ex:
             _writebrokedoc(doc, ex, name)

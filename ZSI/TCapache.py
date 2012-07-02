@@ -57,7 +57,7 @@ class _Map(TypeCode):
             self.set_attribute_href(el, objid)
             return None
 
-        # xsi:type attribute 
+        # xsi:type attribute
         if kw.get('typed', self.typed) is True:
             self.set_attribute_xsi_type(el, **kw)
 
@@ -91,7 +91,7 @@ class AttachmentRef(SimpleType):
         #never invoked ???
         #print "elt is: " + str(elt)
         #print "while ps: " + str(ps)
-        return 
+        return
 
     def get_formatted_content(self, pyobj):
         return self.format %pyobj
@@ -116,7 +116,7 @@ class AttachmentRef(SimpleType):
             attachmentElement.setAttributeNS(None, "href", "cid:" + str(idhref))
         else:
             #print "the file " + pyobj + " was already attached"
-            #do nothing 
+            #do nothing
             #this should not happen
             pass
 
