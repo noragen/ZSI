@@ -22,10 +22,15 @@ except:
 
     class SOAP:
 
-        ENV = 'http://schemas.xmlsoap.org/soap/envelope/'
-        ENV12 = "http://www.w3.org/2003/05/soap-envelope"
-        ENC = 'http://schemas.xmlsoap.org/soap/encoding/'
-        ENC12 = "http://www.w3.org/2003/05/soap-encoding"
+        # ENV = 'http://schemas.xmlsoap.org/soap/envelope/'
+
+        ENV12 = 'http://www.w3.org/2003/05/soap-envelope'
+        ENV = ENV12
+
+        # ENC = 'http://schemas.xmlsoap.org/soap/encoding/'
+
+        ENC12 = 'http://www.w3.org/2003/05/soap-encoding'
+        ENC = ENC12
         ACTOR_NEXT = 'http://schemas.xmlsoap.org/soap/actor/next'
 
 
@@ -201,16 +206,35 @@ class APACHE:
     AXIS_NS = 'http://xml.apache.org/xml-soap'
 
 
-class WSTRUST:
+class WSTRUST200404:
 
     BASE = 'http://schemas.xmlsoap.org/ws/2004/04/trust'
     ISSUE = 'http://schemas.xmlsoap.org/ws/2004/04/trust/Issue'
 
 
-class WSSE:
+class WSTRUST200502:
+
+    BASE = 'http://schemas.xmlsoap.org/ws/2005/02/trust'
+    ISSUE = 'http://schemas.xmlsoap.org/ws/2005/02/trust/Issue'
+    CONV = 'http://schemas.xmlsoap.org/ws/2005/02/sc'
+
+
+WSTRUST = WSTRUST200502
+WSTRUST_LIST = (WSTRUST200502, WSTRUST200404)
+
+
+class WSSE200204:
 
     BASE = 'http://schemas.xmlsoap.org/ws/2002/04/secext'
     TRUST = WSTRUST.BASE
+
+
+class WSSE200306(WSSE200204):
+    BASE = "http://schemas.xmlsoap.org/ws/2003/06/secext"
+    TRUST = WSTRUST.BASE
+
+WSSE = WSSE200306
+WSSE_LIST = (WSSE200306, WSSE200204)
 
 
 class WSU:
@@ -227,35 +251,36 @@ class WSR:
         'http://www.ibm.com/xmlns/stdwip/web-services/WS-ResourceLifetime'
 
 
-class WSA200508:
+class WSA200303:
 
-    ADDRESS = 'http://www.w3.org/2005/08/addressing'
-    ANONYMOUS = '%s/anonymous' % ADDRESS
-    FAULT = '%s/fault' % ADDRESS
+    ADDRESS = 'http://schemas.xmlsoap.org/ws/2003/03/addressing'
+    ANONYMOUS = '%s/role/anonymous' % ADDRESS
+    FAULT = None
+    RM = 'http://schemas.xmlsoap.org/ws/2003/03/rm'
 
 
-class WSA200408:
+class WSA200408(WSA200303):
 
     ADDRESS = 'http://schemas.xmlsoap.org/ws/2004/08/addressing'
     ANONYMOUS = '%s/role/anonymous' % ADDRESS
     FAULT = '%s/fault' % ADDRESS
 
 
-class WSA200403:
+class WSA200403(WSA200408):
 
     ADDRESS = 'http://schemas.xmlsoap.org/ws/2004/03/addressing'
     ANONYMOUS = '%s/role/anonymous' % ADDRESS
     FAULT = '%s/fault' % ADDRESS
 
 
-class WSA200303:
+class WSA200508(WSA200403):
 
-    ADDRESS = 'http://schemas.xmlsoap.org/ws/2003/03/addressing'
+    ADDRESS = 'http://www.w3.org/2005/08/addressing'
     ANONYMOUS = '%s/role/anonymous' % ADDRESS
-    FAULT = None
+    FAULT = '%s/fault' % ADDRESS
 
 
-WSA = WSA200408
+WSA = WSA200508
 WSA_LIST = (WSA200508, WSA200408, WSA200403, WSA200303)
 
 
@@ -271,9 +296,19 @@ WSAW200605 = _WSAW('http://www.w3.org/2006/05/addressing/wsdl')
 WSAW_LIST = (WSAW200605, )
 
 
-class WSP:
+class WSP200212:
 
     POLICY = 'http://schemas.xmlsoap.org/ws/2002/12/policy'
+
+
+class WSP200409:
+
+    POLICY = 'http://schemas.xmlsoap.org/ws/2004/09/policy'
+
+
+WSP = WSP200409
+
+WSP_LIST = (WSP200212, WSP200409)
 
 
 class BEA:
