@@ -127,7 +127,7 @@ class _NamedParamCaller:
             )
 
 
-class _Binding:
+class _Binding(object):
 
     '''Object that represents a binding (connection) to a SOAP server.
     Once the binding is created, various ways of sending and

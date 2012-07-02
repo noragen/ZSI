@@ -9,7 +9,7 @@
 from xml.dom import expatbuilder
 from ZSI import _copyright, _children, _attrs, _child_elements, \
     _stringtypes, _backtrace, EvaluateException, ParseException, \
-    _valid_encoding, _Node, _find_attr, _resolve_prefix
+    _valid_encoding, _Node, _find_attr
 from ZSI.TC import AnyElement
 import types
 
@@ -419,11 +419,11 @@ class ParsedSoap:
                         )
 
             v = []
-            occurs = 0
+
             (namespaceURI, tagName) = (what.nspname, what.pname)
             for (j, c_elt) in [(j, c[j]) for j in crange if c[j]]:
                 (prefix, name) = SplitQName(c_elt.tagName)
-                nsuri = _resolve_prefix(c_elt, prefix)
+                nsuri = c_elt.namespaceURI
                 if tagName == name and namespaceURI == nsuri:
                     pyobj = what.parse(c_elt, self)
                 else:
