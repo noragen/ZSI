@@ -10,9 +10,7 @@
 # $Id: utility.py 1226 2006-05-26 18:11:19Z boverhof $
 
 import re
-from ZSI import EvaluateException
-from ZSI.TCcompound import Struct
-from ZSI.generate import WsdlGeneratorError, Wsdl2PythonError
+from ZSI.generate import WsdlGeneratorError
 from ZSI.wstools.Utility import SplitQName
 from ZSI.wstools.Namespaces import SCHEMA
 
@@ -62,28 +60,28 @@ class NamespaceAliasDict:
     add = classmethod(add)
 
     def getModuleName(cls, ns):
-        if cls.alias_dict.has_key(ns):
+        if ns in cls.alias_dict:
             return cls.alias_dict[ns][0]
 
-        msg = 'failed to find import for schema "%s"'%ns +\
+        msg = 'failed to find import for schema "%s"' % ns + \
         'possibly missing @schemaLocation attribute.'
         if ns in SCHEMA.XSD_LIST:
-            msg = 'missing built-in typecode for schema "%s"' %ns
+            msg = 'missing built-in typecode for schema "%s"' % ns
 
-        raise WsdlGeneratorError, msg
+        raise WsdlGeneratorError(msg)
 
     getModuleName = classmethod(getModuleName)
 
     def getAlias(cls, ns):
-        if cls.alias_dict.has_key(ns):
+        if ns in cls.alias_dict:
             return cls.alias_dict[ns][1]
 
-        msg = 'failed to find import for schema "%s"'%ns +\
+        msg = 'failed to find import for schema "%s"' % ns + \
         'possibly missing @schemaLocation attribute.'
         if ns in SCHEMA.XSD_LIST:
-            msg = 'missing built-in typecode for schema "%s"' %ns
+            msg = 'missing built-in typecode for schema "%s"' % ns
 
-        raise WsdlGeneratorError, msg
+        raise WsdlGeneratorError(msg)
 
     getAlias = classmethod(getAlias)
 
@@ -130,10 +128,13 @@ class MessageContainer:
     """generator util - used by address.py"""
     pass
 
-# Extract sub names from message parts so they can be used when mapping
-#    a message's contents to a function's arguments.
-# Args is a list of Message Parts.  i.e.: op.getInputMessage().parts.values()
+
 def GetPartsSubNames(args, wsdl):
+    '''\
+    Extract sub names from message parts so they can be used when mapping
+        a message's contents to a function's arguments.
+    Args is a list of Message Parts.  i.e.: op.getInputMessage().parts.values()
+    '''
     do_extended = True
     from wsdl2python import WriteServiceModule, SchemaDescription
     wsm = WriteServiceModule(wsdl, do_extended=do_extended)
@@ -152,20 +153,20 @@ def GetPartsSubNames(args, wsdl):
                         argElementType = arg.element[1]
                         if str(argElementType) == str(i.content.name):
                             argSubnames = []
-			    # I'm not sure when the name attribute was dropped
-			    # but at some point, or in some circumstance it's not
-			    # there, but instead a ref attribute is there which is
-		     	    # tuple of (namespace, name). This hack fixes things,
-			    # but I'm not sure why this happens or has happened.
-			    # IRJ - 2005-05-25
+                        # I'm not sure when the name attribute was dropped
+                        # but at some point, or in some circumstance it's not
+                        # there, but instead a ref attribute is there which is
+                        # tuple of (namespace, name). This hack fixes things,
+                        # but I'm not sure why this happens or has happened.
+                        # IRJ - 2005-05-25
                             if i.content.mgContent != None:
                                 for c in i.content.mgContent:
                                     nValue = "None"
                                     if c.isWildCard():
-                                        nValue="any"
-                                    elif c.attributes.has_key("name"):
+                                        nValue = "any"
+                                    elif 'name' in c.attributes:
                                         nValue = c.attributes["name"]
-                                    elif c.attributes.has_key("ref"):
+                                    elif 'ref' in c.attributes:
                                         nValue = c.attributes["ref"][1]
                                     argSubnames.append(nValue)
 
