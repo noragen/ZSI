@@ -153,6 +153,18 @@ class WriteServiceModule:
         self.logger.debug('gatherNamespaces')
         self.usedNamespaces = {}
 
+        def recommended_ns(s):
+            tns = s.getTargetNamespace()
+            recommended = None
+            for k, v in s.attributes.get('xmlns', {}).items():
+                if k == '':
+                    continue
+                if v == tns:
+                    recommended = k
+                    break
+
+            return recommended
+
         # Add all schemas defined in wsdl
         # to used namespace and to the Alias dict
         for schema in self._wsdl.types.values():
@@ -162,7 +174,7 @@ class WriteServiceModule:
             if self.usedNamespaces.has_key(tns) is False:
                 self.usedNamespaces[tns] = []
             self.usedNamespaces[tns].append(schema)
-            NAD.add(tns)
+            NAD.add(tns, recommended_ns(schema))
 
         # Add all xsd:import schema instances
         # to used namespace and to the Alias dict
@@ -172,7 +184,7 @@ class WriteServiceModule:
             if self.usedNamespaces.has_key(k) is False:
                 self.usedNamespaces[k] = []
             self.usedNamespaces[k].append(v)
-            NAD.add(k)
+            NAD.add(k, recommended_ns(v))
 
     def writeClient(self, fd, sdClass=None, **kw):
         """write out client module to file descriptor.

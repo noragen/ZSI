@@ -19,8 +19,11 @@ from ZSI.wstools.Namespaces import SCHEMA
 NCName_to_ModuleName = lambda name: re.sub('\.', '_', TextProtect(name))
 NCName_to_ClassName = lambda name: re.sub('\.', '_', TextProtect(name))
 TextProtect = lambda s: re.sub('[-./:# ]', '_', s)
-TextProtectAttributeName = lambda name: TextProtect('_%s' %name)
-Namespace2ModuleName = lambda ns: TextProtect(ns.lstrip('http://')).rstrip('_')
+TextProtectAttributeName = lambda name: TextProtect('_%s' % name)
+
+
+def Namespace2ModuleName(ns):
+    return TextProtect(ns.lstrip('http://').rstrip(".xsd").replace('_ws_', '')).rstrip('_')
 
 
 def GetModuleBaseNameFromWSDL(wsdl):
@@ -33,17 +36,28 @@ def GetModuleBaseNameFromWSDL(wsdl):
         return None
     return NCName_to_ModuleName(base_name)
 
-namespace_name = lambda cls, ns: 'ns%s' % len(cls.alias_list)
+
+def namespace_name(cls, ns, recommended):
+    if recommended is None:
+        return 'ns%s' % len(cls.alias_list)
+    else:
+        i = 1
+        alias = recommended
+        while alias in cls.alias_list:
+            alias = recommended + str(i)
+
+        return alias
+
 
 class NamespaceAliasDict:
     """a lookup table to store relevant namespaces and their aliases"""
     alias_dict = {}
     alias_list = []
 
-    def add(cls, ns):
-        if cls.alias_dict.has_key(ns):
+    def add(cls, ns, recommended = None):
+        if ns in cls.alias_dict:
             return
-        cls.alias_dict[ns] = (Namespace2ModuleName(ns), '%s' % namespace_name(cls,ns))
+        cls.alias_dict[ns] = (Namespace2ModuleName(ns), '%s' % namespace_name(cls, ns, recommended))
         cls.alias_list.append(ns)
     add = classmethod(add)
 
