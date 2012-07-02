@@ -272,7 +272,12 @@ def FaultFromFaultMessage(ps):
     '''
     import ZSI.schema
     pname = (ps.body_root.namespaceURI, ps.body_root.localName)
-    typecode = ZSI.schema.GTD(*pname)(pname)
+    type_definition = ZSI.schema.GTD(*pname)
+    if type_definition is None:
+        typecode = FaultType.typecode
+    else:
+        typecode = type_definition(pname)
+
     pyobj = ps.Parse(typecode)
 
     if pyobj.detail == None:

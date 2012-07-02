@@ -19,19 +19,19 @@ try:
     DSIG.C14N = 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315'
 except:
 
-
     class SOAP:
-
-        # ENV = 'http://schemas.xmlsoap.org/soap/envelope/'
-
+        ENV = 'http://schemas.xmlsoap.org/soap/envelope/'
         ENV12 = 'http://www.w3.org/2003/05/soap-envelope'
-        ENV = ENV12
 
-        # ENC = 'http://schemas.xmlsoap.org/soap/encoding/'
-
+        ENC = 'http://schemas.xmlsoap.org/soap/encoding/'
         ENC12 = 'http://www.w3.org/2003/05/soap-encoding'
-        ENC = ENC12
         ACTOR_NEXT = 'http://schemas.xmlsoap.org/soap/actor/next'
+
+    class SOAP12(SOAP):
+        ENV = SOAP.ENV12
+        ENC = SOAP.ENC12
+
+    SOAP_LIST = (SOAP12, SOAP)
 
 
     class SCHEMA:

@@ -110,8 +110,8 @@ class ParsedSoap:
 
         elt = c[0]
         if elt.localName != 'Envelope' or elt.namespaceURI not in (SOAP.ENV, SOAP.ENV12):
-            raise ParseException('Document has "' + elt.localName
-                                 + '" element, not Envelope', 0)
+            raise ParseException('Document has %r element, not %s' %
+                                 ((elt.namespaceURI, elt.localName), (SOAP.ENV12, 'Envelope')), 0)
         self._check_for_legal_children('Envelope', elt)
         for a in _attrs(elt):
             name = a.nodeName
@@ -132,7 +132,7 @@ class ParsedSoap:
         # Envelope's first child might be the header; if so, nip it off.
 
         elt = c[0]
-        if elt.localName == 'Header' and elt.namespaceURI not in (SOAP.ENV, SOAP.ENV12):
+        if elt.localName == 'Header' and elt.namespaceURI in (SOAP.ENV, SOAP.ENV12):
             self._check_for_legal_children('Header', elt)
             self._check_for_pi_nodes(_children(elt), 1)
             self.header = c.pop(0)
@@ -147,12 +147,10 @@ class ParsedSoap:
         elt = c.pop(0)
         if elt.localName != 'Body' or elt.namespaceURI not in (SOAP.ENV, SOAP.ENV12):
             if self.header:
-                raise ParseException('Header followed by "'
-                        + elt.localName + '" element, not Body', 0,
+                raise ParseException('Header followed by "%r" element, not Body' % ((elt.namespaceURI, elt.localName),), 0,
                         elt, self.dom)
             else:
-                raise ParseException('Document has "' + elt.localName
-                        + '" element, not Body', 0, elt, self.dom)
+                raise ParseException('Document has "%r element, not Body' % ((elt.namespaceURI, elt.localName),), 0, elt, self.dom)
         self._check_for_legal_children('Body', elt, 0)
         self._check_for_pi_nodes(_children(elt), 0)
         self.body = elt
