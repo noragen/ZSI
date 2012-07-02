@@ -866,7 +866,9 @@ class ElementProxy(Base, MessageInterface):
     _xmlns_prefix = 'xmlns'
 
     _soap_env_nsuri = SOAP.ENV
+    _soap_env12_nsuri = SOAP.ENV12
     _soap_enc_nsuri = SOAP.ENC
+    _soap_enc12_nsuri = SOAP.ENC12
     _zsi_nsuri = ZSI_SCHEMA_URI
     _xsd_nsuri = SCHEMA.XSD3
     _xsi_nsuri = SCHEMA.XSI3

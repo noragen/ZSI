@@ -23,7 +23,9 @@ except:
     class SOAP:
 
         ENV = 'http://schemas.xmlsoap.org/soap/envelope/'
+        ENV12 = "http://www.w3.org/2003/05/soap-envelope"
         ENC = 'http://schemas.xmlsoap.org/soap/encoding/'
+        ENC12 = "http://www.w3.org/2003/05/soap-encoding"
         ACTOR_NEXT = 'http://schemas.xmlsoap.org/soap/actor/next'
 
 

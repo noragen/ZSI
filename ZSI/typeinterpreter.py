@@ -138,7 +138,7 @@ class BaseTypeInterpreter:
         (prefix, name) = SplitQName(msg_type)
         if targetNamespace in SCHEMA.XSD_LIST:
             return self._get_xsd_typecode(name)
-        elif targetNamespace in [SOAP.ENC]:
+        elif targetNamespace in [SOAP.ENC, SOAP.ENC12]:
             return self._get_soapenc_typecode(name)
         elif targetNamespace in [ZSI.TCapache.Apache.NS]:
 

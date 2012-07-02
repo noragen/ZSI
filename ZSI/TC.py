@@ -32,8 +32,7 @@ except ImportError:
 else:
     StringIO = cStringIO.StringIO
 
-_is_xsd_or_soap_ns = lambda ns: ns in [
-                        SCHEMA.XSD3, SOAP.ENC, SCHEMA.XSD1, SCHEMA.XSD2, ]
+_is_xsd_or_soap_ns = lambda ns: ns in set((SCHEMA.XSD3, SOAP.ENC, SOAP.ENC12, SCHEMA.XSD1, SCHEMA.XSD2))
 _find_nil = lambda E: _find_xsi_attr(E, "null") or _find_xsi_attr(E, "nil")
 
 
@@ -190,7 +189,7 @@ class TypeCode:
 
         parselist, errorlist = self.get_parse_and_errorlist()
         ns, name = _get_element_nsuri_name(elt)
-        if ns == SOAP.ENC:
+        if ns in (SOAP.ENC, SOAP.ENC12):
             # Element is in SOAP namespace, so the name is a type.
             if parselist and \
             (None, name) not in parselist and (ns, name) not in parselist:
@@ -575,6 +574,7 @@ class Any(TypeCode):
                         if parser:
                             return parser.parse(elt, ps)
                     if ((ns, type) == (SOAP.ENC, 'Array') or
+                        (ns, type) == (SOAP.ENC12, 'Array') or
                         (_find_arraytype(elt) or '').endswith('[0]')):
                         return []
                     return None
@@ -582,9 +582,9 @@ class Any(TypeCode):
                         ps.Backtrace(elt))
             elt = ps.FindLocalHREF(href, elt)
             (ns, type) = self.checktype(elt, ps)
-        if not type and elt.namespaceURI == SOAP.ENC:
-            ns, type = SOAP.ENC, elt.localName
-        if not type or (ns, type) == (SOAP.ENC, 'Array'):
+        if not type and elt.namespaceURI in (SOAP.ENC, SOAP.ENC12):
+            ns, type = elt.namespaceURI, elt.localName
+        if not type or (ns, type) in ((SOAP.ENC, 'Array'), (SOAP.ENC12, 'Array')):
             if self.aslist or _find_arraytype(elt):
                 return [self.__class__(**self.kwargs).parse(e, ps)
                             for e in _child_elements(elt)]
@@ -833,7 +833,7 @@ class Token(String):
 class Base64String(String):
     '''A Base64 encoded string.
     '''
-    parselist = [(None, 'base64Binary'), (SOAP.ENC, 'base64')]
+    parselist = [(None, 'base64Binary'), (SOAP.ENC, 'base64'), (SOAP.ENC12, 'base64')]
     type = (SOAP.ENC, 'base64')
     logger = _GetLogger('ZSI.TC.Base64String')
 

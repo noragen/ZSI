@@ -270,7 +270,10 @@ def FaultFromException(ex, inheader, tb=None, actor=None):
 def FaultFromFaultMessage(ps):
     '''Parse the message as a fault.
     '''
-    pyobj = ps.Parse(FaultType.typecode)
+    import ZSI.schema
+    pname = (ps.body_root.namespaceURI, ps.body_root.localName)
+    typecode = ZSI.schema.GTD(*pname)(pname)
+    pyobj = ps.Parse(typecode)
 
     if pyobj.detail == None:
         detailany = None

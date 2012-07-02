@@ -16,9 +16,9 @@ import types
 from ZSI.wstools.Namespaces import SOAP, XMLNS
 from ZSI.wstools.Utility import SplitQName
 
-_find_actor = lambda E: E.getAttributeNS(SOAP.ENV, 'actor') or None
-_find_mu = lambda E: E.getAttributeNS(SOAP.ENV, 'mustUnderstand')
-_find_root = lambda E: E.getAttributeNS(SOAP.ENC, 'root')
+_find_actor = lambda E: E.getAttributeNS(SOAP.ENV, 'actor') or E.getAttributeNS(SOAP.ENV12, 'actor') or None
+_find_mu = lambda E: E.getAttributeNS(SOAP.ENV, 'mustUnderstand') or E.getAttributeNS(SOAP.ENV12, 'mustUnderstand')
+_find_root = lambda E: E.getAttributeNS(SOAP.ENC, 'root') or E.getAttributeNS(SOAP.ENC12, 'root')
 _find_id = lambda E: _find_attr(E, 'id')
 
 
@@ -109,7 +109,7 @@ class ParsedSoap:
         # And that one child must be the Envelope
 
         elt = c[0]
-        if elt.localName != 'Envelope' or elt.namespaceURI != SOAP.ENV:
+        if elt.localName != 'Envelope' or elt.namespaceURI not in (SOAP.ENV, SOAP.ENV12):
             raise ParseException('Document has "' + elt.localName
                                  + '" element, not Envelope', 0)
         self._check_for_legal_children('Envelope', elt)
@@ -132,7 +132,7 @@ class ParsedSoap:
         # Envelope's first child might be the header; if so, nip it off.
 
         elt = c[0]
-        if elt.localName == 'Header' and elt.namespaceURI == SOAP.ENV:
+        if elt.localName == 'Header' and elt.namespaceURI not in (SOAP.ENV, SOAP.ENV12):
             self._check_for_legal_children('Header', elt)
             self._check_for_pi_nodes(_children(elt), 1)
             self.header = c.pop(0)
@@ -145,7 +145,7 @@ class ParsedSoap:
         if len(c) == 0:
             raise ParseException('Envelope has header but no Body', 0)
         elt = c.pop(0)
-        if elt.localName != 'Body' or elt.namespaceURI != SOAP.ENV:
+        if elt.localName != 'Body' or elt.namespaceURI not in (SOAP.ENV, SOAP.ENV12):
             if self.header:
                 raise ParseException('Header followed by "'
                         + elt.localName + '" element, not Body', 0,
@@ -374,7 +374,7 @@ class ParsedSoap:
         e = self.body_root
         if not e:
             return 0
-        return e.namespaceURI == SOAP.ENV and e.localName == 'Fault'
+        return e.namespaceURI in (SOAP.ENV, SOAP.ENV12) and e.localName == 'Fault'
 
     def Parse(self, how):
         '''Parse the message.

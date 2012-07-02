@@ -172,8 +172,8 @@ from ZSI.wstools.Namespaces import SOAP as _SOAP, SCHEMA as _SCHEMA, XMLNS as _X
 
 ##
 ##  Low-level DOM oriented utilities; useful for typecode implementors.
-_find_arraytype = lambda E: E.getAttributeNS(_SOAP.ENC, "arrayType")
-_find_encstyle = lambda E: E.getAttributeNS(_SOAP.ENV, "encodingStyle")
+_find_arraytype = lambda E: E.getAttributeNS(_SOAP.ENC, "arrayType") or E.getAttributeNS(_SOAP.ENC12, 'arrayType')
+_find_encstyle = lambda E: E.getAttributeNS(_SOAP.ENV, "encodingStyle") or E.getAttributeNS(_SOAP.ENV12, 'encodingStyle')
 try:
     from xml.dom import EMPTY_NAMESPACE
     _empty_nsuri_list = [EMPTY_NAMESPACE]
@@ -270,10 +270,10 @@ def _valid_encoding(elt):
     '''Does this node have a valid encoding?
     '''
     enc = _find_encstyle(elt)
-    if not enc or enc == _SOAP.ENC:
+    if not enc or enc in (_SOAP.ENC, _SOAP.ENC12):
         return 1
     for e in enc.split():
-        if e.startswith(_SOAP.ENC):
+        if e.startswith(_SOAP.ENC) or e.startswith(_SOAP.ENC12):
             # XXX Is this correct?  Once we find a Sec5 compatible
             # XXX encoding, should we check that all the rest are from
             # XXX that same base?  Perhaps.  But since the if test above

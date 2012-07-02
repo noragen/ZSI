@@ -19,8 +19,8 @@ import re
 import types
 from copy import copy as _copy
 
-_find_arrayoffset = lambda E: E.getAttributeNS(SOAP.ENC, "offset")
-_find_arrayposition = lambda E: E.getAttributeNS(SOAP.ENC, "position")
+_find_arrayoffset = lambda E: E.getAttributeNS(SOAP.ENC, "offset") or E.getAttributeNS(SOAP.ENC12, 'offset')
+_find_arrayposition = lambda E: E.getAttributeNS(SOAP.ENC, "position") or E.getAttributeNS(SOAP.ENC12, 'position')
 
 _offset_pat = re.compile(r'\[[0-9]+\]')
 _position_pat = _offset_pat
