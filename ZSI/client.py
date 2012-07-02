@@ -313,8 +313,8 @@ class _Binding:
         d.update(self.nsdict)
         d.update(nsdict)
 
-        sw = SoapWriter(nsdict=d, header=True,
-                        outputclass=self.writerclass,
+        SWC = kw.get('writerclass', self.writerclass or SoapWriter)
+        sw = SWC(nsdict=d, header=True, outputclass=self.writerclass,
                         encodingStyle=kw.get('encodingStyle'))
 
         requesttypecode = kw.get('requesttypecode')
