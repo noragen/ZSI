@@ -39,7 +39,7 @@ except:
 _packages = [ "ZSI", "ZSI.generate", "ZSI.wstools"]
 if sys.version_info[0:2] >= (2, 4):
     _packages.append("ZSI.twisted")
-    
+
 
 # setuptools specific logic
 additional_params = {}

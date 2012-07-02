@@ -54,7 +54,7 @@ from typesmodule, or Any.  Not compatible with \var{docstyle}.
 
 \subsubsection{docstyle}  Callback is invoked with a ParsedSoap instance
 representing the request, and the return value is serialized with an XML
-typecode (DOM).  The result in wrapped as an rpc-style message, with 
+typecode (DOM).  The result in wrapped as an rpc-style message, with
 \emph{Response} appended to the request wrapper.  Not compatible with \var{rpc}.
 
 \subsection{Special Modules}  These are keyword options available to all
@@ -62,10 +62,10 @@ dispatch mechansism (see below).
 
 \subsubsection{modules}{Dispatch is based solely on the name of the root element in the
 incoming SOAP request; the request URL is ignored.  These modules will be search
-for a matching function.  If no modules are specified, only the 
+for a matching function.  If no modules are specified, only the
 \module{__main__} module will be searched.}
 
-\subsubsection{typesmodule}{Used for parsing.  This module should contain class 
+\subsubsection{typesmodule}{Used for parsing.  This module should contain class
 definitions with the \code{typecode} attribute set to a \class{TypeCode}
 instance.  By default, a class definition matching the root element name will be
 retrieved or the Any typecode will be used.  If using \emph{rpc}, each child of
@@ -95,7 +95,7 @@ The following keyword arguments may be used:
 functions that can be invoked.}
 \lineiii{\code{typesmodule}}{\code{(__main__,)}}{This module is used for
 parsing, it contains class definitions that specify the \code{typecode}
-attribute.} 
+attribute.}
 \lineiii{\code{nsdict}}{\code{\{\}}}{Namespace dictionary to send in the SOAP
 \code{Envelope}}
 \end{tableiii}
@@ -115,7 +115,7 @@ The following keyword arguments may be used:
 functions that can be invoked.}
 \lineiii{\code{typesmodule}}{\code{(__main__,)}}{This module is used for
 parsing, it contains class definitions that specify the \code{typecode}
-attribute.} 
+attribute.}
 \lineiii{\code{nsdict}}{\code{\{\}}}{Namespace dictionary to send in the SOAP
 \code{Envelope}}
 \end{tableiii}
@@ -138,7 +138,7 @@ functions that can be invoked.}
 \lineiii{\code{rpc}}{\code{False}}{Exhibit the \emph{rpc} behavior.}
 \lineiii{\code{typesmodule}}{\code{(__main__,)}}{This module is used for
 parsing, it contains class definitions that specify the \code{typecode}
-attribute.} 
+attribute.}
 \lineiii{\code{nsdict}}{\code{\{\}}}{Namespace dictionary to send in the SOAP
 \code{Envelope}}
 \end{tableiii}
@@ -159,7 +159,7 @@ functions that can be invoked.}
 \lineiii{\code{rpc}}{\code{False}}{Exhibit the \emph{rpc} behavior.}
 \lineiii{\code{typesmodule}}{\code{(__main__,)}}{This module is used for
 parsing, it contains class definitions that specify the \code{typecode}
-attribute.} 
+attribute.}
 \lineiii{\code{nsdict}}{\code{\{\}}}{Namespace dictionary to send in the SOAP
 \code{Envelope}}
 \end{tableiii}
@@ -176,7 +176,7 @@ class Handler(cgi.Handler):
     def process(self, req):
         dispatch.AsJonPy(modules=(MyHandler,), request=req)
 
-jon.fcgi.Server({jon.fcgi.FCGI_RESPONDER: Handler}).run() 
+jon.fcgi.Server({jon.fcgi.FCGI_RESPONDER: Handler}).run()
 \end{verbatim}
 
 \end{methoddesc}
@@ -229,7 +229,7 @@ modules.
 It must be explicitly imported, as in
 \samp{from ZSI.client import AUTH,Binding}.
 
-\subsection{_Binding}  
+\subsection{_Binding}
 
 \begin{classdesc}{_Binding}{\optional{**keywords}}
 This class encapsulates a connection to a server, known as a \emph{binding}.
@@ -252,7 +252,7 @@ The following keyword arguments may be used:
     \code{SOAPAction} HTTP header.}
 \lineiii{\code{readerclass}}{\code{None}}{Class used to create DOM-creating
 XML readers; see the description in the \class{ParsedSoap} class.}
-\lineiii{\code{writerclass}}{\code{None}}{ElementProxy Class used to create 
+\lineiii{\code{writerclass}}{\code{None}}{ElementProxy Class used to create
 XML writers; see the description in the \class{SoapWriter} class.}
 \lineiii{\code{tracefile}}{\code{None}}{An object with a \code{write}
     method, where packet traces will be recorded.}
@@ -265,7 +265,7 @@ to use.  By default it's not used.}
 \end{tableiii}
 
 If using SSL, the \code{cert_file} and \code{key_file} keyword parameters may
-be passed to the transport's constructor via the \code{transdict}.  For details 
+be passed to the transport's constructor via the \code{transdict}.  For details
 about HTTPSConnection see the documentation for the \module{httplib} module.
 
 \end{classdesc}

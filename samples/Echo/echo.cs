@@ -8,7 +8,7 @@ using System;
 
 class Echo {
   public static void Main(string[] args) {
-   
+
    EchoService server = new EchoService();
 
    string request = "Test C#";

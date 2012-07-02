@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions 
+<definitions
   xmlns="http://schemas.xmlsoap.org/wsdl/"
   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"
   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
@@ -46,15 +46,15 @@
   </portType>
 
   <binding name="EchoServer" type="tns:EchoServer">
-    <soap:binding style="document" 
+    <soap:binding style="document"
                   transport="http://schemas.xmlsoap.org/soap/http"/>
     <operation name="Echo">
       <soap:operation soapAction=""/>
 	<input>
-   	  <soap:body use="literal"/> 
+   	  <soap:body use="literal"/>
 	</input>
 	<output>
-	  <soap:body use="literal"/> 
+	  <soap:body use="literal"/>
 	</output>
     </operation>
   </binding>

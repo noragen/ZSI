@@ -25,13 +25,13 @@ test03 = '''<SOAP-ENV:Envelope
            <faultcode>SOAP-ENV:MustUnderstand</faultcode>
            <faultstring>SOAP Must Understand Error</faultstring>
            <?MYPI spenser?>
-       </SOAP-ENV:Fault>    
+       </SOAP-ENV:Fault>
    </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>'''
 
 test04 = '''<SOAP-ENV:Envelope fooattr='bar'
   xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-   <SOAP-ENV:Body>            
+   <SOAP-ENV:Body>
        <SOAP-ENV:Fault>
            <faultcode>SOAP-ENV:Server</faultcode>
            <faultstring>Server Error</faultstring>
@@ -50,10 +50,10 @@ test04 = '''<SOAP-ENV:Envelope fooattr='bar'
 </SOAP-ENV:Envelope>'''
 
 test05 = '''<SOAP-ENV:Envelope
-  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
+  xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
   SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
    <SOAP-ENV:Body></SOAP-ENV:Body>
-   <SOAP-ENV:Body></SOAP-ENV:Body> 
+   <SOAP-ENV:Body></SOAP-ENV:Body>
 </SOAP-ENV:Envelope>'''
 
 test06 = '''<SOAP-ENV:ChemicalX

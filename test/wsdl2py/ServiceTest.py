@@ -11,7 +11,7 @@ from ZSI.wstools.TimeoutSocket import TimeoutError
 from ZSI.generate import commands
 
 """Global Variables:
-    CONFIG_FILE -- configuration file 
+    CONFIG_FILE -- configuration file
     CONFIG_PARSER -- ConfigParser instance
     DOCUMENT -- test section variable, specifying document style.
     LITERAL -- test section variable, specifying literal encodings.
@@ -20,7 +20,7 @@ from ZSI.generate import commands
     SECTION_CONFIGURATION -- configuration section, turn on/off debuggging.
     TRACEFILE -- file class instance.
     TOPDIR -- current working directory
-    MODULEDIR  -- stubs directory 
+    MODULEDIR  -- stubs directory
     PORT -- port of local container
     HOST -- address of local container
     SECTION_SERVERS -- services to be tested, values are paths to executables.
@@ -115,17 +115,17 @@ class ServiceTestCase(unittest.TestCase):
     """Conventions for method names:
     test_net*
     -- network tests
-    
+
     test_local*
     -- local tests
-    
+
     test_dispatch*
     -- tests that use the a spawned local container
-    
+
     class attributes: Edit/Override these in the inheriting class as needed
         out -- file descriptor to write output to
         name -- configuration item, must be set in class.
-        url_section -- configuration section, maps a test module 
+        url_section -- configuration section, maps a test module
            name to an URL.
         client_file_name --
         types_file_name --
@@ -137,11 +137,11 @@ class ServiceTestCase(unittest.TestCase):
     client_file_name = None
     types_file_name = None
     server_file_name = None
-    
+
     def __init__(self, methodName):
         """
         parameters:
-           methodName -- 
+           methodName --
         instance variables:
             client_module
             types_module
@@ -209,7 +209,7 @@ class ServiceTestCase(unittest.TestCase):
             except:
                 result.addError(self, self._exc_info())
                 ok = False
-            if ok: 
+            if ok:
                 result.addSuccess(self)
                 print>>self
                 print>>self, "|"+"-"*60
@@ -229,25 +229,25 @@ class ServiceTestCase(unittest.TestCase):
         kw = {}
         if CONFIG_PARSER.getboolean(SECTION_CONFIGURATION, 'tracefile'):
             kw['tracefile'] = TRACEFILE
-        
+
         kw.update(self.portkwargs)
         return kw
-    
+
     def _setUpDispatch(self):
         """Set this test up as a dispatch test.
-        url -- 
+        url --
         """
         host = CONFIG_PARSER.get(SECTION_DISPATCH, 'host')
         port = CONFIG_PARSER.get(SECTION_DISPATCH, 'port')
         path = CONFIG_PARSER.get(SECTION_DISPATCH, 'path')
-        
+
         scheme = 'http'
         netloc = '%s:%s' %(host, port)
         params = query = fragment = None
-        
+
         self.portkwargs['url'] = \
             urlparse.urlunparse((scheme,netloc,path,params,query,fragment))
-        
+
     _wsdl = {}
     def _generate(self):
         """call the wsdl2py and wsdl2dispatch scripts and
@@ -262,7 +262,7 @@ class ServiceTestCase(unittest.TestCase):
         if SKIP:
             ServiceTestCase._wsdl[url] = True
             return
-        
+
         ServiceTestCase._wsdl[url] = False
         try:
             os.mkdir(MODULEDIR)
@@ -272,18 +272,18 @@ class ServiceTestCase(unittest.TestCase):
         os.chdir(MODULEDIR)
         if MODULEDIR not in sys.path:
             sys.path.append(MODULEDIR)
- 
+
         try:
             commands.wsdl2py([url] + self.wsdl2py_args)
             ServiceTestCase._wsdl[url] = True
         finally:
             os.chdir(TOPDIR)
-            
+
     _process = None
     _lastToDispatch = None
     def setUp(self):
         """Generate types and services modules once, then make them
-        available thru the *_module attributes if the *_file_name 
+        available thru the *_module attributes if the *_file_name
         attributes were specified.
         """
         section = self.url_section
@@ -291,30 +291,30 @@ class ServiceTestCase(unittest.TestCase):
         if not section or not name:
             raise TestException, 'section(%s) or name(%s) not defined' %(
                 section, name)
-            
+
         if not CONFIG_PARSER.has_section(section):
             raise TestException,\
                 'No such section(%s) in configuration file(%s)' %(
                 self.url_section, CONFIG_FILE)
 
         self.url = CONFIG_PARSER.get(section, name)
-        
+
         status = ServiceTestCase._wsdl.get(self.url)
         if status is False:
             self.fail('generation failed for "%s"' %self.url)
-            
+
         if status is None:
             self._generate()
-            
+
         # Check for files
         tfn = self.types_file_name
         cfn = self.client_file_name
         sfn = self.server_file_name
-    
+
         files = filter(lambda f: f is not None, [cfn, tfn,sfn])
         if None is cfn is tfn is sfn:
             return
-        
+
         for n,m in map(lambda i: (i,__import__(i.split('.py')[0])), files):
             if tfn is not None and tfn == n:
                 self.types_module = m
@@ -322,13 +322,13 @@ class ServiceTestCase(unittest.TestCase):
                 self.client_module = m
             elif sfn is not None and sfn == n:
                 self.server_module = m
-            else: 
+            else:
                 self.fail('Unexpected module %s' %n)
 
         # DISPATCH PORTION OF SETUP
         if not self.methodName.startswith('test_dispatch'):
             return
-        
+
         self._setUpDispatch()
         if ServiceTestCase._process is not None:
             return
@@ -340,16 +340,16 @@ class ServiceTestCase(unittest.TestCase):
 
         if ServiceTestCase._lastToDispatch == expath:
             return
-        
+
         if ServiceTestCase._lastToDispatch is not None:
            ServiceTestCase.CleanUp()
-        
+
         ServiceTestCase._lastToDispatch = expath
         ServiceTestCase._process = \
-            _LaunchContainer(os.path.join(os.path.abspath(TOPDIR), 
+            _LaunchContainer(os.path.join(os.path.abspath(TOPDIR),
                                                           *expath.split('/')))
-       
-            
+
+
     def CleanUp(cls):
         """call this when dispatch server is no longer needed,
         maybe another needs to be started.  Assumption that
@@ -361,8 +361,8 @@ class ServiceTestCase(unittest.TestCase):
         os.kill(cls._process.pid, signal.SIGKILL)
         cls._process = None
     CleanUp = classmethod(CleanUp)
-         
-         
+
+
 class ServiceTestSuite(unittest.TestSuite):
     """A test suite is a composite test consisting of a number of TestCases.
 
@@ -387,8 +387,8 @@ class ServiceTestSuite(unittest.TestSuite):
             if result.shouldStop:
                 break
             test(result)
-            
+
         ServiceTestCase.CleanUp()
         return result
-    
+
 

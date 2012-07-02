@@ -94,7 +94,7 @@ a \samp{(namespace, name)} tuple.
 
 \begin{memberdesc}{attribute_typecode_dict}
 This is a class attribute.
-This is a dict of \samp{(URI, NCName)} tuple keys, the values of each is a 
+This is a dict of \samp{(URI, NCName)} tuple keys, the values of each is a
 typecode.  This is how attribute declarations other than SOAP and XMLSchema
 attribute declarations (eg. \code{xsi:type}, \code{id}, \code{href}, etc) are
 represented.
@@ -216,7 +216,7 @@ override an existing entry in the registry call \function{RegisterType} with
 Python types and a \class{TypeCode} instance, it is not possible to have one
 Python type map to multiple typecodes.  The parsing entries are mappings
 between  \code{(namespaceURI,name)} tuples, representing the \code{xsi:type}
-attribute, and a \class{TypeCode} instance.  Thus, only one instance of a 
+attribute, and a \class{TypeCode} instance.  Thus, only one instance of a
 \class{TypeCode} class can represent a XML Schema type.  So this mechanism is
 not appropriate for representing XML Schema element information.
 
@@ -530,7 +530,7 @@ the first six values are taken directly as year, month, day, hour, minute,
 second in UTC.
 
 \item
-Although the classes \class{Duration} and \class{Gregorian} are defined, they 
+Although the classes \class{Duration} and \class{Gregorian} are defined, they
 are for internal use only and should not be included in any \class{TypeCode}
 you define.  Instead, use the classes beginning with a lower case g in your
 typecodes.
@@ -715,8 +715,8 @@ foo.typecode = TC.Struct(foo,
 
 \section{Struct}
 
-SOAP Struct is a complex type for accessors identified by name. No element may 
-have the same name as any other, nor may any element have a maxOccurs > 1. 
+SOAP Struct is a complex type for accessors identified by name. No element may
+have the same name as any other, nor may any element have a maxOccurs > 1.
 SOAP Structs are either Python dictionaries or instances of application-specified classes.
 
 \section{Arrays}
@@ -760,7 +760,7 @@ need not appear.}
 \section{Apache Datatype}
 
 The Apache SOAP project, url{http://xml.apache.org/soap/index.html},
-has defined a popular SOAP datatype in the 
+has defined a popular SOAP datatype in the
 \code{http://xml.apache.org/xml-soap} namespace, a
 \class{Map}.
 

@@ -22,7 +22,7 @@
               <element name="dayOfYear" nillable="true" type="xsd:integer"/>
               <element name="dst" nillable="true" type="xsd:integer"/>
             </sequence>
-      </complexType>  
+      </complexType>
     </schema>
   </types>
 

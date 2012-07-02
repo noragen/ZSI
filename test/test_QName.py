@@ -13,7 +13,7 @@ class TestCase(unittest.TestCase):
     def check_soapfault_faultcode(self):
         """ Typecode QName when default namespace is not declared, should
         specify the empty namespace.
-        """ 
+        """
         msg = """<?xml version="1.0" encoding="UTF-8"?>
 <soapenv:Envelope xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
   xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"

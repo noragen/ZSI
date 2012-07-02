@@ -12,7 +12,7 @@ from ServiceTest import main, ServiceTestCase, ServiceTestSuite, TestException
 """
 Unittest for contacting the SquareService rpc/literal tests.
 
-From the paper "Interoperable WSDL/SOAP web services introduction: 
+From the paper "Interoperable WSDL/SOAP web services introduction:
 Python ZSI, Excel XP, gSOAP C/C++ & Applix SS", Holger Joukl
 
 WSDL: SquareService.wsdl
@@ -36,7 +36,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(Test, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -55,10 +55,10 @@ class Test(ServiceTestCase):
     def __init__(self, methodName):
         ServiceTestCase.__init__(self, methodName)
         self.wsdl2py_args.append('-b')
-    
+
     def test_local_getSquare(self):
         from ZSI.writer import SoapWriter
-        
+
     def test_dispatch_getSquare(self):
         loc = self.client_module.SquareServiceLocator()
         port = loc.getSquarePort(**self.getPortKWArgs())
@@ -66,10 +66,10 @@ class Test(ServiceTestCase):
         msg = self.client_module.getSquareRequest()
         msg.X = 4.0
         rsp = port.getSquare(msg)
-        
+
         self.failUnless(rsp.Return == msg.X**2,
                         "Square Failed:  got %d, expecting %d" %(rsp.Return,msg.X**2))
-        
+
 
 if __name__ == "__main__" :
     main()

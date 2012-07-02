@@ -8,9 +8,9 @@ from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException, ParsedSoap, SoapWriter
 
 """
-Unittest 
+Unittest
 
-WSDL:   
+WSDL:
 """
 
 # General targets
@@ -31,7 +31,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(TestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -50,8 +50,8 @@ class TestCase(ServiceTestCase):
         self.wsdl2py_args.append('-b')
 
     def test_local_generateMessageAttachment(self):
-        """doc/lit, generating a message using MIME attachment, 
-        we don't have the server side implementation so we can 
+        """doc/lit, generating a message using MIME attachment,
+        we don't have the server side implementation so we can
         really do a full test yet
         """
         from TestService_server import uploadFileRequest

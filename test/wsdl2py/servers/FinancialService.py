@@ -17,7 +17,7 @@ class Service(FinancialService):
         t = 0
         PV = 0.0
         for CF in args._CFSequence._CF:
-            PV += (CF or 0.0) * ((args._irate / 100.0 + 1) ** (-t)) 
+            PV += (CF or 0.0) * ((args._irate / 100.0 + 1) ** (-t))
             t += 1
 
         #print "Present value is: ", PV

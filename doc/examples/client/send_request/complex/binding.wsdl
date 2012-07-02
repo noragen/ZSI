@@ -13,7 +13,7 @@
   <import namespace="http://pycon.org/" location="interface.wsdl"/>
 
   <binding name="Binding" type="tns:Registration">
-    <soap:binding style="rpc" 
+    <soap:binding style="rpc"
                   transport="http://schemas.xmlsoap.org/soap/http"/>
     <operation name="RegisterUser">
       <soap:operation soapAction="urn:Registration#RegisterUser"/>
@@ -24,7 +24,7 @@
       <output>
         <soap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
                     namespace="urn:Registration" use="encoded"/>
-      </output> 
+      </output>
     </operation>
   </binding>
 

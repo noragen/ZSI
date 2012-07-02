@@ -12,7 +12,7 @@
     <xs:element name="rank" type="xs:int"/>
     <xs:element name="any"/>
   </xs:choice>
-</xs:complexType>  
+</xs:complexType>
 
 <xs:complexType name="HardChoice">
   <xs:choice maxOccurs="unbounded">
@@ -20,6 +20,6 @@
     <xs:element name="rank" type="xs:int"/>
     <xs:element name="any"/>
   </xs:choice>
-</xs:complexType>  
+</xs:complexType>
 
 </xs:schema>

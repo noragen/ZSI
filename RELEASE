@@ -20,7 +20,7 @@ information on getting and setting up those tools.
 
 3.  Make sure CHANGES is up to date, including the version number at
     the top.
-    
+
 4.  Make sure the documentation is up to date. Try all of the examples,
 	and make sure they work. For a release candidate, the docs do not
 	have to be up to date, but we must at least mark the parts of the
@@ -56,7 +56,7 @@ information on getting and setting up those tools.
 
         % svn co https://pywebsvcs.svn.sourceforge.net/svnroot/pywebsvcs/tags/ZSI_v2_0_0RC3
         % cd ZSI_v2_0_0RC3/zsi/ZSI
-        % svn propset "svn:externals" "wstools/ https://pywebsvcs.svn.sourceforge.net/svnroot/pywebsvcs/tags/ZSI-v2_0_0RC3/wstools" . 
+        % svn propset "svn:externals" "wstools/ https://pywebsvcs.svn.sourceforge.net/svnroot/pywebsvcs/tags/ZSI-v2_0_0RC3/wstools" .
 
         % svn commit
 

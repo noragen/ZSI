@@ -34,8 +34,8 @@ def main_twisted():
 if __name__ == '__main__':
     if len(sys.argv) == 1:
         main()
-    else: 
-        var = sys.argv[1] 
+    else:
+        var = sys.argv[1]
         try:
             getattr(sys.modules[__name__], 'main_%s' %var)(*sys.argv[2:])
         except Exception, ex:

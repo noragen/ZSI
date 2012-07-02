@@ -10,14 +10,14 @@ PAPER=		letter
 M_CHAPTERS=	c01-intro.tex c02-samples.tex \
 		c03-except.tex c04-utils.tex c05-parse.tex c06-tc.tex \
 		c07-writer.tex c08-fault.tex c09-resolve.tex \
-		c10-dispatch.tex 
-	
+		c10-dispatch.tex
+
 G_CHAPTERS=	guide01-intro.tex guide02-wsdl2py.tex
 
 M=		zsi
 G=		guide
 
-SOURCES=	$M.tex version.tex $(M_CHAPTERS) 
+SOURCES=	$M.tex version.tex $(M_CHAPTERS)
 GSOURCES=	$G.tex version.tex $(G_CHAPTERS)
 
 
@@ -59,7 +59,7 @@ $G.html: $(GSOURCES)
 clean:
 	rm -f *.aux *.idx *.ilg *.ind *.log *.toc *.bkm *.syn *.pla *.how
 clobber: clean
-	rm -f $M.ps $M.pdf $M.html $M.l2h $M.css $G.ps $G.pdf $G.html zsixsd.tex 
+	rm -f $M.ps $M.pdf $M.html $M.l2h $M.css $G.ps $G.pdf $G.html zsixsd.tex
 realclean: clobber
 distclean: clobber
 .PHONY: clean clobber realclean distclean

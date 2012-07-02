@@ -57,7 +57,7 @@ def handler(req):
 
 \end{verbatim}
 
-\subsection{client: invoke savePerson} 
+\subsection{client: invoke savePerson}
 \subsubsection{script}
 \begin{verbatim}
 import sys
@@ -67,16 +67,16 @@ from MyComplexTypes import Person
 b = Binding(url='http://localhost/test3/pickler.py', tracefile=sys.stdout)
 person = Person('christopher', 26)
 b.savePerson(person)
-\end{verbatim} 
+\end{verbatim}
 
 \subsubsection{SOAP Trace}
 \begin{verbatim}
 _________________________________ Wed Oct 11 13:10:05 2006 REQUEST:
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -89,15 +89,15 @@ _________________________________ Wed Oct 11 13:10:05 2006 REQUEST:
 </SOAP-ENV:Envelope>
 
 _________________________________ Wed Oct 11 13:10:05 2006 RESPONSE:
-Server: Apache/2.0.53-dev (Unix) mod_ruby/1.2.4 Ruby/1.8.2(2004-12-25) 
+Server: Apache/2.0.53-dev (Unix) mod_ruby/1.2.4 Ruby/1.8.2(2004-12-25)
 mod_python/3.1.4 Python/2.4.1
 Transfer-Encoding: chunked
 Content-Type: text/xml
 
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -105,7 +105,7 @@ Content-Type: text/xml
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 
-\end{verbatim} 
+\end{verbatim}
 
 \subsection{client: invoke getPerson 3 different ways}
 \subsubsection{script}
@@ -133,17 +133,17 @@ class Name(str):
 rsp = b.getPerson(Name('christopher'))
 assert isinstance(rsp['Person'], MyComplexTypes.Person), (
     'expecting instance of %s' %MyComplexTypes.Person)
-\end{verbatim} 
+\end{verbatim}
 
 \subsubsection{SOAP Trace} All responses are exactly the same, for comparison
 the three requests are presented first and only the last response is included.
 \begin{verbatim}
 _________________________________ Wed Oct 11 13:19:00 2006 REQUEST:
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -156,11 +156,11 @@ _________________________________ Wed Oct 11 13:19:00 2006 REQUEST:
 ** OMIT RESPONSE **
 
 _________________________________ Wed Oct 11 13:19:00 2006 REQUEST:
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -173,11 +173,11 @@ _________________________________ Wed Oct 11 13:19:00 2006 REQUEST:
 ** OMIT RESPONSE **
 
 _________________________________ Wed Oct 11 13:19:00 2006 REQUEST:
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
-xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -188,15 +188,15 @@ SOAP-ENV:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
 </SOAP-ENV:Envelope>
 
 _________________________________ Wed Oct 11 13:19:00 2006 RESPONSE:
-Server: Apache/2.0.53-dev (Unix) mod_ruby/1.2.4 Ruby/1.8.2(2004-12-25) 
+Server: Apache/2.0.53-dev (Unix) mod_ruby/1.2.4 Ruby/1.8.2(2004-12-25)
 mod_python/3.1.4 Python/2.4.1
 Transfer-Encoding: chunked
 Content-Type: text/xml
 
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -208,5 +208,5 @@ Content-Type: text/xml
 		</getPersonResponse>
 	</SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
-\end{verbatim} 
+\end{verbatim}
 

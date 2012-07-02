@@ -7,9 +7,9 @@ import os, sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException, ParsedSoap
 """
-Unittest 
+Unittest
 
-WSDL:   
+WSDL:
 """
 
 # General targets
@@ -30,7 +30,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(TestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()

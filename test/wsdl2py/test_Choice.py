@@ -10,10 +10,10 @@ from ZSI.TC import _get_global_element_declaration as GED
 from ZSI.writer import SoapWriter
 
 """
-Unittest for Bug Report 
+Unittest for Bug Report
 [ 1441574 ] ZSI assumes minOccurs(1) for all parts
 
-WSDL:  
+WSDL:
 """
 
 # General targets
@@ -34,7 +34,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(ChoiceTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -45,12 +45,12 @@ def all():
 class ChoiceTestCase(ServiceTestCase):
     name = "test_Choice"
     types_file_name = "test_Choice_xsd_types.py"
- 
+
     def __init__(self, methodName):
         ServiceTestCase.__init__(self, methodName)
         self.wsdl2py_args.append('-b')
         self.wsdl2py_args.append('-x')
- 
+
     def test_local_choice_default_facets_legal1(self):
         """<choice minOccurs=1 maxOccurs=1>
         """

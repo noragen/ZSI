@@ -2,7 +2,7 @@
 # Joshua R. Bovernof, LBNL
 # See Copyright for copyright notice!
 #
-# CONFIGURATION SECTIONS 
+# CONFIGURATION SECTIONS
 #  [configuration] - global configuration of service tests.
 #	  tracefile -- trace soap messages
 #     debug -- turn on debugging
@@ -24,7 +24,7 @@ debug = False
 skip = False
 twisted = False
 lazy = False
-output = 
+output =
 
 [dispatch]
 host = localhost
@@ -32,7 +32,7 @@ port = 9080
 path = test
 twisted = False
 test_WhiteMesa = servers/WhiteMesa.py
-test_Echo = servers/EchoServer.py 
+test_Echo = servers/EchoServer.py
 test_BasicComm = servers/BasicServer.py
 test_SquareService = servers/SquareService.py
 test_DateService = servers/DateService.py
@@ -45,7 +45,7 @@ test_NoMessagePart = servers/NoMessagePartServer.py
 #    document -- document style True/False
 #    literal  -- literal encoding True/False
 #    broke -- broke True/False
-#    tests -- whitespace separated list of test modules, referenced in 
+#    tests -- whitespace separated list of test modules, referenced in
 #        section WSDL.
 #
 #  [rpc_encoded] -- these are rpc/encoded services that WORK.
@@ -83,7 +83,7 @@ tests = test_ThreatService
 document = False
 literal = False
 broke = True
-tests = 
+tests =
 
 
 ########################## RPC/LITERAL ###################################
@@ -96,19 +96,19 @@ tests =
 document = False
 literal = True
 broke = False
-tests = test_WhiteMesa test_SquareService test_DateService 
+tests = test_WhiteMesa test_SquareService test_DateService
 
 [rpc_literal_broke]
 document = False
 literal = True
 broke = True
-tests = 
+tests =
 
 [rpc_literal_broke_interop]
 document = False
 literal = True
 broke = True
-tests = 
+tests =
 
 ########################## DOCUMENT/LITERAL ##############################
 #
@@ -121,24 +121,24 @@ tests =
 document = True
 literal = True
 broke = False
-tests = test_Attachment test_MapPoint test_Echo test_AWSECommerceService test_FinancialService test_BasicComm test_Manufacturer test_Racing  test_Attributes test_Choice test_DerivedTypes test_EchoWSAddr200403 test_SubstitutionGroup test_VIM test_Unqualified test_NoMessagePart 
+tests = test_Attachment test_MapPoint test_Echo test_AWSECommerceService test_FinancialService test_BasicComm test_Manufacturer test_Racing  test_Attributes test_Choice test_DerivedTypes test_EchoWSAddr200403 test_SubstitutionGroup test_VIM test_Unqualified test_NoMessagePart
 
 [doc_literal_broke]
 document = True
 literal = True
 broke = True
-tests = 
+tests =
 
 [doc_literal_broke_interop]
 document = True
 literal = True
 broke = True
-tests = 
+tests =
 
 
 ##########################################################################
 # SECTION [WSDL] - test name(equivalent to module name) and URL.
-# 
+#
 ##########################################################################
 [WSDL]
 test_AWSECommerceService = http://webservices.amazon.com/AWSECommerceService/AWSECommerceService.wsdl

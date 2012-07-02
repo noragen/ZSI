@@ -12,7 +12,7 @@ from ZSI.TC import _get_type_definition as GTD
 from ZSI.TC import _get_global_element_declaration as GED
 
 """
-Unittest 
+Unittest
 
 WSDL:  derivedTypes.
 """
@@ -35,7 +35,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(DTTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -60,15 +60,15 @@ class DTTestCase(ServiceTestCase):
         """
         self.types_module
         pyobj = GED('urn:test', 'test').pyclass()
-        
+
         # use GED of a derived type
         pyobj.Actor = sub = GED('urn:test', 'MiddleActor').pyclass()
         sub.Element1 = 'foo'
         sub.Element2 = 'bar'
-        
+
         sw = SoapWriter()
         self.failUnlessRaises(TypeError, sw.serialize, pyobj)
-        
+
     def test_local_type_substitution_test2(self):
         """test extension of extension"""
 
@@ -78,8 +78,8 @@ class DTTestCase(ServiceTestCase):
         self.types_module
         pyobj = GED('urn:test', 'test2').pyclass()
 
-        # Test maxOccurs>1 for substitution 
-        # 
+        # Test maxOccurs>1 for substitution
+        #
         pyobj.Actor = [GTD('urn:test', 'TopActor')(None).pyclass()]
         sub1 = pyobj.Actor[0]
         sub1.Element1 = 'one'
@@ -88,7 +88,7 @@ class DTTestCase(ServiceTestCase):
         sub1.set_attribute_attr1(attr1)
         sub1.set_attribute_attr2(attr2)
         sub1.set_attribute_attr3(attr3)
-        
+
         sw = SoapWriter()
         sw.serialize(pyobj)
         xml = str(sw)
@@ -103,19 +103,19 @@ class DTTestCase(ServiceTestCase):
         self.failUnless(sub2.Element1 == sub1.Element1, 'bad element 1')
         self.failUnless(sub2.Element2 == sub1.Element2, 'bad element 2')
         self.failUnless(sub2.Element3 == sub1.Element3, 'bad element 3')
-                
+
         # check parsed out correct type
-        self.failUnless(isinstance(sub2.typecode, sub1.typecode.__class__), 
+        self.failUnless(isinstance(sub2.typecode, sub1.typecode.__class__),
             'local element actor "%s" must be an instance of "%s"'%
                 (sub2.typecode, sub1.typecode.__class__))
-        
+
         # check local element is derived from base
         base = GTD('urn:test', 'BaseActor')
-        self.failUnless(isinstance(sub2.typecode, base), 
+        self.failUnless(isinstance(sub2.typecode, base),
             'local element actor must be a derived type of "%s"'%
                 base)
 
-        
+
     def test_local_type_substitution2(self):
         """test extension of extension"""
 
@@ -137,7 +137,7 @@ class DTTestCase(ServiceTestCase):
 
         # [ 1489090 ] Derived type attributes don't populate the attr dictionary
         # [ 1489677 ] Derivation from derived type missing derived element
-        # 
+        #
         pyobj.Actor = sub1 = GTD('urn:test', 'TopActor')(None).pyclass()
         sub1.Element1 = 'one'
         sub1.Element2 = 'two'
@@ -145,7 +145,7 @@ class DTTestCase(ServiceTestCase):
         sub1.set_attribute_attr1(attr1)
         sub1.set_attribute_attr2(attr2)
         sub1.set_attribute_attr3(attr3)
-        
+
         sw = SoapWriter()
         sw.serialize(pyobj)
         xml = str(sw)
@@ -160,15 +160,15 @@ class DTTestCase(ServiceTestCase):
         self.failUnless(sub2.Element1 == sub1.Element1, 'bad element 1')
         self.failUnless(sub2.Element2 == sub1.Element2, 'bad element 2')
         self.failUnless(sub2.Element3 == sub1.Element3, 'bad element 3')
-                
+
         # check parsed out correct type
-        self.failUnless(isinstance(sub2.typecode, sub1.typecode.__class__), 
+        self.failUnless(isinstance(sub2.typecode, sub1.typecode.__class__),
             'local element actor "%s" must be an instance of "%s"'%
                 (sub2.typecode, sub1.typecode.__class__))
-        
+
         # check local element is derived from base
         base = GTD('urn:test', 'BaseActor')
-        self.failUnless(isinstance(sub2.typecode, base), 
+        self.failUnless(isinstance(sub2.typecode, base),
             'local element actor must be a derived type of "%s"'%
                 base)
 
@@ -198,13 +198,13 @@ class DTTestCase(ServiceTestCase):
         self.failUnless(sub0.get_attribute_attr2() == attr2, 'bad attribute2')
 
         # [ 1489090 ] Derived type attributes don't populate the attr dictionary
-        # 
+        #
         pyobj.Actor = sub1 = GTD('urn:test', 'MiddleActor')(None).pyclass()
         sub1.Element1 = 'foo'
         sub1.Element2 = 'bar'
         sub1.set_attribute_attr1(attr1)
         sub1.set_attribute_attr2(attr2)
-        
+
         sw = SoapWriter()
         sw.serialize(pyobj)
         xml = str(sw)
@@ -214,18 +214,18 @@ class DTTestCase(ServiceTestCase):
 
         self.failUnless(sub2.get_attribute_attr1() == attr1, 'bad attribute class')
         self.failUnless(sub2.get_attribute_attr2() == attr2, 'bad attribute name')
-                
+
         # check parsed out correct type
-        self.failUnless(isinstance(sub2.typecode, sub1.typecode.__class__), 
+        self.failUnless(isinstance(sub2.typecode, sub1.typecode.__class__),
             'local element actor "%s" must be an instance of "%s"'%
                 (sub2.typecode, sub1.typecode.__class__))
-        
+
         # check local element is derived from base
         base = GTD('urn:test', 'BaseActor')
-        self.failUnless(isinstance(sub2.typecode, base), 
+        self.failUnless(isinstance(sub2.typecode, base),
             'local element actor must be a derived type of "%s"'%
                 base)
-        
+
 
 MSG1 = """<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:test"><ns1:test><actor attr1="myclass" attr2="whatever" xsi:type="ns1:MiddleActor"><element1 xsi:type="xsd:string">foo</element1><element2 xsi:type="xsd:string">bar</element2></actor></ns1:test></SOAP-ENV:Body></SOAP-ENV:Envelope>"""
 

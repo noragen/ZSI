@@ -18,7 +18,7 @@ import test_AnyType
 
 def makeTestSuite():
     return unittest.TestSuite(
-        map(lambda t: globals()[t].makeTestSuite(), 
+        map(lambda t: globals()[t].makeTestSuite(),
             filter(lambda g: g.startswith('test_') and True, globals()))
     )
 

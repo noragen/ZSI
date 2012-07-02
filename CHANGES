@@ -5,7 +5,7 @@ Change for xxx released xxx:
     -   In SoapWriter, put nsdecls on body, not envelope
     -   Record facets (restrictions) in XMLSchema.py <vchen@datapower.com>
     -   Remove Send()'s kwargs out of _args list <efrain@bogotron.net>
-    -   Added support for file attachment using AXIS apachesoap:DataHandler to 
+    -   Added support for file attachment using AXIS apachesoap:DataHandler to
         reference it in the WSDL (only client side) lclement@sf.net
 
 Change for 2.1.0_a1 released 31-Oct-2007:
@@ -15,10 +15,10 @@ Change for 2.1.0_a1 released 31-Oct-2007:
 Change for 2.0.0 released xxx:
     -   no more wsdl2dispatch, wsdl2py does it all
     -   simplified and consolidated various wsdl2py script options
-    -   wsdl2py added some soapheader support to client code. 
-    -   wsdl2py changed Locator accessors names to match the "port.name" 
+    -   wsdl2py added some soapheader support to client code.
+    -   wsdl2py changed Locator accessors names to match the "port.name"
         rather than the "portType.name"
-    -   wsdl2py changed generated Binding class names to match the "binding.name" 
+    -   wsdl2py changed generated Binding class names to match the "binding.name"
         rather than the "portType.name"
 
 Change for 2.0.0rc3 released xxx:
@@ -30,12 +30,12 @@ Change for 2.0.0rc3 released xxx:
     -   simplified and retooled Binding/NamedParamBinding and dispatch, added
         "typesmodule" back into Binding.  Now it's mirror image of dispatch.
     -   Microseconds to TCtime
-    -   BUG [ 1525567 ] Amazon ECommerce Issues: local element declarations 
-        overriding global element declarations with the same name within the 
+    -   BUG [ 1525567 ] Amazon ECommerce Issues: local element declarations
+        overriding global element declarations with the same name within the
         same namespace.
     -   new module "schema", contains "all" the code for dealing with global
         Schema instance.
-        
+
 Change for 2.0.0rc2 released 28-March-2006:
     -   Replace many/most id() with _get_idstr() to hide negative numbers
     -   Added ZSI.twisted package w/client and server, requires Python 2.4
@@ -69,7 +69,7 @@ Changes for 1.4, released 09-Sep-2003:
     -   Fixed bug where xmlns attribute was included in closing elements
     -   Added support for "wrapped" complexTypes in response messages
     -   TypeCode enabled classes now support parameters in the constructor
-    -   Automatic parsing of ComplexTypes in response messages 
+    -   Automatic parsing of ComplexTypes in response messages
     -   WSDL Parsing and operation invocation via ServiceProxy
     -   Tuple returned from dates and times (instead of a list)
     -   Arrays of ComplexTypes can now be deserialized

@@ -14,8 +14,8 @@ a specified set of object types.  Here's how:
     3.  Create a "base" typecode that uses TC.Choice to do the actual
         parsing and serializing.  Two versions are shown, below.
 Then you can instantiate, e.g., an Array that can handle multiple
-datatypes with: 
-    TC.Array("base-class-name", TC_Base(), "MyArray") 
+datatypes with:
+    TC.Array("base-class-name", TC_Base(), "MyArray")
 """
 
 class Base: pass

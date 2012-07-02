@@ -10,7 +10,7 @@ from ZSI import FaultException
 """
 Unittest for contacting Clearspace blog webservice
 
-WSDL:  
+WSDL:
 """
 
 # General targets
@@ -31,7 +31,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(ServiceTest, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -47,7 +47,7 @@ wsdl2py(['--complexType', '--schema','--output-dir=stubs', 'http://docs.oasis-op
 
 class BlogServiceTest(ServiceTestCase):
     """Test case for Clearspace sandbox, example how to use client WSSE:Security UsernameToken Profile
-    
+
 <wsdl:Envelope xmlns:soap="..." xmlns:wsse="..." >
    <wsdl:Header>
       <wsse:Security>

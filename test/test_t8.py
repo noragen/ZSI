@@ -60,8 +60,8 @@ class AnyTestCase(unittest.TestCase):
 
         sw = SoapWriter()
         sw.serialize(orig, typecode=TC.Any(pname="builtins", aslist=True))
-        
-        ps = ParsedSoap(str(sw)) 
+
+        ps = ParsedSoap(str(sw))
         parsed = ps.Parse(TC.Any())
         self.assertEqual(len(orig), len(parsed))
 
@@ -70,7 +70,7 @@ class AnyTestCase(unittest.TestCase):
         self.assertEqual(myStr, parsed[2])
         self.assertEqual(myDate[0:6], parsed[3][0:6])
         self.assertEqual(myFloat, parsed[4])
-        
+
         self.assertEqual(type(myInt), type(parsed[0]))
         self.assertEqual(type(myLong), type(parsed[1]))
         self.assertEqual(str, type(parsed[2]))

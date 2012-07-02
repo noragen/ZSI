@@ -5,7 +5,7 @@
 ###########################################################################
 import sys, time
 from ZSI.ServiceContainer import AsServer
-from DateService_server import simple_Date_Service as _DateService 
+from DateService_server import simple_Date_Service as _DateService
 
 class Service(_DateService):
     def soap_getCurrentDate(self, ps):
@@ -18,8 +18,8 @@ class Service(_DateService):
     def soap_getDate(self, ps):
         request,response = _DateService.soap_getDate(self, ps)
         response.Day = day = response.new_day()
-        _SetDay(day, offset=request.Offset, 
-                            date=request.Someday)       
+        _SetDay(day, offset=request.Offset,
+                            date=request.Someday)
         return request,response
 
 
@@ -53,13 +53,13 @@ def _SetDay(someDay, offset=None, date=None):
 
     someDay._year = newDate_tuple[0]
     someDay._month = newDate_tuple[1]
-    someDay._day = newDate_tuple[2] 
+    someDay._day = newDate_tuple[2]
     someDay._hour = newDate_tuple[3]
     someDay._minute = newDate_tuple[4]
     someDay._second = newDate_tuple[5]
     someDay._weekday = newDate_tuple[6]
     someDay._dayOfYear = newDate_tuple[7]
-    someDay._dst = newDate_tuple[8]      
+    someDay._dst = newDate_tuple[8]
     return someDay
 
 

@@ -9,7 +9,7 @@ from ZSI import FaultException
 """
 Unittest for contacting google adwords
 
-WSDL:  
+WSDL:
 """
 
 # General targets
@@ -30,7 +30,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(ServiceTest, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -43,10 +43,10 @@ class TrafficEstimatorServiceTest(ServiceTestCase):
     Reads header information from a file "adwords.properties", need to format this for ConfigParser
 
 [test_GoogleAdWords]
-email = 
-password = 
-useragent = 
-applicationtoken = 
+email =
+password =
+useragent =
+applicationtoken =
 
     """
     name = "test_GoogleAdWords"

@@ -29,12 +29,12 @@ class EchoServer:
 
     def Echo(self, input):
         return input * 3
-    
+
 # This using a derived server instead
 class EchoServIn(EchoServer_interface.EchoServer):
     def __init__(self, post='', **kw):
         EchoServer_interface.EchoServer.__init__(self, post, kw=kw)
-        
+
     def authorize(self, auth_info, post, action):
         print "Authorizing INHERIT Echo"
         ctx = GetSOAPContext()

@@ -20,7 +20,7 @@
     <part name="UserId" type="xsd:string"/>
   </message>
 
-  
+
   <portType name="Registration">
     <operation name="GetUser">
       <input message="tns:GetUserRequest"/>

@@ -7,7 +7,7 @@ import os, sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException, SoapWriter, ParsedSoap
 """
-Unittest 
+Unittest
 
 [ 1803439 ] ZSI.generate.Wsdl2PythonError: must specify part for doc/lit
 
@@ -24,7 +24,7 @@ http://www.ws-i.org/Profiles/BasicProfile-1.0-2004-04-16.html#WSDLMSGS
 Document styles to permit operations that can send or receive messages with
 empty soap:Bodys.
 
-Basically what needs to be done here is an empty <soap:Body> is sent...  
+Basically what needs to be done here is an empty <soap:Body> is sent...
 
 Now only ONE operation should be able to specify an message w/o a part (
 for doc/lit ), because the wire representation of each operation MUST be
@@ -51,7 +51,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(NoMessagePartTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -94,7 +94,7 @@ class NoMessagePartTestCase(ServiceTestCase):
     def test_dispatch_NoMessagePart(self):
         loc = self.client_module.NoMessagePartServerLocator()
         port = loc.getHelloServerSOAP11port_http(**self.getPortKWArgs())
-        
+
         ## NOTE: Should take no argument
         rsp = port.Hello()
         self.failUnless(rsp.Return == "XXX", "TODO")

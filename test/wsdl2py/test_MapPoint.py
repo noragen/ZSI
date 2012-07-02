@@ -7,9 +7,9 @@ import sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI.auth import AUTH
 """
-Unittest for contacting the Map Point Service.  
+Unittest for contacting the Map Point Service.
 
-WSDL:  
+WSDL:
 """
 # General targets
 def dispatch():
@@ -29,7 +29,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(MapPointTest, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -40,7 +40,7 @@ def all():
 
 class MapPointTest(ServiceTestCase):
     """Test case for OPCService Web service
-    
+
     """
     name = "test_MapPoint"
     client_file_name = "CommonService_client.py"
@@ -58,7 +58,7 @@ class MapPointTest(ServiceTestCase):
         kw = self.getPortKWArgs()
         #port = loc.getCommonServiceSoap(auth=(AUTH.httpdigest, "USERNAME", "PASSWORD"), **kw)
         port = loc.getCommonServiceSoap(**kw)
-        
+
         msg = self.client_module.GetVersionInfoSoapIn()
         try:
             rsp = port.GetVersionInfo(msg)
@@ -72,7 +72,7 @@ class MapPointTest(ServiceTestCase):
             rsp = port.GetVersionInfo(msg)
         except RuntimeError:
             pass
-        
+
 
 if __name__ == "__main__" :
     main()

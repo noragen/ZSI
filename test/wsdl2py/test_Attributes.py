@@ -11,10 +11,10 @@ from ZSI.writer import SoapWriter
 from ZSI.parse import ParsedSoap
 
 """
-Unittest for Bug Report 
-[ ] 
+Unittest for Bug Report
+[ ]
 
-XSD: test_Attributes.xsd  
+XSD: test_Attributes.xsd
 """
 
 # General targets
@@ -35,7 +35,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(AttributeTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -85,7 +85,7 @@ class AttributeTestCase(ServiceTestCase):
         pyobj.set_attribute_myHexBinary(myHexBinary)
         pyobj.set_attribute_myDuration(myGDateTime)
 
-        # Problems parsings 
+        # Problems parsings
         pyobj.set_attribute_myQName(myQName)
         pyobj.set_attribute_myGMonthDay(myGDateTime)
 
@@ -97,7 +97,7 @@ class AttributeTestCase(ServiceTestCase):
         sw = SoapWriter()
         sw.serialize(pyobj)
         soap = str(sw)
- 
+
         ps = ParsedSoap(soap)
         pyobj2 = ps.Parse(pyobj.typecode)
 
@@ -164,12 +164,12 @@ class AttributeTestCase(ServiceTestCase):
         sw = SoapWriter()
         sw.serialize(pyobj)
         soap = str(sw)
- 
+
         print soap
         ps = ParsedSoap(soap)
         pyobj2 = ps.Parse(pyobj.typecode)
 
-        test = pyobj2.get_attribute_myString() 
+        test = pyobj2.get_attribute_myString()
         self.failUnlessEqual(myString, str(test))
 
 

@@ -10,7 +10,7 @@ def main():
     port = locator.getExample()
     request = Example_services.EchoRequestWrapper()
     request._Message = MESSAGE
-    
+
     try:
         print ' Sending: %s' % MESSAGE
         response = port.echo(request)

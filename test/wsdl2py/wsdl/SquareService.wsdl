@@ -2,15 +2,15 @@
 
 
 
-<definitions name="SquareService" 
+<definitions name="SquareService"
 
- targetNamespace="http://dev-b.handel-dev.local:8080/SquareService"  
+ targetNamespace="http://dev-b.handel-dev.local:8080/SquareService"
 
- xmlns:tns="http://dev-b.handel-dev.local:8080/SquareService"   
+ xmlns:tns="http://dev-b.handel-dev.local:8080/SquareService"
 
- xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 
- xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
 
  xmlns="http://schemas.xmlsoap.org/wsdl/">
 
@@ -58,7 +58,7 @@
 
             <input>
 
-                <soap:body use="literal" 
+                <soap:body use="literal"
 
                  namespace="http://dev-b.handel-dev.local:8080/SquareService"/>
 
@@ -66,7 +66,7 @@
 
             <output>
 
-                <soap:body use="literal" 
+                <soap:body use="literal"
 
                  namespace="http://dev-b.handel-dev.local:8080/SquareService"/>
 

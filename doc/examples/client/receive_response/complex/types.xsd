@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
- 
+
 <schema targetNamespace="http://pycon.org/types"
   xmlns="http://www.w3.org/2001/XMLSchema"
   xmlns:tns="http://pycon.org/types">
- 
+
   <complexType name="User">
     <sequence>
       <element name="UserId" type="string"/>
@@ -11,5 +11,5 @@
       <element name="Age" type="integer"/>
     </sequence>
   </complexType>
- 
+
 </schema>

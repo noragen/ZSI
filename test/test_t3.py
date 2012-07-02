@@ -9,7 +9,7 @@ class t3TestCase(unittest.TestCase):
 
     def checkt3(self):
         a = None
-        try: 
+        try:
             3 / 0
         except Exception, e:
             a = e

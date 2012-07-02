@@ -22,7 +22,7 @@
 
     </xsd:schema>
     </types>
-	
+
     <message name="test">
         <part name='in' type='types:innerType'/>
     </message>

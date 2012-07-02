@@ -3,9 +3,9 @@
 WSDL_DEFINITION = '''<?xml version="1.0"?>
 
 <definitions name="InteropTest"
-    targetNamespace="http://soapinterop.org/" 
-    xmlns="http://schemas.xmlsoap.org/wsdl/" 
-    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" 
+    targetNamespace="http://soapinterop.org/"
+    xmlns="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
     xmlns:tns="http://soapinterop.org/">
 
   <import

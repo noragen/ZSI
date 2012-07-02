@@ -1,7 +1,7 @@
 \chapter{Examples}
 
-This chapter contains a number of examples to show off some of \ZSI{}'s 
-features.  It is broken down into client-side and server-side examples, and 
+This chapter contains a number of examples to show off some of \ZSI{}'s
+features.  It is broken down into client-side and server-side examples, and
 explores different implementation options \ZSI{} provides.
 
 \section{Server Side Examples}
@@ -21,7 +21,7 @@ as a CGI script, a SOAP message can be posted to that script's URL with any of
 \code{hello}, \code{echo}, or \code{average} as the request element,
 and the value returned by the function will be sent back.  These functions
 expect and return SOAP-ENC:arrayType instances which are marshalled into python
-\class{list} instances, this script interoperates with the 
+\class{list} instances, this script interoperates with the
 \class{client.Binding}.  For more information see \emph{Appendix A}.
 
 The \ZSI{} CGI dispatcher catches exceptions and sends back a SOAP fault.
@@ -38,7 +38,7 @@ into python \class{dict} instances, this script interoperates with the
 
 We will now show a more complete example of a robust web service implemented at
 the SOAP layer. It takes as input a player name and array of integers, and returns
-the average.  It is presented in sections, following the steps detailed above. 
+the average.  It is presented in sections, following the steps detailed above.
 A complete working example of this service is available in \emph{Appendix C}.
 
 The first section reads in a request, and parses the SOAP header.
@@ -115,7 +115,7 @@ except Exception, e:
 \end{verbatim}
 
 In the \method{serialize()} call above, the second parameter is optional, since
-\code{result} is an instance of the \class{Average} class, and the 
+\code{result} is an instance of the \class{Average} class, and the
 \code{Average.typecode} attribute is the typecode for class instances.
 
 
@@ -123,11 +123,11 @@ In the \method{serialize()} call above, the second parameter is optional, since
 
 The Apache module \code{mod_python} (see
 \url{http://www.modpython.org}) embeds Python within the Apache server.
-In order to expose operations within a module via mod_python, use the 
+In order to expose operations within a module via mod_python, use the
 \method{dispatch.AsHandler()} function.  The \method{dispatch.AsHandler()}
 function will dispatch requests to any operation defined in the module you
 pass it, which allows for multiple operations to be defined in a module.
-The only trick is to use __import__ to load the XML encodings your service 
+The only trick is to use __import__ to load the XML encodings your service
 expects.  This is a required workaround to avoid the pitfalls of restricted
 execution with respect to XML parsing.
 
@@ -222,9 +222,9 @@ def savePerson(person):
 
 In order for \ZSI{} to transparently deserialize the returned complex type into
 a \class{Person} instance, a module defining the class and its typecode can be
-passed into the \class{Binding}. It is also possible to explicitly tell \ZSI{} 
-what typecode to use by passing it as a parameter to the \method{Binding.Receive()} 
-method.  
+passed into the \class{Binding}. It is also possible to explicitly tell \ZSI{}
+what typecode to use by passing it as a parameter to the \method{Binding.Receive()}
+method.
 
 The following fragment shows both styles:
 
@@ -239,7 +239,7 @@ rsp = b.savePerson(person)
 
 \end{verbatim}
 
-Because the returned complex type is defined in a class present in 
+Because the returned complex type is defined in a class present in
 \var{typesmodule}, transparent deserialization is possible.  When sending
 complex types to the server, it is not necessary to list the module
 in \var{typesmodule}:

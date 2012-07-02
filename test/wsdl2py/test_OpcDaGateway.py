@@ -31,7 +31,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(OPCServiceTest, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -41,7 +41,7 @@ def all():
 
 class OPCServiceTest(ServiceTestCase):
     """Test case for OPCService Web service
-    
+
     def GetProperties(self, request):
     def Subscribe(self, request):
     def SubscriptionPolledRefresh(self, request):
@@ -71,22 +71,22 @@ class OPCServiceTest(ServiceTestCase):
         item.typecode.ofwhat[1].processContents = 'lax'
         item.Value = 123
         s = str(ZSI.SoapWriter().serialize(pyobj))
-        
+
         ps = ZSI.ParsedSoap(s)
         pyobj = ps.Parse(pyobj.typecode)
         for item in pyobj.RItemList.Items:
             item.Value
-        
+
     def test_net_Browse(self):
         """FaultException: The item path is not known to the server.
         """
         loc = self.client_module.OpcXmlDaSrvLocator()
         port = loc.getOpcXmlDaSrvSoap(**self.getPortKWArgs())
-        
+
         msg = self.client_module.BrowseSoapIn()
         msg._PropertyNames=['Static']
         msg._attrs = {'ItemPath':'Static'}
-        
+
         self.failUnless(\
             getattr(msg.typecode, 'attribute_typecode_dict', None) is not None,
              )
@@ -98,7 +98,7 @@ class OPCServiceTest(ServiceTestCase):
 #        """FaultException: The item path is not known to the server.
 #        """
 #        msg = self.getInputMessageInstance('Read')
-#        
+#
 #        #msg = ReadSoapIn()
 #        op = msg.new_Options()
 #        msg.Options = op
@@ -116,20 +116,20 @@ class OPCServiceTest(ServiceTestCase):
 #        item.set_attribute_ItemPath("")
 #        item.set_attribute_ItemName("Staic.Analog Types.Int")
 #        item.set_attribute_ClientItemHandle("")
-#        
+#
 #        self.failUnless(\
 #            getattr(msg.typecode, 'attribute_typecode_dict', None) is not None,
 #             )
 #
 #        self._ports[0].Read(msg)
-#        
+#
 
 #    def hangs_test_net_GetProperties(self):
-#        """sending an empty GetProperties request, 
+#        """sending an empty GetProperties request,
 #        receiving empty response.
-#        
-#        <GetPropertiesResult RcvTime="2005-12-16T13:23:55.8593750-05:00" 
-#            ReplyTime="2005-12-16T13:24:00.1093750-05:00" 
+#
+#        <GetPropertiesResult RcvTime="2005-12-16T13:23:55.8593750-05:00"
+#            ReplyTime="2005-12-16T13:24:00.1093750-05:00"
 #            RevisedLocaleID="en-us" ServerState="running" />
 #        """
 #        operationName = 'GetProperties'
@@ -138,15 +138,15 @@ class OPCServiceTest(ServiceTestCase):
 #        msg._PropertyNames
 #        response = self._ports[0].GetProperties(msg)
 #        result = response._GetPropertiesResult
-#        
+#
 #        # not sure these attributes are required but check for them.
 #        self.failUnless(isinstance(getattr(result, '_attrs', None), dict))
 #        for k in ['RcvTime','ReplyTime','RevisedLocaleID','ServerState']:
 #            self.failUnless(result._attrs.has_key(k))
-#            
+#
 #        self.failUnless(len(response._PropertyLists) == 0)
 #        self.failUnless(len(response._Errors) == 0)
-        
+
 
 
 

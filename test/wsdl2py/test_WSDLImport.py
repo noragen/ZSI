@@ -11,8 +11,8 @@ from ZSI.writer import SoapWriter
 from ZSI.parse import ParsedSoap
 
 """
-Unittest for Bug Report 
-[ ] 
+Unittest for Bug Report
+[ ]
 
 test_WSDLImport.wsdl
 test_WSDLImport2.wsdl
@@ -37,7 +37,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(WSDLImportTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()

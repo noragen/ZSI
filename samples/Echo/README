@@ -33,7 +33,7 @@ Authorization Callbacks
 
 This functionality lets you define a method on your implementation
 object that can be invoked to authorize calls to it from the
-underlying SOAP interface. 
+underlying SOAP interface.
 
 ServiceContainer Enhancements
 -----------------------------

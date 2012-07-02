@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions 
+<definitions
   xmlns="http://schemas.xmlsoap.org/wsdl/"
   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
   xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
@@ -54,21 +54,21 @@
   </portType>
 
   <binding name="BasicServer" type="tns:BasicServer">
-    <soap:binding style="document" 
+    <soap:binding style="document"
                   transport="http://schemas.xmlsoap.org/soap/http"/>
     <operation name="Basic">
       <soap:operation soapAction="Basic"/>
 	<input>
-   	  <soap:body use="literal"/> 
+   	  <soap:body use="literal"/>
 	</input>
 	<output>
-	  <soap:body use="literal"/> 
+	  <soap:body use="literal"/>
 	</output>
     </operation>
     <operation name="BasicOneWay">
       <soap:operation soapAction="BasicOneWay"/>
 	<input>
-   	  <soap:body use="literal"/> 
+   	  <soap:body use="literal"/>
 	</input>
     </operation>
   </binding>

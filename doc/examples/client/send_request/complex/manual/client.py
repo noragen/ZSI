@@ -15,7 +15,7 @@ def main():
                                 tracefile=sys.stdout)
     response = registration.RegisterUser(user)
     print response
-    
+
 
 if __name__ == '__main__':
     main()

@@ -8,8 +8,8 @@ from ZSI import ParsedSoap, SoapWriter, TC
 
 From rfc2396:
 
-"If the data for a URI component would conflict with the reserved 
-purpose, then the conflicting data must be escaped before forming the 
+"If the data for a URI component would conflict with the reserved
+purpose, then the conflicting data must be escaped before forming the
 URI."
 
 reserved = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" |
@@ -30,7 +30,7 @@ append ":" to result
 class TestCase(unittest.TestCase):
     def check_uri_quoting(self):
         """ all reserved characters used for reserved purpose.
-        """ 
+        """
         sw1 = SoapWriter(envelope=False)
         tc1= TC.URI('sourceforge')
         orig = 'https://sourceforge.net/tracker/index.php?func=detail&aid=1520092&group_id=26590&atid=387667'

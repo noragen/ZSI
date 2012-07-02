@@ -5,7 +5,7 @@ from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException, Fault
 from ConfigParser import ConfigParser, NoSectionError, NoOptionError
 """
-Unittest 
+Unittest
 
 WSDL:  BasicComm.wsdl
 """
@@ -33,7 +33,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(BasicCommTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -58,7 +58,7 @@ class BasicCommTestCase(ServiceTestCase):
     def test_dispatch_Basic(self):
         loc = self.client_module.BasicServerLocator()
         port = loc.getBasicServer(**self.getPortKWArgs())
-        
+
         msg = self.client_module.BasicRequest()
         msg._BasicIn = 'bla bla bla'
         rsp = port.Basic(msg)
@@ -68,11 +68,11 @@ class BasicCommTestCase(ServiceTestCase):
         # no soap response.
         import httplib
         msg = u"""
-            <SOAP-ENV:Envelope 
-               xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-               xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-               xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-               xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+            <SOAP-ENV:Envelope
+               xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+               xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                  <SOAP-ENV:Header></SOAP-ENV:Header>
                  <SOAP-ENV:Body xmlns:ns1="urn:ZSI:examples">
@@ -101,7 +101,7 @@ class BasicCommTestCase(ServiceTestCase):
     def test_dispatch_BasicOneWay(self):
         loc = self.client_module.BasicServerLocator()
         port = loc.getBasicServer(**self.getPortKWArgs())
-        
+
         msg = self.client_module.BasicOneWayRequest()
         msg.BasicIn = 'bla bla bla'
         rsp = port.BasicOneWay(msg)
@@ -112,7 +112,7 @@ class BasicCommTestCase(ServiceTestCase):
         """
         loc = self.client_module.BasicServerLocator()
         port = loc.getBasicServer(**self.getPortKWArgs())
-        
+
         msg = self.client_module.BasicOneWayRequest()
         msg.BasicIn = 'fault'
         self.failUnlessRaises(FaultException, port.BasicOneWay, msg)

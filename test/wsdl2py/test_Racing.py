@@ -7,9 +7,9 @@ import os, sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException, ParsedSoap, SoapWriter
 """
-Unittest 
+Unittest
 
-WSDL:   
+WSDL:
 """
 
 # General targets
@@ -30,7 +30,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(TestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -50,7 +50,7 @@ class TestCase(ServiceTestCase):
 
     def test_local_anyType(self):
         """rpc/lit, testing if <any/> lax content handling
-        should get back dicts and strings 
+        should get back dicts and strings
         """
         ps = ParsedSoap(MSG)
         pyobj = ps.Parse(self.client_module.EventApproximatesSoapOut.typecode)
@@ -69,8 +69,8 @@ class TestCase(ServiceTestCase):
         pyobj2 = ps.Parse(self.client_module.EventApproximatesSoapOut.typecode)
         print "EAR: ", pyobj2.EventApproximatesResult
         print "Any: ", pyobj2.EventApproximatesResult.Any
-        
-        
+
+
         self.failUnless(pyobj.EventApproximatesResult.Any == pyobj2.EventApproximatesResult.Any,
             'Failed match:\n %s\n\n%s' %(pyobj.EventApproximatesResult.Any, pyobj2.EventApproximatesResult.Any))
 

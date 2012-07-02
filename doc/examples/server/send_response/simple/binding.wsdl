@@ -14,7 +14,7 @@
           location="interface.wsdl"/>
 
   <binding name="Binding" type="tns:Example">
-    <soap:binding style="rpc" 
+    <soap:binding style="rpc"
                       transport="http://schemas.xmlsoap.org/soap/http"/>
     <operation name="echo">
       <soap:operation soapAction="urn:Example#echo"/>
@@ -25,7 +25,7 @@
       <output>
         <soap:body encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"
                     namespace="urn:Example" use="encoded"/>
-      </output> 
+      </output>
     </operation>
   </binding>
 

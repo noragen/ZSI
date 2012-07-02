@@ -15,7 +15,7 @@ from xml.dom import Node
 """
 Unittest for NVO Admin.
 
-WSDL:  
+WSDL:
 """
 #from ZSI.wstools.logging import setBasicLoggerDEBUG; setBasicLoggerDEBUG()
 
@@ -48,7 +48,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(ServiceTest, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -70,7 +70,7 @@ class NVOAdmin(ServiceTestCase):
         self.wsdl2py_args.append('-b')
 
     def test_local_serialize_schema(self):
-        from ZSI import SoapWriter    
+        from ZSI import SoapWriter
         from ZSI import _child_elements
         from xml.dom.ext.reader import PyExpat
         msg = self.client_module.DSQueryRegistrySoapOut()
@@ -90,7 +90,7 @@ class NVOAdmin(ServiceTestCase):
         sw = SoapWriter()
         sw.serialize(msg)
         soap = str(sw)
-        print soap        
+        print soap
 
         ps = ParsedSoap(soap)
         pyobj = ps.Parse(msg.typecode)
@@ -98,7 +98,7 @@ class NVOAdmin(ServiceTestCase):
         self.failUnless(_is_element(pyobj.DSQueryRegistryResult.Schema))
         print _get_element_nsuri_name(pyobj.DSQueryRegistryResult.Schema)
         self.failUnlessEqual(_get_element_nsuri_name(pyobj.DSQueryRegistryResult.Schema), (u'http://www.w3.org/2001/XMLSchema', u'schema'))
-        
+
 
 ServiceTest = NVOAdmin
 

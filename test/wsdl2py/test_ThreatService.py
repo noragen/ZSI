@@ -32,7 +32,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(HomelandTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -51,7 +51,7 @@ class HomelandTestCase(ServiceTestCase):
     def __init__(self, methodName):
         ServiceTestCase.__init__(self, methodName)
         self.wsdl2py_args.append('-b')
-    
+
     def test_net_threatLevel(self):
         loc = self.client_module.Current_Homeland_Security_Threat_LevelLocator()
         port = loc.getthreat_cfc(**self.getPortKWArgs())
@@ -61,8 +61,8 @@ class HomelandTestCase(ServiceTestCase):
         for item in rsp.ThreatLevelReturn.Item:
             item['key']
             item['value']
-        
-    
+
+
 
 if __name__ == "__main__" :
     main()

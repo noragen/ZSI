@@ -15,7 +15,7 @@ def main():
     print '   Age: %d' % response._User._Age
     print '  Name: %s' % response._User._Name
     print 'UserId: %s' % response._User._UserId
-    
+
 
 if __name__ == '__main__':
     main()

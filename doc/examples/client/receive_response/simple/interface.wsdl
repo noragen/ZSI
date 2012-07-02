@@ -17,7 +17,7 @@
     <part name="Message" type="xsd:string"/>
   </message>
 
-  
+
   <portType name="Example">
     <operation name="echo">
       <input message="tns:EchoRequest"/>

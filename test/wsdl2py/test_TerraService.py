@@ -36,7 +36,7 @@ class TerraServiceTest(ServiceTestCase):
         request._place._State = 'Washington'
         request._place._Country = 'United States'
         response = self.RPC(operationName, request)
-        
+
 
 
     def test_ConvertLonLatPtToNearestPlace(self):
@@ -46,24 +46,24 @@ class TerraServiceTest(ServiceTestCase):
         request._point = self._moduleDict[self._typeModuleName].ns1.LonLatPt_Def()
         request._point._Lon = -122.643
         request._point._Lat = 48.297
-        response = self.RPC(operationName, request)   
-    
+        response = self.RPC(operationName, request)
+
     def test_ConvertLonLatPtToUtmPt(self):
         operationName = 'ConvertLonLatPtToUtmPt'
         request = self.getInputMessageInstance(operationName)
         request._point = self._moduleDict[self._typeModuleName].ns1.LonLatPt_Def()
         request._point._Lon = -122.643
         request._point._Lat = 48.297
-        response = self.RPC(operationName, request)  
+        response = self.RPC(operationName, request)
 
     def test_ConvertUtmPtToLonLatPt(self):
         operationName = 'ConvertUtmPtToLonLatPt'
-        request = self.getInputMessageInstance(operationName) 
+        request = self.getInputMessageInstance(operationName)
         request._utm = self._moduleDict[self._typeModuleName].ns1.UtmPt_Def()
         request._utm._X =  526703.512403
         request._utm._Y =  5348595.96493
         request._utm._Zone =  10
-        response = self.RPC(operationName, request)  
+        response = self.RPC(operationName, request)
 
     def test_CountPlacesInRect(self):
         operationName = 'CountPlacesInRect'
@@ -76,7 +76,7 @@ class TerraServiceTest(ServiceTestCase):
         request._lowerright._Lat = request._upperleft._Lon - 1.0
         request._ptype = "HillMountain"
         response = self.RPC(operationName, request)
-    
+
     def test_GetAreaFromPt(self):
         operationName = 'GetAreaFromPt'
         request = self.getInputMessageInstance(operationName)
@@ -127,7 +127,7 @@ class TerraServiceTest(ServiceTestCase):
         # derived type (enum) problem
         # skipping it for now
 
-              
+
         # derived type (enum) problem
         # also inconsistent timeout problem for this call
 
@@ -188,7 +188,7 @@ class TerraServiceTest(ServiceTestCase):
 
 class TerraServiceTestFailures(ServiceTestCase):
     name = "test_TerraService"
-    
+
     def test_ConvertPlaceToLonLatPt_x1(self):
         """
         This test should fail
@@ -199,10 +199,10 @@ class TerraServiceTestFailures(ServiceTestCase):
         request._place._City = 1
         request._place._State = 'Washington'
         request._place._Country = 'United States'
-        
+
         try:
             response = self.RPC(operationName, request)
-            
+
         except Exception, msg:
             exceptionString = str(msg)
             if SERIALIZE_PATTERN.match(exceptionString):

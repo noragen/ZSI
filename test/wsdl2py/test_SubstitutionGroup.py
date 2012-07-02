@@ -12,9 +12,9 @@ from ZSI.parse import ParsedSoap
 
 """
 Unittest for substitutionGroup
-[ ] 
+[ ]
 
-XSD: 
+XSD:
 """
 
 # General targets
@@ -35,7 +35,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(SubstitutionGroupTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -75,7 +75,7 @@ class SubstitutionGroupTestCase(ServiceTestCase):
         p2 = ps.Parse(GED("urn:subGroup:types", "holder"))
         b2 = p2.BaseElt[0]
         c2 = p2.BaseElt[1]
- 
+
         self.failUnlessEqual(b1.Base, b2.Base)
         self.failUnlessEqual(c1.Base, c2.Base)
         self.failUnlessEqual(c1.Child, c2.Child)

@@ -27,7 +27,7 @@ class t6TestCase(unittest.TestCase):
             self.fail()
         except Exception, e:
             # Faulted while processing; assume it's in the header.
-            print >>OUT, FaultFromException(e, 1, sys.exc_info()[2]).AsSOAP() 
+            print >>OUT, FaultFromException(e, 1, sys.exc_info()[2]).AsSOAP()
             self.fail()
 
         try:
@@ -37,17 +37,17 @@ class t6TestCase(unittest.TestCase):
             print >>OUT, FaultFromException(e, 0, sys.exc_info()[2]).AsSOAP()
             self.fail()
 
-        self.failUnlessEqual(dict['stringtest'], strExtTest, 
+        self.failUnlessEqual(dict['stringtest'], strExtTest,
                             "Failed to extract stringtest correctly")
-        #print base64.encodestring(cid['partii@zolera.com'].read()) 
+        #print base64.encodestring(cid['partii@zolera.com'].read())
         v = dict['b64']
-        #print type(v), 'is type(v)' 
+        #print type(v), 'is type(v)'
         self.failUnlessEqual(cid['partii@zolera.com'].getvalue(), v,
                                     "mismatch")
-        #print base64.encodestring(v)             
-        #from ZSI.wstools.c14n import Canonicalize 
-        #z = dict['xmltest'] 
-        #print type(z), z 
+        #print base64.encodestring(v)
+        #from ZSI.wstools.c14n import Canonicalize
+        #z = dict['xmltest']
+        #print type(z), z
         #print Canonicalize(z)
 
 def makeTestSuite():
@@ -64,7 +64,7 @@ typecode = TC.Struct(None, [
                 TC.String('stringtest'),
                 TC.XML('xmltest'),
             ])
-                                                            
+
 intext='''Return-Path: <rsalz@zolera.com>
 Received: from zolera.com (os390.zolera.com [10.0.1.9])
         by zolera.com (8.11.0/8.11.0) with ESMTP id f57I2sf00832

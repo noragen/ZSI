@@ -9,7 +9,7 @@ from ZSI import FaultException, TC
 from ZSI.schema import GED, GTD
 
 """
-Unittest 
+Unittest
 
 WSDL:  ../../samples/Echo/Echo.wsdl
 """
@@ -32,7 +32,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(EchoTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -62,7 +62,7 @@ class EchoTestCase(ServiceTestCase):
     def test_dispatch_Echo(self):
         loc = self.client_module.EchoWSAddr200403ServerLocator()
         port = loc.getport(**self.getPortKWArgs())
-        
+
         msg = self.client_module.EchoRequest()
         msg.EchoIn = 'bla bla bla'
         rsp = port.Echo(msg)
@@ -99,7 +99,7 @@ class EchoTestCase(ServiceTestCase):
         epr = GED('http://schemas.xmlsoap.org/ws/2004/03/addressing','EndpointReference').pyclass()
         epr.Address = 'urn:whatever'
         epr.ReferenceProperties = epr.new_ReferenceProperties()
-        class Xstr(str): 
+        class Xstr(str):
             typecode = TC.String('mystr')
 
         epr.ReferenceProperties.Any = [Xstr('whatever'),]
@@ -115,7 +115,7 @@ class EchoTestCase(ServiceTestCase):
         epr = GED('http://schemas.xmlsoap.org/ws/2004/03/addressing','EndpointReference').pyclass()
         epr.Address = 'urn:whatever'
         epr.ReferenceProperties = epr.new_ReferenceProperties()
-        class Xstr(str): 
+        class Xstr(str):
             typecode = TC.String(('urn:josh','mystr'))
 
         epr.ReferenceProperties.Any = [Xstr('whatever'),]

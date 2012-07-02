@@ -2,11 +2,11 @@
 \section{Code Generation from WSDL and XML Schema}
 
 This section covers wsdl2py, the second way ZSI provides to access WSDL
-services.  Given the path to a WSDL service, two files are generated, a 
+services.  Given the path to a WSDL service, two files are generated, a
 'service' file and a 'types' file, that one can then use to access the
 service.  As an example, we will use the search service provided by Wolfram
-Research Inc.\copyright{}, \url{http://webservices.wolfram.com/wolframsearch/}, 
-which provides a service for searching the popular MathWorld site, 
+Research Inc.\copyright{}, \url{http://webservices.wolfram.com/wolframsearch/},
+which provides a service for searching the popular MathWorld site,
 \url{http://mathworld.wolfram.com/}, among others.
 
 \begin{verbatim}
@@ -19,9 +19,9 @@ In this example, the service name is {\it WolframSearchService}.  Therefore the 
 {\it WolframSearchService_services.py} and {\it WolframSearchService_services_types.py}
 should be generated.
 
-The 'service' file contains locator, portType, and message classes.  
-A locator instance is used to get an instance of a portType class, 
-which is a remote proxy object. Message instances are sent and received 
+The 'service' file contains locator, portType, and message classes.
+A locator instance is used to get an instance of a portType class,
+which is a remote proxy object. Message instances are sent and received
 through the methods of the portType instance.
 
 The 'types' file contains class representations of the definitions and
@@ -64,7 +64,7 @@ Now each section of the code above will be explained.
 from WolframSearchService_client import *
 \end{verbatim}
 
-We are primarily interested in the service locator that is imported.  The 
+We are primarily interested in the service locator that is imported.  The
 binding proxy and classes for all the messages are additionally imported.
 Look at the {\it WolframSearchService_services.py} file for more information.
 
@@ -77,9 +77,9 @@ Using an instance of the locator, we fetch an instance of the port proxy
 which is used for invoking the remote methods provided by the service.  In
 this case the default {\it location} specified in the {\it wsdlsoap:address}
 element is used.  You can optionally pass a url to the port getter method to
-specify an alternate location to be used.  The {\it portType} - {\it name} 
+specify an alternate location to be used.  The {\it portType} - {\it name}
 attribute is used to determine the method name to fetch a port proxy instance.
-In this example, the port name is {\it WolframSearchmyPortType}, hence the 
+In this example, the port name is {\it WolframSearchmyPortType}, hence the
 method of the locator for fetching the proxy is {\it getWolframSearchmyPortType}.
 
 The first step in calling {\it WolframSearch} is to create a request object
@@ -95,10 +95,10 @@ req.Options.Query = 'newton'
 
 Once a request object is created we need to populate the instance with the
 information we want to use in our request.  This is where the {\tt --complexType}
-option we passed to wsdl2py will come in handy.  This caused the creation of 
-functions for getting and setting elements and attributes of the type, class 
+option we passed to wsdl2py will come in handy.  This caused the creation of
+functions for getting and setting elements and attributes of the type, class
 properties for each element, and convenience functions for creating new instances
-of elements of complex types.  This functionality is explained in detail in 
+of elements of complex types.  This functionality is explained in detail in
 subsection~\ref{subsubsection:complexType}.
 
 Once the request instance is populated, calling the remote service is easy.  Using
@@ -120,4 +120,4 @@ print 'Search Time:', resp.Result.SearchTime
 \end{verbatim}
 
 Refer to the wsdl for {\it WolframSearchService} for more details on the
-returned information. 
+returned information.

@@ -22,7 +22,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         (stdout, stderr) = p.communicate(xml_in)
         code = 200
-        if stdout.find('Fault') >= 0: code = 500 
+        if stdout.find('Fault') >= 0: code = 500
         self.send_response(code)
         self.send_header('Content-type', 'text/xml; charset="utf-8"')
         self.send_header('Content-Length', str(len(stdout)))
@@ -54,7 +54,7 @@ class Average:
 Average.typecode = TC.Struct(Average, [
                                 TC.Integer('average'),
                                 ], 'GetAverageResponse')
-\end{verbatim}                          
+\end{verbatim}
 \subsection{player script}
 \begin{verbatim}
 #!/usr/bin/env python
@@ -123,14 +123,14 @@ if __name__ == '__main__':
 
 \section{SOAP Trace}
 
-\subsection{GetAverage} 
+\subsection{GetAverage}
 \begin{verbatim}
-$./client.py 
+$./client.py
 _________________________________ Thu Oct  5 14:57:39 2006 REQUEST:
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -153,10 +153,10 @@ Date: Thu, 05 Oct 2006 21:57:39 GMT
 Content-type: text/xml; charset="utf-8"
 Content-Length: 431
 
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+	xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+	xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -173,12 +173,12 @@ Content-Length: 431
 \subsection{fault} Purposely send a incorrect \emph{Nae} element for the
 \emph{Name}.
 \begin{verbatim}
-$./client.py 
+$./client.py
 _________________________________ Thu Oct  5 14:33:25 2006 REQUEST:
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -197,10 +197,10 @@ _________________________________ Thu Oct  5 14:33:26 2006 RESPONSE:
 500
 Internal Server Error
 
-<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" 
-xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
-xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" 
-xmlns:xsd="http://www.w3.org/2001/XMLSchema" 
+<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/"
+xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+xmlns:ZSI="http://www.zolera.com/schemas/ZSI/"
+xmlns:xsd="http://www.w3.org/2001/XMLSchema"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<SOAP-ENV:Header></SOAP-ENV:Header>
 	<SOAP-ENV:Body>
@@ -218,9 +218,9 @@ Traceback (most recent call last):
   File "./player_client.py", line 25, in ?
     pyobj = b.RPC(None, None, Player("Josh",10,20,30), replytype=Average)
   File "/private/var/www/htdocs/guide/client.py", line 176, in RPC
-    
+
   File "/private/var/www/htdocs/guide/client.py", line 420, in Receive
-    
+
 ZSI.FaultException: Unparseable message
 <Element Node at 5f9f58: Name='Eoe440' with 0 attributes and 1 children>
 \end{verbatim}

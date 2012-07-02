@@ -12,10 +12,10 @@ from ZSI.writer import SoapWriter
 from xml.etree import ElementTree
 
 """
-Unittest for Bug Report 
+Unittest for Bug Report
 [ 1853368 ] "elementFormDefault='unqualified'" mishandled
 
-WSDL:  
+WSDL:
 """
 
 # General targets
@@ -36,7 +36,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(UnqualifiedTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -47,15 +47,15 @@ def all():
 class UnqualifiedTestCase(ServiceTestCase):
     name = "test_Unqualified"
     types_file_name = "test_Unqualified_xsd_types.py"
- 
+
     def __init__(self, methodName):
         ServiceTestCase.__init__(self, methodName)
         self.wsdl2py_args.append('-b')
         self.wsdl2py_args.append('-x')
- 
+
     def test_local_serialize1(self):
         _test_local_serialize1()
- 
+
 def _test_local_serialize1():
         """
       <element name="GlobalElementLocalType">
@@ -94,16 +94,16 @@ def _test_local_serialize1():
         print xml
 
         et = ElementTree.fromstring(xml)
- 
+
         # GlobalElementLocalType
         assert(et.tag == '{urn:test}GlobalElementLocalType'), "root GED"
 
-        for i,j in zip([ 'Unqualified1', 'Unqualified2', 'Unqualified3', 'Unqualified4'], 
+        for i,j in zip([ 'Unqualified1', 'Unqualified2', 'Unqualified3', 'Unqualified4'],
             map(lambda c: c.tag, et.getchildren())):
 
             assert(i == j), 'Match Failed: expected "%s" not "%s"' %(i,j)
-        
-        
+
+
 
 if __name__ == "__main__" :
     main()

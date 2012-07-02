@@ -19,11 +19,11 @@ def dispatch():
 def local():
     """Run all local tests"""
     return _localTestSuite(broke=False)
-    
+
 def net():
     """Run all network tests"""
     return _netTestSuite(broke=False)
-    
+
 def all():
     """Run all tests"""
     return _allTestSuite(broke=False)
@@ -41,8 +41,8 @@ def rpcLitTestSuite():
 def rpcEncTestSuite():
     """Run all rpc/enc network tests"""
     return _netTestSuite(broke=False, document=False, literal=False)
-    
-    
+
+
 # Low level functions
 def _allTestSuite(document=None, literal=None, broke=None):
     return _makeTestSuite('all', document, literal, broke)
@@ -52,15 +52,15 @@ def _netTestSuite(document=None, literal=None, broke=None):
 
 def _localTestSuite(document=None, literal=None, broke=None):
     return _makeTestSuite('local', document, literal, broke)
-    
+
 def _dispatchTestSuite(document=None, literal=None, broke=None):
     return _makeTestSuite('dispatch', document, literal, broke)
 
-    
+
 def _makeTestSuite(test, document=None, literal=None, broke=None):
-    """Return a test suite containing all test cases that satisfy 
+    """Return a test suite containing all test cases that satisfy
     the parameters. None means don't check.
-    
+
     Parameters:
        test -- "net" run network tests, "local" run local tests,
            "dispatch" run dispatch tests, "all" run all tests.
@@ -70,7 +70,7 @@ def _makeTestSuite(test, document=None, literal=None, broke=None):
     """
     assert test in ['net', 'local', 'dispatch', 'all'],(
         'test must be net, local, dispatch, or all')
-    
+
     cp = CONFIG_PARSER
     testSections = []
     sections = [\
@@ -84,7 +84,7 @@ def _makeTestSuite(test, document=None, literal=None, broke=None):
             (sec, (None,boo(sec,DOCUMENT)), (None,boo(sec,LITERAL)), (None,boo(sec,BROKE))), sections):
         if document in d and literal in l and broke in b:
             testSections.append(s)
-        
+
     suite = unittest.TestSuite()
     for section in testSections:
         moduleList = cp.get(section, TESTS).split()
@@ -92,14 +92,14 @@ def _makeTestSuite(test, document=None, literal=None, broke=None):
             def _warn_empty():
                 warnings.warn('"%s" has no test "%s"' %(module, test))
                 return unittest.TestSuite()
-                
+
             s = getattr(module, test, _warn_empty)()
             suite.addTest(s)
     return suite
 
-   
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     gridLog(prog="runTests.py", zsi="v%d.%d.%d" % version.Version, event="zsi.test.wsdl2py.runTests.ping")
     main()
-    
+
 

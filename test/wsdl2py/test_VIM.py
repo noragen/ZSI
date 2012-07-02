@@ -7,7 +7,7 @@ import os, sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException, ParsedSoap, SoapWriter
 """
-Unittest 
+Unittest
 
 WSDL:  wsdl/vim.wsdl
 """
@@ -30,7 +30,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(VIMTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -93,7 +93,7 @@ class VIMTestCase(ServiceTestCase):
 </soapenv:Body>
 </soapenv:Envelope>"""
 
-        # Parse it out 
+        # Parse it out
         ps = ParsedSoap(MSG)
         pyobj = ps.Parse( self.client_module.RetrieveServiceContentResponseMsg.typecode )
         sessionMgr = pyobj.Returnval.SessionManager

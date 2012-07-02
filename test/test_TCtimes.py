@@ -22,7 +22,7 @@ class TestCase(unittest.TestCase):
         stamp = tc.get_formatted_content(tmp)
         #print "%s -> %s" % (data, str(tmp))
 
-        self.failUnless(stamp == correct, 
+        self.failUnless(stamp == correct,
             '%s with local offset(%s): expecting "%s" got "%s"' %(
             msg, data, correct, stamp))
 
@@ -66,7 +66,7 @@ class TestCase(unittest.TestCase):
 
     def check_valid_dateTime(self):
         typecode = TC.gDateTime()
-        for i in ('1968-04-02T13:20:00', '1968-04-02T13:20:15.5', 
+        for i in ('1968-04-02T13:20:00', '1968-04-02T13:20:15.5',
             '1968-04-02T13:20:00-05:00', '1968-04-02T13:20:00Z'):
             data = typecode.text_to_data(i, None, None)
             text = typecode.get_formatted_content(data)

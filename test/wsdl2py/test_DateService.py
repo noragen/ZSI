@@ -10,7 +10,7 @@ from ServiceTest import main, ServiceTestCase, ServiceTestSuite, TestException
 """
 Unittest for contacting the DateService rpc/literal tests.
 
-From the paper "Interoperable WSDL/SOAP web services introduction: 
+From the paper "Interoperable WSDL/SOAP web services introduction:
 Python ZSI, Excel XP, gSOAP C/C++ & Applix SS", Holger Joukl
 
 WSDL: DateService.wsdl
@@ -34,7 +34,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(Test, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -53,10 +53,10 @@ class Test(ServiceTestCase):
     def __init__(self, methodName):
         ServiceTestCase.__init__(self, methodName)
         self.wsdl2py_args.append('-b')
-    
+
     #def test_local_getDate(self):
     #    from ZSI.writer import SoapWriter
-        
+
     def test_dispatch_getCurrentDate_getDate(self):
         offset = 9
         loc = self.client_module.simple_Date_ServiceLocator()
@@ -65,7 +65,7 @@ class Test(ServiceTestCase):
         msg = self.client_module.getCurrentDateRequest()
         msg.Input = "Test"
         rsp = port.getCurrentDate(msg)
-        
+
         today = rsp.Today
         today.Month
         today.Day
@@ -94,7 +94,7 @@ def _make_asctime(date_object):
                  )
     return time.asctime(timeTuple)
 
-        
+
 
 if __name__ == "__main__" :
     main()

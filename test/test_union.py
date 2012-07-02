@@ -4,14 +4,14 @@ import unittest
 import sys
 from cStringIO import StringIO
 
-import ZSI 
+import ZSI
 from ZSI import _get_element_nsuri_name
 from ZSI.schema import GED, TypeDefinition, ElementDeclaration
 from ZSI.parse import ParsedSoap
 from ZSI.wstools.c14n import Canonicalize
 from ZSI.wstools.Namespaces import WSA200403, SOAP
 
-# 
+#
 # Generated code
 class ns3:
     class localPAssertionId_Dec(ElementDeclaration):
@@ -63,7 +63,7 @@ class UnionTestCase(unittest.TestCase):
             ps = ParsedSoap(xml)
             pyobj = ps.Parse(typecode)
 
-            # Union Limitation:  
+            # Union Limitation:
             #     currently it tries to parse it sequentially via memberTypes,
             #     so string is going to parse the URI when we want anyURI
             self.failUnless(value == pyobj, 'Expected equivalent')
@@ -77,7 +77,7 @@ class UnionTestCase(unittest.TestCase):
         date = typecode.text_to_data("2002-10-30T12:30:00Z", None, None)
         self.assertEquals((2002, 10, 30), date[:3], "Fail to parse dateTime")
         self.assertRaises(EvaluateException, typecode.text_to_data, "urn:string", None, _PS())
-        
+
 
 def makeTestSuite():
     suite = unittest.TestSuite()
@@ -87,6 +87,6 @@ def makeTestSuite():
 def main():
     unittest.main(defaultTest="makeTestSuite")
 
-if __name__ == '__main__': 
+if __name__ == '__main__':
     main()
 

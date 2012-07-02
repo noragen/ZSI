@@ -7,7 +7,7 @@ import sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException
 """
-Unittest for contacting 
+Unittest for contacting
 
 WSDL:  http://webservices.sabre.com/wsdl/sabreXML1.0.00/res/SessionCreateRQ.wsdl
 """
@@ -31,7 +31,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(ServiceTest, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -41,7 +41,7 @@ def all():
 
 class ServiceTest(ServiceTestCase):
     """Test case for Sabre Web service
-    
+
     """
     name = "test_Sabre"
     client_file_name = "SessionCreateRQService_client.py"
@@ -81,19 +81,19 @@ E
         """
         loc = self.client_module.SessionCreateRQServiceLocator()
         port = loc.getSessionCreatePortType(**self.getPortKWArgs())
-        
+
         msg = self.client_module.GetSessionCreateInput()
         msg.POS = msg.new_POS()
         msg.POS.Source = msg.POS.new_Source()
-        msg.POS.Source.set_attribute_PseudoCityCode("SF") 
+        msg.POS.Source.set_attribute_PseudoCityCode("SF")
 
         self.failUnlessRaises(FaultException, port.SessionCreateRQ, msg)
         #response = self._ports[0].SessionCreateRQ(msg)
         #response.Success
         #response.Warnings
-        #response.ConversationId 
+        #response.ConversationId
         #response.Errors
-        
+
 
 if __name__ == "__main__" :
     main()

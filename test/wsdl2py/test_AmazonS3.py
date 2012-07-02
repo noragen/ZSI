@@ -12,7 +12,7 @@ from ZSI import ParsedSoap
 """
 Unittest for contacting the Amazon ECommerce Service
 
-WSDL: 
+WSDL:
 
 """
 # General targets
@@ -33,7 +33,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(AmazonTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -56,7 +56,7 @@ class AmazonTestCase(ServiceTestCase):
 
     def test_local_import(self):
         pass
-    
+
     def test_net_CreateBucket(self):
         loc = self.client_module.AmazonS3Locator()
         port = loc.getAmazonS3(**self.getPortKWArgs())

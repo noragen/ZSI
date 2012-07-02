@@ -7,7 +7,7 @@ import os, sys, unittest
 from ServiceTest import main, ServiceTestCase, ServiceTestSuite
 from ZSI import FaultException
 """
-Unittest 
+Unittest
 
 WSDL:  ../../samples/Echo/Echo.wsdl
 """
@@ -30,7 +30,7 @@ def net():
     suite = ServiceTestSuite()
     suite.addTest(unittest.makeSuite(EchoTestCase, 'test_net'))
     return suite
-    
+
 def all():
     """Run all tests"""
     suite = ServiceTestSuite()
@@ -55,7 +55,7 @@ class EchoTestCase(ServiceTestCase):
     def test_dispatch_Echo(self):
         loc = self.client_module.EchoServerLocator()
         port = loc.getEchoServer(**self.getPortKWArgs())
-        
+
         msg = self.client_module.EchoRequest()
         msg.EchoIn = 'bla bla bla'
         rsp = port.Echo(msg)

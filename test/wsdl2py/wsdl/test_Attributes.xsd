@@ -38,6 +38,6 @@ test attribute groups
   <xs:attribute name="myInt" type="xs:int"/>
   <xs:attribute ref="bt:myDouble"/>
   <xs:attributeGroup ref="bt:common"/>
-</xs:complexType>  
+</xs:complexType>
 
 </xs:schema>

@@ -20,7 +20,7 @@
     <part name="User" type="types:User"/>
   </message>
 
-  
+
   <portType name="Registration">
     <operation name="RegisterUser">
       <input message="tns:RegisterUserRequest"/>
