@@ -332,10 +332,11 @@ class DOM:
     NS_WSDL = NS_WSDL_1_1
 
     NS_SOAP_BINDING_1_1 = 'http://schemas.xmlsoap.org/wsdl/soap/'
+    NS_SOAP_BINDING_1_2 = 'http://schemas.xmlsoap.org/wsdl/soap12/'
     NS_HTTP_BINDING_1_1 = 'http://schemas.xmlsoap.org/wsdl/http/'
     NS_MIME_BINDING_1_1 = 'http://schemas.xmlsoap.org/wsdl/mime/'
 
-    NS_SOAP_BINDING_ALL = (NS_SOAP_BINDING_1_1,)
+    NS_SOAP_BINDING_ALL = (NS_SOAP_BINDING_1_1, NS_SOAP_BINDING_1_2)
     NS_HTTP_BINDING_ALL = (NS_HTTP_BINDING_1_1,)
     NS_MIME_BINDING_ALL = (NS_MIME_BINDING_1_1,)
 

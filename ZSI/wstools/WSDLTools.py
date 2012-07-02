@@ -146,7 +146,8 @@ class WSDL:
         child.setAttributeNS(XMLNS.BASE, 'xmlns:xsd', 'http://www.w3.org/1999/XMLSchema')
         child.setAttributeNS(XMLNS.BASE, 'xmlns:soap', 'http://schemas.xmlsoap.org/wsdl/soap/')
         child.setAttributeNS(XMLNS.BASE, 'xmlns:tns', self.targetNamespace)
-        
+        child.setAttributeNS(XMLNS.BASE, 'xmlns:soap12', 'http://schemas.xmlsoap.org/wsdl/soap12/')
+
         if self.name:
             child.setAttributeNS(None, 'name', self.name)
 
