@@ -5,7 +5,8 @@
 # See LBNLCopyright for copyright notice!
 ###########################################################################
 
-import pydoc
+if __debug__:
+    import pydoc
 import sys
 
 from ZSI import TC
@@ -153,8 +154,9 @@ class pyclass_type(type):
                 # if pydoc.Helper.keywords.has_key(pname):
 
                 pname = pname[0].upper() + pname[1:]
-                assert not pydoc.Helper.keywords.has_key(pname), \
-                    'unexpected keyword: %s' % pname
+                if __debug__:
+                    assert not pydoc.Helper.keywords.has_key(pname), \
+                        'unexpected keyword: %s' % pname
 
                 classdict[pname] = property(get, set, None,
                         'property for element (%s,%s), minOccurs="%s" maxOccurs="%s" nillable="%s"'
