@@ -16,7 +16,7 @@ ident = "$Id: XMLSchema.py 1500 2011-11-21 17:58:29Z boverhof $"
 
 import types, weakref, sys, warnings
 from Namespaces import SCHEMA, XMLNS, SOAP, APACHE
-from Utility import DOM, DOMException, Collection, SplitQName, basejoin
+from Utility import DOM, DOMException, Collection, SplitQName, basejoin, isfile
 from StringIO import StringIO
 
 # If we have no threading, this should be a no-op
@@ -1366,7 +1366,10 @@ class XMLSchema(XMLSchemaComponent):
             if not self.attributes.has_key('schemaLocation'):
                 raise NoSchemaLocationWarning('no schemaLocation attribute in import')
 
-            reader.loadFromURL(self.attributes.get('schemaLocation'), schema)
+            try:
+                reader.loadFromFile(self.attributes.get('schemaLocation'), schema)
+            except Exception:
+                reader.loadFromURL(self.attributes.get('schemaLocation'), schema)
 
 
     class Include(XMLSchemaComponent):
@@ -3107,7 +3110,7 @@ class TypeDescriptionComponent(tupleClass):
             raise TypeError, 'expecting tuple (namespace, name), got %s' %args
         elif args[1].find(':') >= 0:
             args = (args[0], SplitQName(args[1])[1])
-        tuple.__init__(self, args)
+        tupleClass.__init__(self, args)
         return
 
     def getTargetNamespace(self):

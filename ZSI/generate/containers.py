@@ -2808,6 +2808,11 @@ class RestrictionContainer(SimpleTypeContainer):
 
                 raise Wsdl2PythonError('no built-in type nor schema instance type for base attribute("%s","%s"): %s' %(
                     base.getTargetNamespace(), base.getName(), tp.getItemTrace()))
+            else:
+                base = item.content.getAttribute('base')
+                self.sKlass = BTI.get_typeclass(base.getName(), base.getTargetNamespace())
+                if self.sKlass is not None:
+                    return
 
             warnings.warn('Using string for simpleType/Restriction w/User-Defined Base: %s %s' %(tp.getItemTrace(),item.getItemTrace()))
 

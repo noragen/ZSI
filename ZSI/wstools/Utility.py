@@ -15,7 +15,7 @@
 ident = "$Id: Utility.py 1483 2009-03-31 18:27:55Z lclement $"
 
 import sys, types, httplib, urllib, socket, weakref, ssl
-from os.path import isfile
+from os.path import isfile, join as opj, split as ops, exists as ope
 from string import join, strip, split
 from UserDict import UserDict
 from cStringIO import StringIO
@@ -73,7 +73,13 @@ except:
 # python2.3 urllib.basejoin does not remove current directory ./
 # from path and this causes problems on subsequent basejoins.
 #
-basejoin = urllib.basejoin
+def basejoin(head, tail):
+    res = opj(ops(head)[0], tail)
+    if ope(res):
+        return res
+    else:
+        return urllib.basejoin(head, tail)
+
 if sys.version_info[0:2] < (2, 4, 0, 'final', 0)[0:2]:
     #basejoin = lambda base,url: urllib.basejoin(base,url.lstrip('./'))
     token = './'
