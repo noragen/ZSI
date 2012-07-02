@@ -1303,8 +1303,9 @@ class NamespaceClassHeaderContainer(NamespaceClassContainerBase):
             '# targetNamespace',
             '# %s' % self.ns,
             '#' * 30 + '\n',
+            '_TARGET_NAMESPACE = %r' % self.ns,
             'class %s:' % self.getNSAlias(),
-            '%stargetNamespace = "%s"' % (ID1, self.ns),
+            '%stargetNamespace = _TARGET_NAMESPACE' % (ID1,)
             ]
 
         self.writeArray(head)
@@ -1555,7 +1556,7 @@ class TypecodeContainerBase(TypesContainerBase):
 
     def schemaTag(self):
         if self.ns is not None:
-            return 'schema = "%s"' % self.ns
+            return 'schema = _TARGET_NAMESPACE'
         raise ContainerError('failed to set schema targetNamespace(%s)'
                              % self.__class__)
 
@@ -1919,7 +1920,7 @@ class TypecodeContainerBase(TypesContainerBase):
 
             self.tcListElements.append(tc)
 
-    def getTypecodeList(self):
+    def getTypecodeList(self, indent = ID4):
         if not self.tcListSet:
 
 #            self._flattenContent()
@@ -1931,7 +1932,7 @@ class TypecodeContainerBase(TypesContainerBase):
         for e in self.tcListElements:
             list.append(str(e))
 
-        return ', '.join(list)
+        return (', %s\n' % indent).join(list)
 
     # the following _methods() are utility methods used during
     # TCList generation, et al.
@@ -2043,7 +2044,7 @@ class MessageTypecodeContainer(TypecodeContainerBase):
 
             self.tcListElements.append(tc)
 
-    def getTypecodeList(self):
+    def getTypecodeList(self, indent = ID4):
         if not self.tcListSet:
             self._setTypecodeList()
             self.tcListSet = True
@@ -2051,7 +2052,7 @@ class MessageTypecodeContainer(TypecodeContainerBase):
         list = []
         for e in self.tcListElements:
             list.append(str(e))
-        return ', '.join(list)
+        return (', %s\n' % indent).join(list)
 
     def getAttributeNames(self):
         '''returns a list of anames representing the parts
