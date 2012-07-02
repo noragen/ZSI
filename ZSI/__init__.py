@@ -154,17 +154,17 @@ UNICODE_ENCODING = 'utf-8'
 
 ##
 ##  Not public constants.
-_inttypes = [ _types.IntType, _types.LongType ]
-_floattypes = [ _types.FloatType ]
-_seqtypes = [ _types.TupleType, _types.ListType ]
-_stringtypes = [ _types.StringType, _types.UnicodeType ]
+_inttypes = [_types.IntType, _types.LongType]
+_floattypes = [_types.FloatType]
+_seqtypes = [_types.TupleType, _types.ListType]
+_stringtypes = [_types.StringType, _types.UnicodeType]
 
 ##
 ##  Low-level DOM oriented utilities; useful for typecode implementors.
 _attrs = lambda E: (E.attributes and E.attributes.values()) or []
 _children = lambda E: E.childNodes or []
-_child_elements = lambda E: [ n for n in (E.childNodes or [])
-                        if n.nodeType == _Node.ELEMENT_NODE ]
+_child_elements = lambda E: [n for n in (E.childNodes or [])
+                        if n.nodeType == _Node.ELEMENT_NODE]
 
 ##
 ##  Stuff imported from elsewhere.
@@ -176,18 +176,23 @@ _find_arraytype = lambda E: E.getAttributeNS(_SOAP.ENC, "arrayType")
 _find_encstyle = lambda E: E.getAttributeNS(_SOAP.ENV, "encodingStyle")
 try:
     from xml.dom import EMPTY_NAMESPACE
-    _empty_nsuri_list = [ EMPTY_NAMESPACE ]
+    _empty_nsuri_list = [EMPTY_NAMESPACE]
     #if '' not in _empty_nsuri_list: __empty_nsuri_list.append('')
     #if None not in _empty_nsuri_list: __empty_nsuri_list.append(None)
 except:
-    _empty_nsuri_list = [ None, '' ]
+    _empty_nsuri_list = [None, '']
+
+
 def _find_attr(E, attr):
     for nsuri in _empty_nsuri_list:
         try:
             v = E.getAttributeNS(nsuri, attr)
-            if v: return v
-        except: pass
+            if v:
+                return v
+        except:
+            pass
     return None
+
 
 def _find_attrNS(E, namespaceURI, localName):
     '''namespaceURI
@@ -195,8 +200,10 @@ def _find_attrNS(E, namespaceURI, localName):
     '''
     try:
         v = E.getAttributeNS(namespaceURI, localName)
-        if v: return v
-    except: pass
+        if v:
+            return v
+    except:
+        pass
     return None
 
 
@@ -207,13 +214,13 @@ def _find_attrNodeNS(E, namespaceURI, localName):
        localName
     '''
     attr = E.getAttributeNodeNS(namespaceURI, localName)
-    if attr is None: return None
+    if attr is None:
+        return None
     try:
         return attr.value
-    except: pass
+    except:
+        pass
     return E.getAttributeNS(namespaceURI, localName)
-
-
 
 
 _find_href = lambda E: _find_attr(E, "href")
@@ -232,6 +239,7 @@ _get_element_nsuri_name = lambda E: (E.namespaceURI, E.localName)
 
 _is_element = lambda E: E.nodeType == _Node.ELEMENT_NODE
 
+
 def _resolve_prefix(celt, prefix):
     '''resolve prefix to a namespaceURI.  If None or
     empty str, return default namespace or None.
@@ -240,27 +248,30 @@ def _resolve_prefix(celt, prefix):
       celt -- element node
       prefix -- xmlns:prefix, or empty str or None
     '''
-    namespace = None
+
     while _is_element(celt):
         if prefix:
             namespaceURI = _find_xmlns_prefix(celt, prefix)
         else:
             namespaceURI = _find_default_namespace(celt)
-        if namespaceURI: break
+        if namespaceURI:
+            break
         celt = celt.parentNode
     else:
         if prefix:
-            raise EvaluateException, 'cant resolve xmlns:%s' %prefix
+            raise EvaluateException('cant resolve xmlns:%s' % prefix)
         else:
-            raise EvaluateException, 'cant resolve default namespace'
+            raise EvaluateException('cant resolve default namespace')
 
     return namespaceURI
+
 
 def _valid_encoding(elt):
     '''Does this node have a valid encoding?
     '''
     enc = _find_encstyle(elt)
-    if not enc or enc == _SOAP.ENC: return 1
+    if not enc or enc == _SOAP.ENC:
+        return 1
     for e in enc.split():
         if e.startswith(_SOAP.ENC):
             # XXX Is this correct?  Once we find a Sec5 compatible
@@ -270,6 +281,7 @@ def _valid_encoding(elt):
             return 1
     return 0
 
+
 def _backtrace(elt, dom):
     '''Return a "backtrace" from the given element to the DOM root,
     in XPath syntax.
@@ -277,9 +289,10 @@ def _backtrace(elt, dom):
     s = ''
     while elt != dom:
         name, parent = elt.nodeName, elt.parentNode
-        if parent is None: break
-        matches = [ c for c in _child_elements(parent)
-                        if c.nodeName == name ]
+        if parent is None:
+            break
+        matches = [c for c in _child_elements(parent)
+                        if c.nodeName == name]
         if len(matches) == 1:
             s = '/' + name + s
         else:
@@ -287,6 +300,7 @@ def _backtrace(elt, dom):
             s = ('/%s[%d]' % (name, i)) + s
         elt = parent
     return s
+
 
 def _get_idstr(pyobj):
     '''Python 2.3.x generates a FutureWarning for negative IDs, so
@@ -308,10 +322,12 @@ def _get_postvalue_from_absoluteURI(url):
     cache = _get_postvalue_from_absoluteURI.cache
     path = cache.get(url, '')
     if not path:
-        scheme,authpath = url.split('://')
+        scheme, authpath = url.split('://')
         s = authpath.split('/', 1)
-        if len(s) == 2: path = '/%s' %s[1]
-        if len(cache) > _get_postvalue_from_absoluteURI.MAXLEN:cache.clear()
+        if len(s) == 2:
+            path = '/%s' % s[1]
+        if len(cache) > _get_postvalue_from_absoluteURI.MAXLEN:
+            cache.clear()
         cache[url] = path
     return path
 _get_postvalue_from_absoluteURI.cache = {}
@@ -324,6 +340,7 @@ class ZSIException(Exception):
     '''Base class for all ZSI exceptions.
     '''
     pass
+
 
 class ParseException(ZSIException):
     '''Exception raised during parsing.
@@ -360,6 +377,7 @@ class EvaluateException(ZSIException):
     def __repr__(self):
         return "<%s.EvaluateException %s>" % (__name__, _get_idstr(self))
 
+
 class FaultException(ZSIException):
     '''Exception raised when a fault is received.
     '''
@@ -373,6 +391,7 @@ class FaultException(ZSIException):
     def __repr__(self):
         return "<%s.FaultException %s>" % (__name__, _get_idstr(self))
 
+
 class WSActionException(ZSIException):
     '''Exception raised when WS-Address Action Header is incorrectly
     specified when received by client or server.
@@ -382,6 +401,8 @@ class WSActionException(ZSIException):
 ##
 ##  Importing the rest of ZSI.
 import version
+
+
 def Version():
     return version.Version
 
@@ -421,7 +442,7 @@ TC.RegisterType(TC.Apache.Map, minOccurs=0, nillable=False)
 ## TC.AnyElement wraps builtins so element name information can be saved
 ##
 import schema
-for i in [int,float,str,tuple,list,unicode]:
+for i in [int, float, str, tuple, list, unicode]:
     schema._GetPyobjWrapper.RegisterBuiltin(i)
 
 ## Load up Wrappers for builtin types
@@ -433,4 +454,5 @@ schema.RegisterAnyElement()
 #except:
 #    pass
 
-if __name__ == '__main__': print _copyright
+if __name__ == '__main__':
+    print _copyright

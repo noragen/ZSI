@@ -4,42 +4,48 @@
 '''
 
 from ZSI import _copyright, _children, _child_elements, \
-    _floattypes, _stringtypes, _seqtypes, _find_attr, _find_attrNS, _find_attrNodeNS, \
-    _find_arraytype, _find_default_namespace, _find_href, _find_encstyle, \
+    _floattypes, _stringtypes, _seqtypes, _find_attrNodeNS, \
+    _find_arraytype, _find_href, _find_encstyle, \
     _resolve_prefix, _find_xsi_attr, _find_type, \
-    _find_xmlns_prefix, _get_element_nsuri_name, _get_idstr, \
+    _get_element_nsuri_name, _get_idstr, \
     _Node, EvaluateException, UNICODE_ENCODING, \
     _valid_encoding, ParseException
 
 from ZSI.wstools.Namespaces import SCHEMA, SOAP
 from ZSI.wstools.Utility import SplitQName
-from ZSI.wstools.c14n import Canonicalize
 from ZSI.wstools.logging import getLogger as _GetLogger
 
-import re, types, time, copy
+import re
+import types
+import time
+import copy
 
 from base64 import decodestring as b64decode, encodestring as b64encode
 from urllib import unquote as urldecode, quote as urlencode
 from binascii import unhexlify as hexdecode, hexlify as hexencode
-try:
-    from cStringIO import StringIO
-except ImportError:
-    from StringIO import StringIO
 
+import StringIO as StringIOMod
+try:
+    import cStringIO
+except ImportError:
+    StringIO = StringIOMod.StringIO
+else:
+    StringIO = cStringIO.StringIO
 
 _is_xsd_or_soap_ns = lambda ns: ns in [
                         SCHEMA.XSD3, SOAP.ENC, SCHEMA.XSD1, SCHEMA.XSD2, ]
 _find_nil = lambda E: _find_xsi_attr(E, "null") or _find_xsi_attr(E, "nil")
 
+
 def _get_xsitype(pyclass):
     '''returns the xsi:type as a tuple, coupled with ZSI.schema
     '''
-    if hasattr(pyclass,'type') and type(pyclass.type) in _seqtypes:
+    if hasattr(pyclass, 'type') and type(pyclass.type) in _seqtypes:
         return pyclass.type
-    elif hasattr(pyclass,'type') and hasattr(pyclass, 'schema'):
+    elif hasattr(pyclass, 'type') and hasattr(pyclass, 'schema'):
         return (pyclass.schema, pyclass.type)
 
-    return (None,None)
+    return (None, None)
 
 
 # value returned when xsi:nil="true"
@@ -64,7 +70,7 @@ class TypeCode:
         logger -- logger instance for this class.
     '''
     tag = None
-    type = (None,None)
+    type = (None, None)
     typechecks = True
     attribute_typecode_dict = None
     logger = _GetLogger('ZSI.TC.TypeCode')
@@ -148,10 +154,12 @@ class TypeCode:
             ps -- the ParsedSoap object.
             tag --
         '''
-        if len(_children(elt)): return elt
+        if len(_children(elt)):
+            return elt
         href = _find_href(elt)
         if not href:
-            if self.minOccurs is 0 or self.nilled(elt, ps): return None
+            if self.minOccurs is 0 or self.nilled(elt, ps):
+                return None
             raise EvaluateException('Required' + tag + ' missing',
                     ps.Backtrace(elt))
         return ps.FindLocalHREF(href, elt, 0)
@@ -166,7 +174,8 @@ class TypeCode:
         if parselist and not errorlist:
             errorlist = []
             for t in parselist:
-                if t[1] not in errorlist: errorlist.append(t[1])
+                if t[1] not in errorlist:
+                    errorlist.append(t[1])
             errorlist = ' or '.join(errorlist)
             d['errorlist'] = errorlist
         return (parselist, errorlist)
@@ -179,7 +188,7 @@ class TypeCode:
             ps -- the ParsedSoap object.
         '''
 
-        parselist,errorlist = self.get_parse_and_errorlist()
+        parselist, errorlist = self.get_parse_and_errorlist()
         ns, name = _get_element_nsuri_name(elt)
         if ns == SOAP.ENC:
             # Element is in SOAP namespace, so the name is a type.
@@ -209,10 +218,10 @@ class TypeCode:
         '''
         typeName = _find_type(elt)
         if typeName is None or typeName == "":
-            return (None,None)
+            return (None, None)
 
         # Parse the QNAME.
-        prefix,typeName = SplitQName(typeName)
+        prefix, typeName = SplitQName(typeName)
         # Use '' for default namespace with ParsedSoap
         uri = ps.GetElementNSdict(elt).get(prefix or '')
         if uri is None:
@@ -220,11 +229,12 @@ class TypeCode:
                     ps.Backtrace(elt))
 
         #typeName = list[1]
-        parselist,errorlist = self.get_parse_and_errorlist()
-        if not parselist or \
-        (uri,typeName) in parselist or \
-        (_is_xsd_or_soap_ns(uri) and (None,typeName) in parselist):
-            return (uri,typeName)
+        parselist, errorlist = self.get_parse_and_errorlist()
+        if (not parselist
+            or (uri, typeName) in parselist
+            or (_is_xsd_or_soap_ns(uri)
+                and (None, typeName) in parselist)):
+            return (uri, typeName)
         raise EvaluateException(
                 'Type mismatch (%s namespace) (got %s wanted %s)' % \
                 (uri, typeName, errorlist), ps.Backtrace(elt))
@@ -243,7 +253,8 @@ class TypeCode:
             elt -- the DOM element being parsed
             ps -- the ParsedSoap object.
         '''
-        if _find_nil(elt) not in [ "true",  "1"]: return False
+        if _find_nil(elt) not in ["true", "1"]:
+            return False
         if self.nillable is False:
             raise EvaluateException('Non-nillable element is NIL',
                     ps.Backtrace(elt))
@@ -271,7 +282,7 @@ class TypeCode:
         # concatenating the text nodes is the right thing to do.
         return ''.join([E.nodeValue for E in c
                 if E.nodeType
-                in [ _Node.TEXT_NODE, _Node.CDATA_SECTION_NODE ]])
+                in [_Node.TEXT_NODE, _Node.CDATA_SECTION_NODE]])
 
     def parse_attributes(self, elt, ps):
         '''find all attributes specified in the attribute_typecode_dict in
@@ -285,16 +296,17 @@ class TypeCode:
             return
 
         attributes = {}
-        for attr,what in self.attribute_typecode_dict.items():
-            namespaceURI,localName = None,attr
+        for attr, what in self.attribute_typecode_dict.items():
+            namespaceURI, localName = None, attr
             if type(attr) in _seqtypes:
-                namespaceURI,localName = attr
+                namespaceURI, localName = attr
             value = _find_attrNodeNS(elt, namespaceURI, localName)
             self.logger.debug("Parsed Attribute (%s,%s) -- %s",
                                namespaceURI, localName, value)
 
             # For Now just set it w/o any type interpretation.
-            if value is None: continue
+            if value is None:
+                continue
             attributes[attr] = what.text_to_data(value, elt, ps)
 
         return attributes
@@ -312,12 +324,11 @@ class TypeCode:
             return
 
         if not isinstance(getattr(pyobj, self.attrs_aname), dict):
-            raise TypeError,\
-                'pyobj.%s must be a dictionary of names and values'\
-                % self.attrs_aname
+            raise TypeError('pyobj.%s must be a dictionary of names and values'
+                            % self.attrs_aname)
 
         for attr, value in getattr(pyobj, self.attrs_aname).items():
-            namespaceURI,localName = None, attr
+            namespaceURI, localName = None, attr
             if type(attr) in _seqtypes:
                 namespaceURI, localName = attr
 
@@ -330,9 +341,7 @@ class TypeCode:
             # allow derived type
             if hasattr(value, 'typecode') and not isinstance(what, AnyType):
                 if what is not None and not isinstance(value.typecode, what):
-                    raise EvaluateException, \
-                        'self-describing attribute must subclass %s'\
-                        %what.__class__
+                    raise EvaluateException('self-describing attribute must subclass %s' % what.__class__)
 
                 what = value.typecode
 
@@ -354,7 +363,7 @@ class TypeCode:
             el -- MessageInterface representing the element
         '''
         if kw.get('typed', self.typed):
-            namespaceURI,typeName = kw.get('type', _get_xsitype(self))
+            namespaceURI, typeName = kw.get('type', _get_xsitype(self))
             if namespaceURI and typeName:
                 self.logger.debug("attribute: (%s, %s)", namespaceURI, typeName)
                 el.setAttributeType(namespaceURI, typeName)
@@ -365,7 +374,7 @@ class TypeCode:
             el -- MessageInterface representing the element
             objid -- ID type, unique id
         '''
-        el.setAttributeNS(None, 'href', "#%s" %objid)
+        el.setAttributeNS(None, 'href', "#%s" % objid)
 
     def set_attribute_id(self, el, objid):
         '''set id attribute
@@ -374,7 +383,7 @@ class TypeCode:
             objid -- ID type, unique id
         '''
         if self.unique is False:
-            el.setAttributeNS(None, 'id', "%s" %objid)
+            el.setAttributeNS(None, 'id', "%s" % objid)
 
     def get_name(self, name, objid):
         '''
@@ -387,14 +396,15 @@ class TypeCode:
 
         ns = self.nspname
         n = name or self.pname or ('E' + objid)
-        return ns,n
+        return ns, n
 
     def has_attributes(self):
         '''Return True if Attributes are declared outside
         the scope of SOAP ('root', 'id', 'href'), and some
         attributes automatically handled (xmlns, xsi:type).
         '''
-        if self.attribute_typecode_dict is None: return False
+        if self.attribute_typecode_dict is None:
+            return False
         return len(self.attribute_typecode_dict) > 0
 
 
@@ -426,7 +436,8 @@ class SimpleType(TypeCode):
 
             elt = ps.FindLocalHREF(href, elt)
             self.checktype(elt, ps)
-            if self.nilled(elt, ps): return Nilled
+            if self.nilled(elt, ps):
+                return Nilled
             if len(_children(elt)) == 0:
                 v = self.empty_content
             else:
@@ -447,7 +458,7 @@ class SimpleType(TypeCode):
         return pyobj
 
     def get_formatted_content(self, pyobj):
-        raise NotImplementedError, 'method get_formatted_content is not implemented'
+        raise NotImplementedError('method get_formatted_content is not implemented')
 
     def serialize_text_node(self, elt, sw, pyobj):
         '''Serialize without an element node.
@@ -456,7 +467,7 @@ class SimpleType(TypeCode):
         if pyobj is not None:
             text = self.get_formatted_content(pyobj)
             if type(text) not in _stringtypes:
-                raise TypeError, 'pyobj must be a formatted string'
+                raise TypeError('pyobj must be a formatted string')
 
             textNode = elt.createAppendTextNode(text)
 
@@ -476,7 +487,7 @@ class SimpleType(TypeCode):
 
         '''
         objid = _get_idstr(pyobj)
-        ns,n = self.get_name(name, objid)
+        ns, n = self.get_name(name, objid)
 
         # nillable
         el = elt.createAppendElement(ns, n)
@@ -525,7 +536,8 @@ class Any(TypeCode):
 
     # input arg v should be a list of tuples (name, value).
     def listify(self, v):
-        if self.aslist: return [ k for j,k in v ]
+        if self.aslist:
+            return [k for j, k in v]
         return dict(v)
 
     def parse_into_dict_or_list(self, elt, ps):
@@ -534,13 +546,16 @@ class Any(TypeCode):
         v = []
         if count == 0:
             href = _find_href(elt)
-            if not href: return v
+            if not href:
+                return v
             elt = ps.FindLocalHREF(href, elt)
             self.checktype(elt, ps)
             c = _child_elements(elt)
             count = len(c)
-            if count == 0: return self.listify(v)
-        if self.nilled(elt, ps): return Nilled
+            if count == 0:
+                return self.listify(v)
+        if self.nilled(elt, ps):
+            return Nilled
 
         for c_elt in c:
             v.append((str(c_elt.localName), self.__class__(**self.kwargs).parse(c_elt, ps)))
@@ -548,37 +563,39 @@ class Any(TypeCode):
         return self.listify(v)
 
     def parse(self, elt, ps):
-        (ns,type) = self.checkname(elt, ps)
-        if not type and self.nilled(elt, ps): return Nilled
+        (ns, type) = self.checkname(elt, ps)
+        if not type and self.nilled(elt, ps):
+            return Nilled
         if len(_children(elt)) == 0:
             href = _find_href(elt)
             if not href:
                 if self.minOccurs < 1:
                     if _is_xsd_or_soap_ns(ns):
-                        parser = Any.parsemap.get((None,type))
-                        if parser: return parser.parse(elt, ps)
-                    if ((ns,type) == (SOAP.ENC,'Array') or
+                        parser = Any.parsemap.get((None, type))
+                        if parser:
+                            return parser.parse(elt, ps)
+                    if ((ns, type) == (SOAP.ENC, 'Array') or
                         (_find_arraytype(elt) or '').endswith('[0]')):
                         return []
                     return None
                 raise EvaluateException('Required Any missing',
                         ps.Backtrace(elt))
             elt = ps.FindLocalHREF(href, elt)
-            (ns,type) = self.checktype(elt, ps)
+            (ns, type) = self.checktype(elt, ps)
         if not type and elt.namespaceURI == SOAP.ENC:
-            ns,type = SOAP.ENC, elt.localName
-        if not type or (ns,type) == (SOAP.ENC,'Array'):
+            ns, type = SOAP.ENC, elt.localName
+        if not type or (ns, type) == (SOAP.ENC, 'Array'):
             if self.aslist or _find_arraytype(elt):
-                return [ self.__class__(**self.kwargs).parse(e, ps)
-                            for e in _child_elements(elt) ]
+                return [self.__class__(**self.kwargs).parse(e, ps)
+                            for e in _child_elements(elt)]
             if len(_child_elements(elt)) == 0:
                 #raise EvaluateException("Any cannot parse untyped element",
                 #        ps.Backtrace(elt))
                 return self.simple_value(elt, ps)
             return self.parse_into_dict_or_list(elt, ps)
-        parser = Any.parsemap.get((ns,type))
+        parser = Any.parsemap.get((ns, type))
         if not parser and _is_xsd_or_soap_ns(ns):
-            parser = Any.parsemap.get((None,type))
+            parser = Any.parsemap.get((None, type))
         if not parser:
             raise EvaluateException('''Any can't parse element''',
                     ps.Backtrace(elt))
@@ -603,7 +620,7 @@ class Any(TypeCode):
                 serializer = gDateTime()
         if serializer:
             return serializer.get_formatted_content(pyobj)
-        raise EvaluateException, 'Failed to find serializer for pyobj %s' %pyobj
+        raise EvaluateException('Failed to find serializer for pyobj %s' % pyobj)
 
     def serialize(self, elt, sw, pyobj, name=None, **kw):
         if hasattr(pyobj, 'typecode') and pyobj.typecode is not self:
@@ -611,7 +628,7 @@ class Any(TypeCode):
             return
 
         objid = _get_idstr(pyobj)
-        ns,n = self.get_name(name, objid)
+        ns, n = self.get_name(name, objid)
         kw.setdefault('typed', self.typed)
         tc = type(pyobj)
         self.logger.debug('Any serialize -- %s', tc)
@@ -620,7 +637,7 @@ class Any(TypeCode):
                 array = elt.createAppendElement(ns, n)
                 array.setAttributeType(SOAP.ENC, "Array")
                 array.setAttributeNS(self.nspname, 'SOAP-ENC:arrayType',
-                    "xsd:anyType[" + str(len(pyobj)) + "]" )
+                    "xsd:anyType[" + str(len(pyobj)) + "]")
                 for o in pyobj:
                     #TODO maybe this should take **self.kwargs...
                     serializer = getattr(o, 'typecode', Any(**self.kwargs))
@@ -633,14 +650,14 @@ class Any(TypeCode):
                     serializer.serialize(struct, sw, o, **kw)
             return
 
-        kw['name'] = (ns,n)
+        kw['name'] = (ns, n)
         if tc == types.DictType:
             el = elt.createAppendElement(ns, n)
-            parentNspname = self.nspname # temporarily clear nspname for dict elements
+            parentNspname = self.nspname  # temporarily clear nspname for dict elements
             self.nspname = None
-            for o,m in pyobj.items():
+            for o, m in pyobj.items():
                 if type(o) != types.StringType and type(o) != types.UnicodeType:
-                    raise Exception, 'Dictionary implementation requires keys to be of type string (or unicode).' %pyobj
+                    raise Exception('Dictionary implementation requires keys to be of type string (or unicode).' % pyobj)
                 kw['name'] = o
                 kw.setdefault('typed', True)
                 self.serialize(el, sw, m, **kw)
@@ -682,7 +699,8 @@ class Any(TypeCode):
                 if "typed" not in kw:
                     kw['typed'] = False
             elif tag:
-                if tag.find(':') == -1: tag = 'SOAP-ENC:' + tag
+                if tag.find(':') == -1:
+                    tag = 'SOAP-ENC:' + tag
                 kw['name'] = tag
                 kw['typed'] = False
 
@@ -697,14 +715,15 @@ class String(SimpleType):
     '''A string type.
     '''
     empty_content = ''
-    parselist = [ (None,'string') ]
-    seriallist = [ types.StringType, types.UnicodeType ]
+    parselist = [(None, 'string')]
+    seriallist = [types.StringType, types.UnicodeType]
     type = (SCHEMA.XSD3, 'string')
     logger = _GetLogger('ZSI.TC.String')
 
     def __init__(self, pname=None, strip=True, **kw):
         TypeCode.__init__(self, pname, **kw)
-        if kw.has_key('resolver'): self.resolver = kw['resolver']
+        if 'resolver' in kw:
+            self.resolver = kw['resolver']
         self.strip = strip
 
     def text_to_data(self, text, elt, ps):
@@ -712,7 +731,8 @@ class String(SimpleType):
         Encode all strings as UTF-8, which will be type 'str'
         not 'unicode'
         '''
-        if self.strip: text = text.strip()
+        if self.strip:
+            text = text.strip()
         if self.pyclass is not None:
             return self.pyclass(text.encode(UNICODE_ENCODING))
         return text.encode(UNICODE_ENCODING)
@@ -732,7 +752,7 @@ class URI(String):
              regardless of whether they are used for the reserved purpose.
 
     '''
-    parselist = [ (None,'anyURI'),(SCHEMA.XSD3, 'anyURI')]
+    parselist = [(None, 'anyURI'), (SCHEMA.XSD3, 'anyURI')]
     type = (SCHEMA.XSD3, 'anyURI')
     logger = _GetLogger('ZSI.TC.URI')
     reserved = ";/?:@&=+$,"
@@ -753,7 +773,7 @@ class URI(String):
 class QName(String):
     '''A QName type
     '''
-    parselist = [ (None,'QName') ]
+    parselist = [(None, 'QName')]
     type = (SCHEMA.XSD3, 'QName')
     logger = _GetLogger('ZSI.TC.QName')
 
@@ -764,9 +784,9 @@ class QName(String):
     def get_formatted_content(self, pyobj):
         value = pyobj
         if isinstance(pyobj, tuple):
-            namespaceURI,localName = pyobj
+            namespaceURI, localName = pyobj
             if self.prefix is not None:
-                value = "%s:%s" %(self.prefix,localName)
+                value = "%s:%s" % (self.prefix, localName)
         return String.get_formatted_content(self, value)
 
     def set_prefix(self, elt, pyobj):
@@ -775,22 +795,22 @@ class QName(String):
         This method must be called before get_formatted_content.
         '''
         if isinstance(pyobj, tuple):
-            namespaceURI,localName = pyobj
+            namespaceURI, localName = pyobj
             self.prefix = elt.getPrefix(namespaceURI)
 
     def text_to_data(self, text, elt, ps):
         '''convert text into typecode specific data.
         '''
-        prefix,localName = SplitQName(text)
+        prefix, localName = SplitQName(text)
         nsdict = ps.GetElementNSdict(elt)
         prefix = prefix or ''
         try:
             namespaceURI = nsdict[prefix]
-        except KeyError, ex:
-            raise EvaluateException('cannot resolve prefix(%s)'%prefix,
+        except KeyError:
+            raise EvaluateException('cannot resolve prefix(%s)' % prefix,
                 ps.Backtrace(elt))
 
-        v = (namespaceURI,localName)
+        v = (namespaceURI, localName)
         if self.pyclass is not None:
             return self.pyclass(v)
         return v
@@ -805,7 +825,7 @@ class QName(String):
 class Token(String):
     '''an xsd:token type
     '''
-    parselist = [ (None, 'token') ]
+    parselist = [(None, 'token')]
     type = (SCHEMA.XSD3, 'token')
     logger = _GetLogger('ZSI.TC.Token')
 
@@ -813,14 +833,14 @@ class Token(String):
 class Base64String(String):
     '''A Base64 encoded string.
     '''
-    parselist = [ (None,'base64Binary'), (SOAP.ENC, 'base64') ]
+    parselist = [(None, 'base64Binary'), (SOAP.ENC, 'base64')]
     type = (SOAP.ENC, 'base64')
     logger = _GetLogger('ZSI.TC.Base64String')
 
     def text_to_data(self, text, elt, ps):
         '''convert text into typecode specific data.
         '''
-        val = b64decode(text.replace(' ', '').replace('\n','').replace('\r',''))
+        val = b64decode(text.replace(' ', '').replace('\n', '').replace('\r', ''))
         if self.pyclass is not None:
             return self.pyclass(val)
         return val
@@ -831,7 +851,7 @@ class Base64String(String):
 
 
 class Base64Binary(String):
-    parselist = [ (None,'base64Binary'), ]
+    parselist = [(None, 'base64Binary')]
     type = (SCHEMA.XSD3, 'base64Binary')
     logger = _GetLogger('ZSI.TC.Base64Binary')
 
@@ -851,7 +871,7 @@ class Base64Binary(String):
 class HexBinaryString(String):
     '''Hex-encoded binary (yuk).
     '''
-    parselist = [ (None,'hexBinary') ]
+    parselist = [(None, 'hexBinary')]
     type = (SCHEMA.XSD3, 'hexBinary')
     logger = _GetLogger('ZSI.TC.HexBinaryString')
 
@@ -922,9 +942,9 @@ class Enumeration(String):
         String.serialize(self, elt, sw, pyobj, name=name, orig=orig, **kw)
 
 
-
 # This is outside the Integer class purely for code esthetics.
 _ignored = []
+
 
 class Integer(SimpleType):
     '''Common handling for all integers.
@@ -948,8 +968,8 @@ class Integer(SimpleType):
 
         'integer':              (_ignored, _ignored)
     }
-    parselist = [ (None,k) for k in ranges.keys() ]
-    seriallist = [ types.IntType, types.LongType ]
+    parselist = [(None, k) for k in ranges.keys()]
+    seriallist = [types.IntType, types.LongType]
     logger = _GetLogger('ZSI.TC.Integer')
 
     def __init__(self, pname=None, format='%d', **kw):
@@ -973,16 +993,18 @@ class Integer(SimpleType):
         return v
 
     def parse(self, elt, ps):
-        (ns,type) = self.checkname(elt, ps)
-        if self.nilled(elt, ps): return Nilled
+        (ns, type) = self.checkname(elt, ps)
+        if self.nilled(elt, ps):
+            return Nilled
         elt = self.SimpleHREF(elt, ps, 'integer')
-        if not elt: return None
+        if not elt:
+            return None
 
         if type is None:
-           type = self.type[1]
+            type = self.type[1]
         elif self.type[1] is not None and type != self.type[1]:
             raise EvaluateException('Integer type mismatch; ' \
-                'got %s wanted %s' % (type,self.type[1]), ps.Backtrace(elt))
+                'got %s wanted %s' % (type, self.type[1]), ps.Backtrace(elt))
 
         v = self.simple_value(elt, ps)
         v = self.text_to_data(v, elt, ps)
@@ -997,8 +1019,7 @@ class Integer(SimpleType):
         return v
 
     def get_formatted_content(self, pyobj):
-        return self.format %pyobj
-
+        return self.format % pyobj
 
 
 # See credits, below.
@@ -1015,13 +1036,14 @@ def _make_inf():
     return x
 
 # This is outside the Decimal class purely for code esthetics.
-_magicnums = { }
+_magicnums = {}
 try:
     _magicnums['INF'] = float('INF')
     _magicnums['-INF'] = float('-INF')
 except:
     _magicnums['INF'] = _make_inf()
     _magicnums['-INF'] = -_magicnums['INF']
+
 
 # The following comment and code was written by Tim Peters in
 # article <001401be92d2$09dcb800$5fa02299@tim> in comp.lang.python,
@@ -1071,14 +1093,20 @@ class Decimal(SimpleType):
     '''Parent class for floating-point numbers.
     '''
 
-    parselist = [ (None,'decimal'), (None,'float'), (None,'double') ]
+    parselist = [(None, 'decimal'), (None, 'float'), (None, 'double')]
     seriallist = _floattypes
     type = None
     ranges =  {
-        'float': ( 7.0064923216240861E-46,
-                        -3.4028234663852886E+38, 3.4028234663852886E+38 ),
-        'double': ( 2.4703282292062327E-324,
-                        -1.7976931348623158E+308, 1.7976931348623157E+308),
+        'float': (
+            7.0064923216240861E-46,
+            -3.4028234663852886E+38,
+            3.4028234663852886E+38
+        ),
+        'double': (
+            2.4703282292062327E-324,
+            -1.7976931348623158E+308,
+            1.7976931348623157E+308
+        ),
     }
     zeropat = re.compile('[1-9]')
     logger = _GetLogger('ZSI.TC.Decimal')
@@ -1086,7 +1114,6 @@ class Decimal(SimpleType):
     def __init__(self, pname=None, format='%f', **kw):
         TypeCode.__init__(self, pname, **kw)
         self.format = format
-
 
     def text_to_data(self, text, elt, ps):
         '''convert text into typecode specific data.
@@ -1096,7 +1123,8 @@ class Decimal(SimpleType):
             return self.pyclass(v)
 
         m = _magicnums.get(v)
-        if m: return m
+        if m:
+            return m
 
         try:
             return float(v)
@@ -1105,18 +1133,20 @@ class Decimal(SimpleType):
                     ps.Backtrace(elt))
 
     def parse(self, elt, ps):
-        (ns,type) = self.checkname(elt, ps)
+        (ns, type) = self.checkname(elt, ps)
         elt = self.SimpleHREF(elt, ps, 'floating-point')
-        if not elt: return None
+        if not elt:
+            return None
         tag = getattr(self.__class__, 'type')
         if tag:
             if type is None:
                 type = tag
-            elif tag != (ns,type):
+            elif tag != (ns, type):
                 raise EvaluateException('Floating point type mismatch; ' \
-                        'got (%s,%s) wanted %s' % (ns,type,tag), ps.Backtrace(elt))
+                        'got (%s,%s) wanted %s' % (ns, type, tag), ps.Backtrace(elt))
         # Special value?
-        if self.nilled(elt, ps): return Nilled
+        if self.nilled(elt, ps):
+            return Nilled
         v = self.simple_value(elt, ps)
         try:
             fp = self.text_to_data(v, elt, ps)
@@ -1128,7 +1158,7 @@ class Decimal(SimpleType):
         if m:
             return m
 
-        if str(fp).lower() in [ 'inf', '-inf', 'nan', '-nan' ]:
+        if str(fp).lower() in ['inf', '-inf', 'nan', '-nan']:
             raise EvaluateException('Floating point number parsed as "' + \
                     str(fp) + '"', ps.Backtrace(elt))
         if fp == 0 and Decimal.zeropat.search(v):
@@ -1151,15 +1181,15 @@ class Decimal(SimpleType):
         elif isnan(pyobj):
             return 'NaN'
         else:
-            return self.format %pyobj
+            return self.format % pyobj
 
 
 class Boolean(SimpleType):
     '''A boolean.
     '''
 
-    parselist = [ (None,'boolean') ]
-    seriallist = [ bool ]
+    parselist = [(None, 'boolean')]
+    seriallist = [bool]
     type = (SCHEMA.XSD3, 'boolean')
     logger = _GetLogger('ZSI.TC.Boolean')
 
@@ -1192,20 +1222,23 @@ class Boolean(SimpleType):
             return self.pyclass(True)
 
         if self.pyclass is None:
-             return False
+            return False
         return self.pyclass(False)
 
     def parse(self, elt, ps):
         self.checkname(elt, ps)
         elt = self.SimpleHREF(elt, ps, 'boolean')
-        if not elt: return None
-        if self.nilled(elt, ps): return Nilled
+        if not elt:
+            return None
+        if self.nilled(elt, ps):
+            return Nilled
 
         v = self.simple_value(elt, ps).lower()
         return self.text_to_data(v, elt, ps)
 
     def get_formatted_content(self, pyobj):
-        if pyobj: return 'true'
+        if pyobj:
+            return 'true'
         return 'false'
 
 
@@ -1226,7 +1259,8 @@ class XML(TypeCode):
         TypeCode.__init__(self, pname, **kw)
         self.comments = comments
         self.inline = inline
-        if kw.has_key('resolver'): self.resolver = kw['resolver']
+        if 'resolver' in kw:
+            self.resolver = kw['resolver']
         self.wrapped = wrapped
         self.copyit = kw.get('copyit', XML.copyit)
 
@@ -1237,7 +1271,8 @@ class XML(TypeCode):
         if not c:
             href = _find_href(elt)
             if not href:
-                if self.minOccurs == 0: return None
+                if self.minOccurs == 0:
+                    return None
                 raise EvaluateException('Embedded XML document missing',
                         ps.Backtrace(elt))
             if href[0] != '#':
@@ -1262,7 +1297,7 @@ class XML(TypeCode):
 
     def serialize(self, elt, sw, pyobj, name=None, unsuppressedPrefixes=[], **kw):
         objid = _get_idstr(pyobj)
-        ns,n = self.get_name(name, objid)
+        ns, n = self.get_name(name, objid)
 
         xmlelt = elt
         if self.wrapped:
@@ -1340,17 +1375,16 @@ class AnyType(TypeCode):
         return text
 
     def serialize(self, elt, sw, pyobj, **kw):
-        nsuri,typeName = _get_xsitype(pyobj)
+        nsuri, typeName = _get_xsitype(pyobj)
         if self.all not in self.namespaces and nsuri not in self.namespaces:
-            raise EvaluateException(
-                '<anyType> unsupported use of namespaces "%s"' %self.namespaces)
+            raise EvaluateException('<anyType> unsupported use of namespaces "%s"' % self.namespaces)
 
         what = getattr(pyobj, 'typecode', None)
         if what is None:
             # TODO: resolve this, "strict" processing but no
             # concrete schema makes little sense.
             #what = _AnyStrict(pname=(self.nspname,self.pname))
-            what = Any(pname=(self.nspname,self.pname), unique=True,
+            what = Any(pname=(self.nspname, self.pname), unique=True,
                        aslist=False)
             kw['typed'] = True
             what.serialize(elt, sw, pyobj, **kw)
@@ -1362,10 +1396,10 @@ class AnyType(TypeCode):
 
     def parse(self, elt, ps):
         #element name must be declared ..
-        nspname,pname = _get_element_nsuri_name(elt)
+        nspname, pname = _get_element_nsuri_name(elt)
         if nspname != self.nspname or pname != self.pname:
-            raise EvaluateException('<anyType> instance is (%s,%s) found (%s,%s)' %(
-                    self.nspname,self.pname,nspname,pname), ps.Backtrace(elt))
+            raise EvaluateException('<anyType> instance is (%s,%s) found (%s,%s)' %
+                    (self.nspname, self.pname, nspname, pname), ps.Backtrace(elt))
 
         #locate xsi:type
         prefix, typeName = SplitQName(_find_type(elt))
@@ -1374,15 +1408,15 @@ class AnyType(TypeCode):
         if not pyclass:
             if _is_xsd_or_soap_ns(namespaceURI):
                 pyclass = Any
-            elif (str(namespaceURI).lower()==str(Apache.Map.type[0]).lower())\
-                and (str(typeName).lower() ==str(Apache.Map.type[1]).lower()):
+            elif (str(namespaceURI).lower() == str(Apache.Map.type[0]).lower())\
+                and (str(typeName).lower() == str(Apache.Map.type[1]).lower()):
                 pyclass = Apache.Map
             else:
                 # Unknown type, so parse into a dictionary
                 pyobj = Any().parse_into_dict_or_list(elt, ps)
                 return pyobj
 
-        what = pyclass(pname=(self.nspname,self.pname))
+        what = pyclass(pname=(self.nspname, self.pname))
         pyobj = what.parse(elt, ps)
         return pyobj
 
@@ -1395,7 +1429,7 @@ class AnyElement(AnyType):
     tag = (SCHEMA.XSD3, 'any')
     logger = _GetLogger('ZSI.TC.AnyElement')
 
-    def __init__(self, namespaces=['#all'],pname=None,
+    def __init__(self, namespaces=['#all'], pname=None,
         minOccurs=1, maxOccurs=1, strip=1, processContents='strict',
         **kw):
 
@@ -1403,7 +1437,7 @@ class AnyElement(AnyType):
             raise ValueError('processContents(%s) must be lax, skip, or strict')
 
         self.processContents = processContents
-        AnyType.__init__(self, namespaces=namespaces,pname=pname,
+        AnyType.__init__(self, namespaces=namespaces, pname=pname,
             minOccurs=minOccurs, maxOccurs=maxOccurs, strip=strip, **kw)
 
     def serialize(self, elt, sw, pyobj, **kw):
@@ -1413,7 +1447,7 @@ class AnyElement(AnyType):
         instance.
         '''
         if isinstance(pyobj, TypeCode):
-            raise TypeError, 'pyobj is a typecode instance.'
+            raise TypeError('pyobj is a typecode instance.')
 
         what = getattr(pyobj, 'typecode', None)
         if what is not None and type(pyobj) is types.InstanceType:
@@ -1429,7 +1463,7 @@ class AnyElement(AnyType):
         if what is None:
             #TODO: seems incomplete.  what about facets.
             #if self.processContents == 'strict':
-            what = Any(pname=(self.nspname,self.pname))
+            what = Any(pname=(self.nspname, self.pname))
 
         self.logger.debug('serialize with %s', what.__class__.__name__)
         what.serialize(elt, sw, pyobj, **kw)
@@ -1443,7 +1477,7 @@ class AnyElement(AnyType):
         3) if 'strict' get declaration, or raise.
         '''
         skip = self.processContents == 'skip'
-        nspname,pname = _get_element_nsuri_name(elt)
+        nspname, pname = _get_element_nsuri_name(elt)
         what = GED(nspname, pname)
         if not skip and what is not None:
             pyobj = what.parse(elt, ps)
@@ -1462,7 +1496,7 @@ class AnyElement(AnyType):
             # First look thru user defined namespaces, if don't find
             # look for 'primitives'.
             pyclass = GTD(namespaceURI, typeName) or Any
-            what = pyclass(pname=(nspname,pname))
+            what = pyclass(pname=(nspname, pname))
             pyobj = what.parse(elt, ps)
             try:
                 pyobj.typecode = what
@@ -1474,16 +1508,16 @@ class AnyElement(AnyType):
             return pyobj
 
         if skip:
-            what = XML(pname=(nspname,pname), wrapped=False)
+            what = XML(pname=(nspname, pname), wrapped=False)
         elif self.processContents == 'lax':
-            what = Any(pname=(nspname,pname), unique=True)
+            what = Any(pname=(nspname, pname), unique=True)
         else:
-            what = Any(pname=(nspname,pname), unique=True)
+            what = Any(pname=(nspname, pname), unique=True)
 
         try:
             pyobj = what.parse(elt, ps)
         except EvaluateException, ex:
-            self.logger.debug("error parsing:  %s" %str(ex))
+            self.logger.debug("error parsing:  %s" % str(ex))
 
             if len(_children(elt)) != 0:
                 self.logger.debug('parse <any>, return as dict')
@@ -1491,7 +1525,7 @@ class AnyElement(AnyType):
 
             self.logger.debug("Give up, parse (%s,%s) as a String",
                   what.nspname, what.pname)
-            what = String(pname=(nspname,pname), typed=False)
+            what = String(pname=(nspname, pname), typed=False)
             return WrapImmutable(what.parse(elt, ps), what)
 
         if pyobj is None:
@@ -1507,7 +1541,6 @@ class AnyElement(AnyType):
             pyobj = WrapImmutable(pyobj, what)
 
         return pyobj
-
 
 
 class Union(SimpleType):
@@ -1527,21 +1560,19 @@ class Union(SimpleType):
         if len(self.memberTypeCodes) > 0:
             return
         if self.__class__.memberTypes is None:
-            raise EvaluateException, 'uninitialized class variable memberTypes [(namespace,name),]'
-        for nsuri,name in self.__class__.memberTypes:
-            tcclass = GTD(nsuri,name)
+            raise EvaluateException('uninitialized class variable memberTypes [(namespace,name),]')
+        for nsuri, name in self.__class__.memberTypes:
+            tcclass = GTD(nsuri, name)
             if tcclass is None:
-                tc = Any.parsemap.get((nsuri,name)) or Any.parsemap.get((None, name))
-                typecode = tc.__class__(pname=(self.nspname,self.pname))
+                tc = Any.parsemap.get((nsuri, name)) or Any.parsemap.get((None, name))
+                typecode = tc.__class__(pname=(self.nspname, self.pname))
             else:
-                typecode = tcclass(pname=(self.nspname,self.pname))
+                typecode = tcclass(pname=(self.nspname, self.pname))
 
             if typecode is None:
-                raise EvaluateException, \
-                    'Typecode class for Union memberType (%s,%s) is missing' %(nsuri,name)
+                raise EvaluateException('Typecode class for Union memberType (%s,%s) is missing' % (nsuri, name))
             if isinstance(typecode, Struct):
-                raise EvaluateException, \
-                    'Illegal: Union memberType (%s,%s) is complexType' %(nsuri,name)
+                raise EvaluateException('Illegal: Union memberType (%s,%s) is complexType' % (nsuri, name))
             self.memberTypeCodes.append(typecode)
 
     def parse(self, elt, ps, **kw):
@@ -1550,7 +1581,7 @@ class Union(SimpleType):
         not have attributes nor children, so this isn't too bad.
         '''
         self.setMemberTypeCodes()
-        (nsuri,typeName) = self.checkname(elt, ps)
+        (nsuri, typeName) = self.checkname(elt, ps)
 
         #if (nsuri,typeName) not in self.memberTypes:
         #    raise EvaluateException(
@@ -1561,9 +1592,9 @@ class Union(SimpleType):
             typecode = self.memberTypeCodes[indx]
             try:
                 pyobj = typecode.parse(elt, ps)
-            except ParseException, ex:
+            except ParseException:
                 continue
-            except Exception, ex:
+            except Exception:
                 continue
 
             if indx > 0:
@@ -1632,7 +1663,7 @@ class List(SimpleType):
         '''Currently need to require maxOccurs=1, so list
         is interpreted as a single unit of data.
         '''
-        assert kw.get('maxOccurs',1) == 1, \
+        assert kw.get('maxOccurs', 1) == 1, \
             'Currently only supporting SimpleType Lists with  maxOccurs=1'
 
         SimpleType.__init__(self, pname=pname, **kw)
@@ -1641,7 +1672,7 @@ class List(SimpleType):
 
         itemTypeCode = None
         if type(self.itemTypeCode) in _seqtypes:
-            namespaceURI,name = self.itemTypeCode
+            namespaceURI, name = self.itemTypeCode
             try:
                 itemTypeCode = GTD(*self.itemType)(None)
             except:
@@ -1655,13 +1686,12 @@ class List(SimpleType):
                         itemTypeCode =  pyclass(None)
 
                 if itemTypeCode is None:
-                    raise EvaluateException('Failed to locate %s' %str(self.itemTypeCode))
+                    raise EvaluateException('Failed to locate %s' % str(self.itemTypeCode))
 
             if hasattr(itemTypeCode, 'text_to_data') is False:
-                raise EvaluateException('TypeCode class %s missing text_to_data method' %itemTypeCode)
+                raise EvaluateException('TypeCode class %s missing text_to_data method' % itemTypeCode)
 
             self.itemTypeCode = itemTypeCode
-
 
     def text_to_data(self, text, elt, ps):
         '''convert text into typecode specific data.  items in
@@ -1695,12 +1725,13 @@ class List(SimpleType):
             elt = ps.FindLocalHREF(href, elt)
             self.checktype(elt, ps)
 
-        if self.nilled(elt, ps): return Nilled
-        if len(_children(elt)) == 0: return []
+        if self.nilled(elt, ps):
+            return Nilled
+        if len(_children(elt)) == 0:
+            return []
 
         v = self.simple_value(elt, ps)
         return self.text_to_data(v, elt, ps)
-
 
     def serialize(self, elt, sw, pyobj, name=None, orig=None, **kw):
         '''elt -- the current DOMWrapper element
@@ -1708,17 +1739,18 @@ class List(SimpleType):
            pyobj -- python object to serialize
         '''
         if pyobj is not None and type(pyobj) not in _seqtypes:
-            raise EvaluateException, 'expecting a list or None'
+            raise EvaluateException('expecting a list or None')
 
         objid = _get_idstr(pyobj)
-        ns,n = self.get_name(name, objid)
+        ns, n = self.get_name(name, objid)
         el = elt.createAppendElement(ns, n)
         if self.nillable is True and pyobj is None:
             self.serialize_as_nil(el)
             return None
 
         tc = self.itemTypeCode
-        s = StringIO(); sep = ' '
+        s = StringIO()
+        sep = ' '
         for item in pyobj:
             s.write(tc.get_formatted_content(item))
             s.write(sep)
@@ -1731,14 +1763,15 @@ def RegisterType(C, clobber=0, *args, **keywords):
     for t in C.__dict__.get('parselist', []):
         prev = Any.parsemap.get(t)
         if prev:
-            if prev.__class__ == C: continue
+            if prev.__class__ == C:
+                continue
             if not clobber:
                 raise TypeError(
                     str(C) + ' duplicating parse registration for ' + str(t))
         Any.parsemap[t] = instance
     for t in C.__dict__.get('seriallist', []):
         ti = type(t)
-        if ti in [ types.TypeType, types.ClassType]:
+        if ti in [types.TypeType, types.ClassType]:
             key = t
         elif ti in _stringtypes:
             key = (types.ClassType, t)
@@ -1746,7 +1779,8 @@ def RegisterType(C, clobber=0, *args, **keywords):
             raise TypeError(str(t) + ' is not a class name')
         prev = Any.serialmap.get(key)
         if prev:
-            if prev.__class__ == C: continue
+            if prev.__class__ == C:
+                continue
             if not clobber:
                 raise TypeError(
                     str(C) + ' duplicating serial registration for ' + str(t))
@@ -1824,8 +1858,8 @@ from TCapache import *
 _get_type_definition, _get_global_element_declaration, Wrap  = GTD, GED, WrapImmutable
 
 f = lambda x: type(x) == types.ClassType and issubclass(x, TypeCode) and getattr(x, 'type', None) is not None
-TYPES = filter(f, map(lambda y:eval(y),dir()))
+TYPES = filter(f, map(lambda y: eval(y), dir()))
 
 
-if __name__ == '__main__': print _copyright
-
+if __name__ == '__main__':
+    print _copyright

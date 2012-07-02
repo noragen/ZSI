@@ -5,20 +5,18 @@
 
 from ZSI import _copyright, _children, _child_elements, \
     _inttypes, _stringtypes, _seqtypes, _find_arraytype, _find_href, \
-    _find_type, _find_xmlns_prefix, _get_idstr, EvaluateException, \
-    ParseException
+    _find_type, _get_idstr, EvaluateException
 
-from TC import _get_element_nsuri_name, \
-     _get_xsitype, TypeCode, Any, AnyElement, AnyType, \
-     Nilled, UNBOUNDED
+from TC import _get_xsitype, TypeCode, Any, AnyElement, AnyType, \
+     Nilled
 
-from schema import GED, ElementDeclaration, TypeDefinition, \
-    _get_substitute_element, _get_type_definition, _is_substitute_element
+from schema import ElementDeclaration, TypeDefinition, \
+    _get_substitute_element, _is_substitute_element
 
-from ZSI.wstools.Namespaces import SCHEMA, SOAP
-from ZSI.wstools.Utility import SplitQName
+from ZSI.wstools.Namespaces import SOAP
 from ZSI.wstools.logging import getLogger as _GetLogger
-import re, types
+import re
+import types
 from copy import copy as _copy
 
 _find_arrayoffset = lambda E: E.getAttributeNS(SOAP.ENC, "offset")
@@ -27,11 +25,12 @@ _find_arrayposition = lambda E: E.getAttributeNS(SOAP.ENC, "position")
 _offset_pat = re.compile(r'\[[0-9]+\]')
 _position_pat = _offset_pat
 
+
 def _check_typecode_list(ofwhat, tcname):
     '''Check a list of typecodes for compliance with Struct
     requirements.'''
     for o in ofwhat:
-        if callable(o): #skip if _Mirage
+        if callable(o):  # skip if _Mirage
             continue
         if not isinstance(o, TypeCode):
             raise TypeError(
@@ -55,7 +54,7 @@ def _get_type_or_substitute(typecode, pyobj, sw, elt):
 
     # Global Element Declaration
     if isinstance(sub, ElementDeclaration):
-        if (typecode.nspname,typecode.pname) == (sub.nspname,sub.pname):
+        if (typecode.nspname, typecode.pname) == (sub.nspname, sub.pname):
             #raise TypeError(\
             #    'bad usage, failed to serialize element reference (%s, %s), in: %s' %
             #     (typecode.nspname, typecode.pname, sw.Backtrace(elt),))
@@ -87,13 +86,13 @@ def _get_type_or_substitute(typecode, pyobj, sw, elt):
     return sub
 
 
-
 class ComplexType(TypeCode):
     '''Represents an element of complexType, potentially containing other
     elements.
     '''
     logger = _GetLogger('ZSI.TCcompound.ComplexType')
-    class _DictHolder: pass
+    class _DictHolder:
+        pass
 
     def __init__(self, pyclass, ofwhat, pname=None, inorder=False, inline=False,
     mutable=True, mixed=False, mixed_aname='_text', **kw):
@@ -115,7 +114,8 @@ class ComplexType(TypeCode):
         if mixed is True:
             self.mixed_aname = mixed_aname
 
-        if self.mutable is True: self.inline = True
+        if self.mutable is True:
+            self.inline = True
         self.type = kw.get('type') or _get_xsitype(self)
         t = type(ofwhat)
         if t not in _seqtypes:
@@ -135,11 +135,11 @@ class ComplexType(TypeCode):
         debug and self.logger.debug('parse')
 
         xtype = self.checkname(elt, ps)
-        if self.type and xtype not in [ self.type, (None,None) ]:
+        if self.type and xtype not in [self.type, (None, None)]:
             if not isinstance(self, TypeDefinition):
-                raise EvaluateException(\
+                raise EvaluateException(
                     'ComplexType for %s has wrong type(%s), looking for %s' %
-                        (self.pname, self.checktype(elt,ps), self.type),
+                        (self.pname, self.checktype(elt, ps), self.type),
                                         ps.Backtrace(elt))
             else:
                 #TODO: mabye change MRO to handle this
@@ -154,8 +154,8 @@ class ComplexType(TypeCode):
                         ps.Backtrace(elt))
             elt = ps.FindLocalHREF(href, elt)
         c = _child_elements(elt)
-        count = len(c)
-        if self.nilled(elt, ps): return Nilled
+        if self.nilled(elt, ps):
+            return Nilled
 
         # Create the object.
         if self.pyclass:
@@ -164,8 +164,8 @@ class ComplexType(TypeCode):
             try:
                 pyobj = self.pyclass()
             except Exception, e:
-                raise TypeError("Constructing element (%s,%s) with pyclass(%s), %s" \
-                    %(self.nspname, self.pname, self.pyclass.__name__, str(e)))
+                raise TypeError("Constructing element (%s,%s) with pyclass(%s), %s"
+                    % (self.nspname, self.pname, self.pyclass.__name__, str(e)))
         else:
             pyobj = ComplexType._DictHolder()
 
@@ -177,23 +177,24 @@ class ComplexType(TypeCode):
 
         #MIXED
         if self.mixed is True:
-            setattr(pyobj, self.mixed_aname, self.simple_value(elt,ps, mixed=True))
+            setattr(pyobj, self.mixed_aname, self.simple_value(elt, ps, mixed=True))
 
         # Clone list of kids (we null it out as we process)
         c, crange = c[:], range(len(c))
         # Loop over all items we're expecting
 
         if debug:
-            self.logger.debug("ofwhat: %s",str(self.ofwhat))
+            self.logger.debug("ofwhat: %s", str(self.ofwhat))
 
-        for j,c_elt in [ (j, c[j]) for j in crange if c[j] ]:
-            for i,what in [ (i, self.ofwhat[i]) for i in range(len(self.ofwhat)) ]:
+        for j, c_elt in [(j, c[j]) for j in crange if c[j]]:
+            for i, what in [(i, self.ofwhat[i]) for i in range(len(self.ofwhat))]:
                 # Loop over all available kids
                 if debug:
                     self.logger.debug("what: (%s,%s)", what.nspname, what.pname)
 
                 # retrieve typecode if it is hidden
-                if callable(what): what = what()
+                if callable(what):
+                    what = what()
 
                 # Loop over all available kids
                 if debug:
@@ -207,7 +208,7 @@ class ComplexType(TypeCode):
                 if what.name_match(c_elt):
                     match = True
                     value = what.parse(c_elt, ps)
-                elif isinstance(what,AnyElement):
+                elif isinstance(what, AnyElement):
                     match = True
                     value = what.parse(c_elt, ps)
                 else:
@@ -259,25 +260,25 @@ class ComplexType(TypeCode):
             self.cb(elt, sw, pyobj, name=name, **kw)
         else:
             objid = _get_idstr(pyobj)
-            ns,n = self.get_name(name, objid)
+            ns, n = self.get_name(name, objid)
             el = elt.createAppendElement(ns, n)
-            el.setAttributeNS(None, 'href', "#%s" %objid)
+            el.setAttributeNS(None, 'href', "#%s" % objid)
             sw.AddCallback(self.cb, elt, sw, pyobj)
 
     def cb(self, elt, sw, pyobj, name=None, **kw):
         debug = self.logger.debugOn()
         if debug:
-            self.logger.debug("cb: %s" %str(self.ofwhat))
+            self.logger.debug("cb: %s" % str(self.ofwhat))
 
         objid = _get_idstr(pyobj)
-        ns,n = self.get_name(name, objid)
+        ns, n = self.get_name(name, objid)
         if pyobj is None:
             if self.nillable is True:
                 elem = elt.createAppendElement(ns, n)
                 self.serialize_as_nil(elem)
                 return
-            raise EvaluateException, 'element(%s,%s) is not nillable(%s)' %(
-                self.nspname,self.pname,self.nillable)
+            raise EvaluateException('element(%s,%s) is not nillable(%s)' %
+                                    (self.nspname, self.pname, self.nillable))
 
         if self.mutable is False and sw.Known(pyobj):
             return
@@ -293,22 +294,22 @@ class ComplexType(TypeCode):
 
             #MIXED For now just stick it in front.
             if self.mixed is True and self.mixed_aname is not None:
-               if hasattr(pyobj, self.mixed_aname):
-                   textContent = getattr(pyobj, self.mixed_aname)
-                   if hasattr(textContent, 'typecode'):
-                       textContent.typecode.serialize_text_node(elem, sw, textContent)
-                   elif type(textContent) in _stringtypes:
-                       if debug:
-                           self.logger.debug("mixed text content:\n\t%s",
-                                             textContent)
-                       elem.createAppendTextNode(textContent)
-                   else:
-                       raise EvaluateException('mixed test content in element (%s,%s) must be a string type' %(
-                           self.nspname,self.pname), sw.Backtrace(elt))
-               else:
-                   if debug:
-                       self.logger.debug("mixed NO text content in %s",
-                                         self.mixed_aname)
+                if hasattr(pyobj, self.mixed_aname):
+                    textContent = getattr(pyobj, self.mixed_aname)
+                    if hasattr(textContent, 'typecode'):
+                        textContent.typecode.serialize_text_node(elem, sw, textContent)
+                    elif type(textContent) in _stringtypes:
+                        if debug:
+                            self.logger.debug("mixed text content:\n\t%s",
+                                              textContent)
+                        elem.createAppendTextNode(textContent)
+                    else:
+                        raise EvaluateException('mixed test content in element (%s,%s) must be a string type' %
+                                                (self.nspname, self.pname), sw.Backtrace(elt))
+                else:
+                    if debug:
+                        self.logger.debug("mixed NO text content in %s",
+                                          self.mixed_aname)
         else:
             #For information items w/o tagNames
             #  ie. model groups,SOAP-ENC:Header
@@ -348,7 +349,8 @@ class ComplexType(TypeCode):
             what = self.ofwhat[indx]
 
             # retrieve typecode if hidden
-            if callable(what): what = what()
+            if callable(what):
+                what = what()
 
             if debug:
                 self.logger.debug('serialize what -- %s',
@@ -370,16 +372,16 @@ class ComplexType(TypeCode):
             whatTC = what
             if whatTC.maxOccurs > 1 and v is not None:
                 if type(v) not in _seqtypes:
-                    raise EvaluateException('pyobj (%s,%s), aname "%s": maxOccurs %s, expecting a %s' %(
-                         self.nspname,self.pname,what.aname,whatTC.maxOccurs,_seqtypes),
-                         sw.Backtrace(elt))
+                    raise EvaluateException('pyobj (%s,%s), aname "%s": maxOccurs %s, expecting a %s' %
+                                            (self.nspname, self.pname, what.aname, whatTC.maxOccurs, _seqtypes),
+                                             sw.Backtrace(elt))
 
                 for v2 in v:
                     occurs += 1
                     if occurs > whatTC.maxOccurs:
-                        raise EvaluateException('occurances (%d) exceeded maxOccurs(%d) for <%s>' %(
-                                occurs, whatTC.maxOccurs, what.pname),
-                                sw.Backtrace(elt))
+                        raise EvaluateException('occurances (%d) exceeded maxOccurs(%d) for <%s>' %
+                                                (occurs, whatTC.maxOccurs, what.pname),
+                                                sw.Backtrace(elt))
 
                     what = _get_type_or_substitute(whatTC, v2, sw, elt)
                     if debug and what is not whatTC:
@@ -419,7 +421,6 @@ class ComplexType(TypeCode):
             raise EvaluateException('Got None for nillable(%s), minOccurs(%d) element (%s,%s), %s' %
                     (what.nillable, what.minOccurs, what.nspname, what.pname, elem),
                     sw.Backtrace(elt))
-
 
     def setDerivedTypeContents(self, extensions=None, restrictions=None):
         """For derived types set appropriate parameter and
@@ -473,16 +474,14 @@ class Struct(ComplexType):
             )
 
         # Check Constraints
-        whats = map(lambda what: (what.nspname,what.pname), self.ofwhat)
+        whats = map(lambda what: (what.nspname, what.pname), self.ofwhat)
         for idx in range(len(self.ofwhat)):
             what = self.ofwhat[idx]
-            key = (what.nspname,what.pname)
+            key = (what.nspname, what.pname)
             if not isinstance(what, AnyElement) and what.maxOccurs > 1:
-                raise TypeError,\
-                    'Constraint: no element can have a maxOccurs>1'
-            if key in whats[idx+1:]:
-                raise TypeError,\
-                    'Constraint: No element may have the same name as any other'
+                raise TypeError('Constraint: no element can have a maxOccurs>1')
+            if key in whats[idx + 1:]:
+                raise TypeError('Constraint: No element may have the same name as any other')
 
 
 class Array(TypeCode):
@@ -500,7 +499,7 @@ class Array(TypeCode):
         self.dimensions = dimensions
         self.atype = atype
         if undeclared is False and self.atype[1].endswith(']') is False:
-            self.atype = (self.atype[0], '%s[]' %self.atype[1])
+            self.atype = (self.atype[0], '%s[]' % self.atype[1])
         # Support multiple dimensions
         if self.dimensions != 1:
             raise TypeError("Only single-dimensioned arrays supported")
@@ -543,7 +542,8 @@ class Array(TypeCode):
 
     def parse_offset(self, elt, ps):
         o = _find_arrayoffset(elt)
-        if not o: return 0
+        if not o:
+            return 0
         if not _offset_pat.match(o):
             raise EvaluateException('Bad offset "' + o + '"',
                         ps.Backtrace(elt))
@@ -551,7 +551,8 @@ class Array(TypeCode):
 
     def parse_position(self, elt, ps):
         o = _find_arrayposition(elt)
-        if not o: return None
+        if not o:
+            return None
         if o.find(',') > -1:
             raise EvaluateException('Sorry, no multi-dimensional arrays',
                     ps.Backtrace(elt))
@@ -567,12 +568,13 @@ class Array(TypeCode):
                 raise EvaluateException('Array has content and HREF',
                         ps.Backtrace(elt))
             elt = ps.FindLocalHREF(href, elt)
-        if self.nilled(elt, ps): return Nilled
+        if self.nilled(elt, ps):
+            return Nilled
         if not _find_arraytype(elt) and self.undeclared is False:
             raise EvaluateException('Array expected', ps.Backtrace(elt))
         t = _find_type(elt)
         if t:
-            pass # XXX should check the type, but parsing that is hairy.
+            pass  # XXX should check the type, but parsing that is hairy.
         offset = self.parse_offset(elt, ps)
         v, vlen = [], 0
         if offset and not self.sparse:
@@ -595,11 +597,12 @@ class Array(TypeCode):
     def serialize(self, elt, sw, pyobj, name=None, childnames=None, **kw):
         debug = self.logger.debugOn()
         if debug:
-            self.logger.debug("serialize: %r" %pyobj)
+            self.logger.debug("serialize: %r" % pyobj)
 
-        if self.mutable is False and sw.Known(pyobj): return
+        if self.mutable is False and sw.Known(pyobj):
+            return
         objid = _get_idstr(pyobj)
-        ns,n = self.get_name(name, objid)
+        ns, n = self.get_name(name, objid)
         el = elt.createAppendElement(ns, n)
 
         # nillable
@@ -630,15 +633,15 @@ class Array(TypeCode):
             while offset < end and pyobj[offset] == self.fill:
                 offset += 1
             if offset:
-                el.setAttributeNS(SOAP.ENC, 'offset', '[%d]' %offset)
+                el.setAttributeNS(SOAP.ENC, 'offset', '[%d]' % offset)
 
         if self.undeclared is False:
             el.setAttributeNS(SOAP.ENC, 'arrayType',
-                '%s:%s' %(el.getPrefix(self.atype[0]), self.atype[1])
+                '%s:%s' % (el.getPrefix(self.atype[0]), self.atype[1])
             )
 
         if debug:
-            self.logger.debug("ofwhat: %r" %self.ofwhat)
+            self.logger.debug("ofwhat: %r" % self.ofwhat)
 
         d = {}
         kn = childnames or self.childnames
@@ -653,11 +656,12 @@ class Array(TypeCode):
             position = 0
             for pos, v in pyobj:
                 if pos != position:
-                    el.setAttributeNS(SOAP.ENC, 'position', '[%d]' %pos)
+                    el.setAttributeNS(SOAP.ENC, 'position', '[%d]' % pos)
                     position = pos
 
                 self.ofwhat.serialize(el, sw, v, **d)
                 position += 1
 
 
-if __name__ == '__main__': print _copyright
+if __name__ == '__main__':
+    print _copyright
