@@ -2783,7 +2783,7 @@ class ComplexTypeComplexContentContainer(TypecodeContainerBase,
                 raise ContainerError('Unsupported derivation: %s'
                         % derivation.getItemTrace())
 
-            if base != (SOAP.ENC, 'Array') and and base != (SOAP.ENC12, 'Array') and base != (SCHEMA.XSD3, 'anyType'):
+            if base != (SOAP.ENC, 'Array') and base != (SOAP.ENC12, 'Array') and base != (SCHEMA.XSD3, 'anyType'):
                 raise ContainerError('Unsupported base(%s): %s'
                         % (base, derivation.getItemTrace()))
 
