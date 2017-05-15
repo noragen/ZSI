@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+﻿#! /usr/bin/env python
 '''Simple Service Container
    -- use with wsdl2py generated modules.
 '''
@@ -141,12 +141,27 @@ def _Dispatch(ps, server, SendResponse, SendFault, post, action, nsdict={}, **kw
         return SendFault(FaultFromException(e, 0, sys.exc_info()[2]), **kw)
 
 
-def AsServer(port=80, services=()):
+def AsServer(port=80, services=(), secure=None, certfile=None, keyfile=None):
     '''port --
        services -- list of service instances
     '''
     address = ('', port)
     sc = ServiceContainer(address, services)
+    if secure:
+        import socket, ssl
+        proto=0
+        try:
+            proto=ssl.PROTOCOL_TLS
+        except:
+            proto=ssl.PROTOCOL_SSLv23
+        context = ssl.SSLContext(proto)
+        context.verify_mode = ssl.CERT_OPTIONAL
+        context.check_hostname = False
+        context.load_default_certs()
+        if not certfile or not keyfile:
+            sc.socket = context.wrap_socket(sc.socket,  server_side=True)
+        else:
+            sc.socket = ssl.wrap_socket (sc.socket, certfile=certfile, keyfile=keyfile, server_side=True)
     sc.serve_forever()
 
 
@@ -356,7 +371,7 @@ class SOAPRequestHandler(BaseSOAPRequestHandler):
 
     def do_GET(self):
         '''The GET command.
-	'''
+    '''
         if self.path.lower().endswith("?wsdl"):
             service_path = self.path[:-5]
             service = self.server.getNode(service_path)
@@ -395,8 +410,8 @@ class ServiceContainer(HTTPServer):
         def __str__(self):
             return str(self.__dict)
 
-	def listNodes(self):
-	    print self.__dict.keys()
+        def listNodes(self):
+            print self.__dict.keys()
 
         def getNode(self, url):
             path = urlparse.urlsplit(url)[2]
