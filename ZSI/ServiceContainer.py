@@ -142,8 +142,11 @@ def _Dispatch(ps, server, SendResponse, SendFault, post, action, nsdict={}, **kw
 
 
 def AsServer(port=80, services=(), secure=None, certfile=None, keyfile=None):
-    '''port --
+    '''port		--
        services -- list of service instances
+       secure	-- use ssl: True/False
+       certfile -- Certificate (pem)
+       keyfile	-- Keyfile of certificate (pem)
     '''
     address = ('', port)
     sc = ServiceContainer(address, services)
