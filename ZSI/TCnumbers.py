@@ -55,14 +55,14 @@ class Iint(Integer):
     '''
     type = (SCHEMA.XSD3, "int")
     parselist = [ (None, "int") ]
-    seriallist = [ types.IntType ]
+    seriallist = [ int ]
 
 class Ilong(Integer):
     '''Signed 64bit value.
     '''
     type = (SCHEMA.XSD3, "long")
     parselist = [(None, "long")]
-    seriallist = [ types.LongType ]
+    seriallist = [ ]
 
 class InegativeInteger(Integer):
     '''Value less than zero.
@@ -138,7 +138,7 @@ class FPfloat(Decimal):
     '''
     type = (SCHEMA.XSD3, "float")
     parselist = [ (None, "float") ]
-    seriallist = [ types.FloatType ]
+    seriallist = [ float ]
 
 class FPdouble(Decimal):
     '''IEEE 64bit floating point value.
