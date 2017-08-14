@@ -145,7 +145,12 @@ accompanying credits file.
 ##
 ##  Stuff imported from elsewhere.
 from xml.dom import Node as _Node
-import types as _types
+import six
+if six.PY2:
+    import types as _types
+
+if six.PY3:
+	pass
 
 ##
 ##  Public constants.
@@ -154,11 +159,18 @@ UNICODE_ENCODING = 'utf-8'
 
 ##
 ##  Not public constants.
-_inttypes = [_types.IntType, _types.LongType]
-_floattypes = [_types.FloatType]
-_seqtypes = [_types.TupleType, _types.ListType]
-_stringtypes = [_types.StringType, _types.UnicodeType]
+if six.PY2:
+    _inttypes 		= [_types.IntType, _types.LongType]
+    _floattypes 	= [_types.FloatType]
+    _seqtypes 		= [_types.TupleType, _types.ListType]
+    _stringtypes 	= [_types.StringType, _types.UnicodeType]
 
+if six.PY3:
+	_inttypes 		= [int]
+	_floattypes 	= [float]
+	_seqtypes 		= [tuple, list]
+    _stringtypes 	= [str]
+	
 ##
 ##  Low-level DOM oriented utilities; useful for typecode implementors.
 _attrs = lambda E: (E.attributes and E.attributes.values()) or []
