@@ -47,6 +47,7 @@ or
   http://www.w3.org/Consortium/Legal/copyright-software-19980720
 '''
 
+import six
 import string
 from xml.dom import Node
 try:
@@ -55,12 +56,15 @@ except:
     class XMLNS:
         BASE = "http://www.w3.org/2000/xmlns/"
         XML = "http://www.w3.org/XML/1998/namespace"
-try:
-    import cStringIO
-    StringIO = cStringIO
-except ImportError:
-    import StringIO
+if six.PY2:
+    try:
+        import cStringIO as StringIO
+    except ImportError:
+        import StringIO
 
+if six.PY3:
+    from io import BytesIO as StringIO
+		
 _attrs = lambda E: (E.attributes and E.attributes.values()) or []
 _children = lambda E: E.childNodes or []
 _IN_XML_NS = lambda n: n.name.startswith("xmlns")

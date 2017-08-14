@@ -456,7 +456,7 @@ class ServiceContainer(HTTPServer):
         '''
         HTTPServer.__init__(self, server_address, RequestHandlerClass)
         self._nodes = self.NodeTree()
-        map(lambda s: self.setNode(s), services)
+        [self.setNode(s) for s in services]
 
     def __str__(self):
         return '%s(%s) nodes( %s )' %(self.__class__, _get_idstr(self), str(self._nodes))
