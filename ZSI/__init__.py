@@ -166,9 +166,9 @@ if six.PY2:
     _stringtypes 	= [_types.StringType, _types.UnicodeType]
 
 if six.PY3:
-	_inttypes 		= [int]
-	_floattypes 	= [float]
-	_seqtypes 		= [tuple, list]
+    _inttypes 		= [int]
+    _floattypes 	= [float]
+    _seqtypes 		= [tuple, list]
     _stringtypes 	= [str]
 	
 ##
