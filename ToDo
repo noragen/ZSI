@@ -1,0 +1,9 @@
+Roadmap:
+
+rewrite ZSI/resolvers.py to py3 (with help of six)
+while not working:
+	ZSI3=python.2to3(ZSI)
+	problems=test(ZSI3) 
+	problems+=[test(ZSI.tests)]
+	fixes=evaluate(problems)
+	ZSI3.doFix(fixes)
