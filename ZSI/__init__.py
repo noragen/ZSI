@@ -459,7 +459,7 @@ for i in [int, float, str, tuple, list]:
     schema._GetPyobjWrapper.RegisterBuiltin(i)
 
 if six.PY2:
-    schema._GetPyobjWrapper.RegisterBuiltin(unicode)
+    schema._GetPyobjWrapper.RegisterBuiltin(unicode) #unicode
 
 ## Load up Wrappers for builtin types
 schema.RegisterAnyElement()
