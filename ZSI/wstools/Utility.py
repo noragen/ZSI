@@ -25,13 +25,14 @@ import socket
 import weakref
 import ssl
 from os.path import isfile, join as opj, split as ops, exists as ope
-from string import join, strip, split
 from UserDict import UserDict
 from cStringIO import StringIO
 from TimeoutSocket import TimeoutSocket
 from urlparse import urlparse
 from httplib import HTTPConnection, HTTPSConnection
 from exceptions import Exception
+join, strip, split = str.join, str.strip, str.split
+
 try:
     from ZSI import _get_idstr
 except:
