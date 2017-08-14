@@ -24,11 +24,11 @@ _version = "%d.%d" % ( major, minor )
 if patchlevel:
     _version += '.%d' % patchlevel
 if candidate:
-    _version += '_rc%d' % candidate
+    _version += 'rc%d' % candidate
 elif alpha:
-    _version += '_a%d' % alpha
+    _version += 'a%d' % alpha
 elif beta:
-    _version += '_b%d' % beta
+    _version += 'b%d' % beta
 
 try:
     open('ZSI/version.py', 'r').close()
