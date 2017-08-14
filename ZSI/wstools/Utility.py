@@ -30,9 +30,10 @@ from cStringIO import StringIO
 from TimeoutSocket import TimeoutSocket
 from urlparse import urlparse
 from httplib import HTTPConnection, HTTPSConnection
-from exceptions import Exception
+
 join, strip, split = str.join, str.strip, str.split
 if six.PY2:
+    from exceptions import Exception
     from UserDict import UserDict
 if six.PY3:
     from collections import UserDict
