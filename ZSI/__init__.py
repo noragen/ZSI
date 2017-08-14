@@ -454,8 +454,12 @@ TC.RegisterType(TC.Apache.Map, minOccurs=0, nillable=False)
 ## TC.AnyElement wraps builtins so element name information can be saved
 ##
 import schema
-for i in [int, float, str, tuple, list, unicode]:
+
+for i in [int, float, str, tuple, list]:
     schema._GetPyobjWrapper.RegisterBuiltin(i)
+
+if six.PY2:
+    schema._GetPyobjWrapper.RegisterBuiltin(unicode)
 
 ## Load up Wrappers for builtin types
 schema.RegisterAnyElement()
