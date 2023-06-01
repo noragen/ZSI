@@ -2,7 +2,7 @@
 import base64
 import unittest
 import sys
-from cStringIO import StringIO
+from io import StringIO
 
 import ZSI
 from ZSI import _get_element_nsuri_name
@@ -30,14 +30,14 @@ class ns3:
 
 
     class LocalPAssertionId_Def(ZSI.TC.Union, TypeDefinition):
-        memberTypes = [(u'http://www.w3.org/2001/XMLSchema', u'long'), (u'http://www.w3.org/2001/XMLSchema', u'string'), (u'http://www.w3.org/2001/XMLSchema', u'anyURI')]
+        memberTypes = [('http://www.w3.org/2001/XMLSchema', 'long'), ('http://www.w3.org/2001/XMLSchema', 'string'), ('http://www.w3.org/2001/XMLSchema', 'anyURI')]
         schema = "http://www.pasoa.org/schemas/version024/PStruct.xsd"
         type = (schema, "LocalPAssertionId")
         def __init__(self, pname, **kw):
             ZSI.TC.Union.__init__(self, pname, **kw)
 
 class TestUnionTC(ZSI.TC.Union, TypeDefinition):
-    memberTypes = [(u'http://www.w3.org/2001/XMLSchema', u'long'), (u'http://www.w3.org/2001/XMLSchema', u'dateTime')]
+    memberTypes = [('http://www.w3.org/2001/XMLSchema', 'long'), ('http://www.w3.org/2001/XMLSchema', 'dateTime')]
     schema = "urn:test:union"
     type = (schema, "TestUnion")
     def __init__(self, pname, **kw):
@@ -66,16 +66,16 @@ class UnionTestCase(unittest.TestCase):
             # Union Limitation:
             #     currently it tries to parse it sequentially via memberTypes,
             #     so string is going to parse the URI when we want anyURI
-            self.failUnless(value == pyobj, 'Expected equivalent')
+            self.assertTrue(value == pyobj, 'Expected equivalent')
 
     def check_union_text_to_data(self):
         from ZSI.TC import EvaluateException
         class _PS:
             def Backtrace(self, *a, **kw): return ""
         typecode = TestUnionTC("TestUnion")
-        self.assertEquals(100, typecode.text_to_data('100', None, None), "Fail to parse long")
+        self.assertEqual(100, typecode.text_to_data('100', None, None), "Fail to parse long")
         date = typecode.text_to_data("2002-10-30T12:30:00Z", None, None)
-        self.assertEquals((2002, 10, 30), date[:3], "Fail to parse dateTime")
+        self.assertEqual((2002, 10, 30), date[:3], "Fail to parse dateTime")
         self.assertRaises(EvaluateException, typecode.text_to_data, "urn:string", None, _PS())
 
 

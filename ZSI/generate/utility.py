@@ -136,13 +136,13 @@ def GetPartsSubNames(args, wsdl):
     Args is a list of Message Parts.  i.e.: op.getInputMessage().parts.values()
     '''
     do_extended = True
-    from wsdl2python import WriteServiceModule, SchemaDescription
+    from .wsdl2python import WriteServiceModule, SchemaDescription
     wsm = WriteServiceModule(wsdl, do_extended=do_extended)
     wsm.gatherNamespaces()
     toReturn = []
     for arg in args:
         argSubnames = []
-        for l in wsm.usedNamespaces.values():
+        for l in list(wsm.usedNamespaces.values()):
             for schema in l:
                 sd = SchemaDescription(do_extended=do_extended)
                 sd.fromSchema(schema)

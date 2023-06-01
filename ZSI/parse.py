@@ -317,10 +317,10 @@ class ParsedSoap:
         if not r:
             raise EvaluateException('No resolver for "' + uri + '"')
         try:
-            if type(uri) == types.UnicodeType:
+            if type(uri) == str:
                 uri = str(uri)
             retval = r(uri, tc, self, **keywords)
-        except Exception, e:
+        except Exception as e:
             raise EvaluateException('''Can't resolve "''' + uri + '" ('
                                     + str(e.__class__) + '): ' + str(e))
         return retval
@@ -378,7 +378,7 @@ class ParsedSoap:
         '''Parse the message.
         '''
 
-        if type(how) == types.ClassType:
+        if type(how) == type:
             how = how.typecode
         return how.parse(self.body_root, self)
 
@@ -410,7 +410,7 @@ class ParsedSoap:
         d = {}
         lenofwhat = len(ofwhat)
         (c, crange) = (self.header_elements[:],
-                       range(len(self.header_elements)))
+                       list(range(len(self.header_elements))))
         for (i, what) in [(i, ofwhat[i]) for i in range(lenofwhat)]:
             if isinstance(what, AnyElement):
                 raise EvaluateException('not supporting <any> as child of SOAP-ENC:Header'
@@ -441,4 +441,4 @@ class ParsedSoap:
 
 
 if __name__ == '__main__':
-    print _copyright
+    print(_copyright)

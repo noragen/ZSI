@@ -12,7 +12,7 @@ from ZSI import _get_element_nsuri_name
 from ZSI.parse import ParsedSoap
 from ZSI.wstools.c14n import Canonicalize
 from ZSI.wstools.Namespaces import WSA200403, SOAP
-from cStringIO import StringIO
+from io import StringIO
 
 
 class CanonicalizeFromTestCase(unittest.TestCase):
@@ -20,8 +20,7 @@ class CanonicalizeFromTestCase(unittest.TestCase):
 
     def setUp(self):
         self.ps = ParsedSoap(XML_INST1)
-        self.el = filter(lambda el: _get_element_nsuri_name(el) == (WSA200403.ADDRESS, "From"),
-                      self.ps.header_elements)[0]
+        self.el = [el for el in self.ps.header_elements if _get_element_nsuri_name(el) == (WSA200403.ADDRESS, "From")][0]
 
     def tearDown(self):
         del self.ps
@@ -89,8 +88,7 @@ class CanonicalizeFromTestCase(unittest.TestCase):
         d2 = base64.encodestring(local_sha(CORRECT).digest()).strip()
 
         ps = ParsedSoap(XML_INST4)
-        el = filter(lambda el: _get_element_nsuri_name(el) == (WSA200403.ADDRESS, "MessageID"),
-                      ps.header_elements)[0]
+        el = [el for el in ps.header_elements if _get_element_nsuri_name(el) == (WSA200403.ADDRESS, "MessageID")][0]
 
         s = StringIO()
         Canonicalize(el, s, unsuppressedPrefixes=[])

@@ -78,17 +78,17 @@ class NoMessagePartTestCase(ServiceTestCase):
         s = SoapWriter()
         xml = str(s)
 
-        print xml
+        print(xml)
 
         # Core functionality required
         ps = ParsedSoap(xml)
 
-        self.failUnless(ps.body.childNodes == 0, "Empty Body expected: " + ps.body.childNodes)
-        self.failUnless(ps.body_root == None, "Body root should be None: " + ps.body_root)
+        self.assertTrue(ps.body.childNodes == 0, "Empty Body expected: " + ps.body.childNodes)
+        self.assertTrue(ps.body_root == None, "Body root should be None: " + ps.body_root)
 
         pyobj = ps.Parse(None)
 
-        self.failUnless(pyobj == None, "pyobj should be None: " + pyobj)
+        self.assertTrue(pyobj == None, "pyobj should be None: " + pyobj)
 
 
     def test_dispatch_NoMessagePart(self):
@@ -97,7 +97,7 @@ class NoMessagePartTestCase(ServiceTestCase):
 
         ## NOTE: Should take no argument
         rsp = port.Hello()
-        self.failUnless(rsp.Return == "XXX", "TODO")
+        self.assertTrue(rsp.Return == "XXX", "TODO")
 
 
 if __name__ == "__main__" :

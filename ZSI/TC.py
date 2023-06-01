@@ -20,17 +20,11 @@ import types
 import time
 import copy
 
-from base64 import decodestring as b64decode, encodestring as b64encode
-from urllib import unquote as urldecode, quote as urlencode
+from base64 import b64decode, b64encode
+from urllib.parse import unquote as urldecode, quote as urlencode
 from binascii import unhexlify as hexdecode, hexlify as hexencode
 
-import StringIO as StringIOMod
-try:
-    import cStringIO
-except ImportError:
-    StringIO = StringIOMod.StringIO
-else:
-    StringIO = cStringIO.StringIO
+from io import StringIO
 
 _is_xsd_or_soap_ns = lambda ns: ns in set((SCHEMA.XSD3, SOAP.ENC, SOAP.ENC12, SCHEMA.XSD1, SCHEMA.XSD2))
 _find_nil = lambda E: _find_xsi_attr(E, "null") or _find_xsi_attr(E, "nil")
@@ -157,10 +151,9 @@ class TypeCode:
             return elt
         href = _find_href(elt)
         if not href:
-            if self.minOccurs is 0 or self.nilled(elt, ps):
+            if self.minOccurs == 0 or self.nilled(elt, ps):
                 return None
-            raise EvaluateException('Required' + tag + ' missing',
-                    ps.Backtrace(elt))
+            raise EvaluateException(f'Required{tag} missing', ps.Backtrace(elt))
         return ps.FindLocalHREF(href, elt, 0)
 
     def get_parse_and_errorlist(self):
@@ -295,7 +288,7 @@ class TypeCode:
             return
 
         attributes = {}
-        for attr, what in self.attribute_typecode_dict.items():
+        for attr, what in list(self.attribute_typecode_dict.items()):
             namespaceURI, localName = None, attr
             if type(attr) in _seqtypes:
                 namespaceURI, localName = attr
@@ -326,7 +319,7 @@ class TypeCode:
             raise TypeError('pyobj.%s must be a dictionary of names and values'
                             % self.attrs_aname)
 
-        for attr, value in getattr(pyobj, self.attrs_aname).items():
+        for attr, value in list(getattr(pyobj, self.attrs_aname).items()):
             namespaceURI, localName = None, attr
             if type(attr) in _seqtypes:
                 namespaceURI, localName = attr
@@ -611,7 +604,7 @@ class Any(TypeCode):
             else:
                 serializer = Any.serialmap.get(tc)
             if not serializer:
-                tc = (types.ClassType, pyobj.__class__.__name__)
+                tc = (type, pyobj.__class__.__name__)
                 serializer = Any.serialmap.get(tc)
         else:
             serializer = Any.serialmap.get(tc)
@@ -651,12 +644,12 @@ class Any(TypeCode):
             return
 
         kw['name'] = (ns, n)
-        if tc == types.DictType:
+        if tc == dict:
             el = elt.createAppendElement(ns, n)
             parentNspname = self.nspname  # temporarily clear nspname for dict elements
             self.nspname = None
-            for o, m in pyobj.items():
-                if type(o) != types.StringType and type(o) != types.UnicodeType:
+            for o, m in list(pyobj.items()):
+                if type(o) != bytes and type(o) != str:
                     raise Exception('Dictionary implementation requires keys to be of type string (or unicode).' % pyobj)
                 kw['name'] = o
                 kw.setdefault('typed', True)
@@ -673,7 +666,7 @@ class Any(TypeCode):
             else:
                 serializer = Any.serialmap.get(tc)
             if not serializer:
-                tc = (types.ClassType, pyobj.__class__.__name__)
+                tc = (type, pyobj.__class__.__name__)
                 serializer = Any.serialmap.get(tc)
         else:
             serializer = Any.serialmap.get(tc)
@@ -716,7 +709,7 @@ class String(SimpleType):
     '''
     empty_content = ''
     parselist = [(None, 'string')]
-    seriallist = [types.StringType, types.UnicodeType]
+    seriallist = [bytes, str]
     type = (SCHEMA.XSD3, 'string')
     logger = _GetLogger('ZSI.TC.String')
 
@@ -740,7 +733,7 @@ class String(SimpleType):
     def get_formatted_content(self, pyobj):
         if type(pyobj) not in _stringtypes:
             pyobj = str(pyobj)
-        if type(pyobj) == unicode:
+        if type(pyobj) == str:
             return pyobj.encode(UNICODE_ENCODING)
         return pyobj
 
@@ -953,13 +946,13 @@ class Integer(SimpleType):
     ranges = {
         'unsignedByte':         (0, 255),
         'unsignedShort':        (0, 65535),
-        'unsignedInt':          (0, 4294967295L),
-        'unsignedLong':         (0, 18446744073709551615L),
+        'unsignedInt':          (0, 4294967295),
+        'unsignedLong':         (0, 18446744073709551615),
 
         'byte':                 (-128, 127),
         'short':                (-32768, 32767),
-        'int':                  (-2147483648L, 2147483647),
-        'long':                 (-9223372036854775808L, 9223372036854775807L),
+        'int':                  (-2147483648, 2147483647),
+        'long':                 (-9223372036854775808, 9223372036854775807),
 
         'negativeInteger':      (_ignored, -1),
         'nonPositiveInteger':   (_ignored, 0),
@@ -968,8 +961,8 @@ class Integer(SimpleType):
 
         'integer':              (_ignored, _ignored)
     }
-    parselist = [(None, k) for k in ranges.keys()]
-    seriallist = [types.IntType, types.LongType]
+    parselist = [(None, k) for k in list(ranges.keys())]
+    seriallist = [int, int]
     logger = _GetLogger('ZSI.TC.Integer')
 
     def __init__(self, pname=None, format='%d', **kw):
@@ -986,7 +979,7 @@ class Integer(SimpleType):
                 v = int(text)
             except:
                 try:
-                    v = long(text)
+                    v = int(text)
                 except:
                     raise EvaluateException('Unparseable integer',
                         ps.Backtrace(elt))
@@ -1150,7 +1143,7 @@ class Decimal(SimpleType):
         v = self.simple_value(elt, ps)
         try:
             fp = self.text_to_data(v, elt, ps)
-        except EvaluateException, ex:
+        except EvaluateException as ex:
             ex.args.append(ps.Backtrace(elt))
             raise ex
 
@@ -1211,7 +1204,7 @@ class Boolean(SimpleType):
             v = int(v)
         except:
             try:
-                v = long(v)
+                v = int(v)
             except:
                 raise EvaluateException('Unparseable boolean',
                         ps.Backtrace(elt))
@@ -1290,7 +1283,7 @@ class XML(TypeCode):
             raise EvaluateException('Too many XML children %d (maxOccurs = %d)' % (len(c), self.maxOccurs),
                     ps.Backtrace(elt))
         if self.copyit:
-            c = map(lambda n: n.cloneNode(1), c)
+            c = [n.cloneNode(1) for n in c]
         if self.maxOccurs == 1:
             return c[0]
         return c
@@ -1333,7 +1326,7 @@ class XML(TypeCode):
         ## copy xmlns: attributes into appended node
         parent = pyobj.parentNode
         while parent.nodeType == _Node.ELEMENT_NODE:
-            for attr in filter(lambda a: a.name.startswith('xmlns:') and a.name not in child.attributes.keys(), parent.attributes):
+            for attr in [a for a in parent.attributes if a.name.startswith('xmlns:') and a.name not in list(child.attributes.keys())]:
                 child.setAttributeNode(attr.cloneNode(1))
 
             parent = parent.parentNode
@@ -1454,7 +1447,7 @@ class AnyElement(AnyType):
             tc = pyobj.__class__
             what = Any.serialmap.get(tc)
             if not what:
-                tc = (types.ClassType, pyobj.__class__.__name__)
+                tc = (type, pyobj.__class__.__name__)
                 what = Any.serialmap.get(tc)
 
         self.logger.debug('processContents: %s', self.processContents)
@@ -1483,7 +1476,7 @@ class AnyElement(AnyType):
             pyobj = what.parse(elt, ps)
             try:
                 pyobj.typecode = what
-            except AttributeError, ex:
+            except AttributeError as ex:
                 # Assume this means builtin type.
                 pyobj = WrapImmutable(pyobj, what)
             return pyobj
@@ -1500,7 +1493,7 @@ class AnyElement(AnyType):
             pyobj = what.parse(elt, ps)
             try:
                 pyobj.typecode = what
-            except AttributeError, ex:
+            except AttributeError as ex:
                 # Assume this means builtin type.
                 pyobj = WrapImmutable(pyobj, what)
 
@@ -1516,7 +1509,7 @@ class AnyElement(AnyType):
 
         try:
             pyobj = what.parse(elt, ps)
-        except EvaluateException, ex:
+        except EvaluateException as ex:
             self.logger.debug("error parsing:  %s" % str(ex))
 
             if len(_children(elt)) != 0:
@@ -1616,7 +1609,7 @@ class Union(SimpleType):
             self.logger.debug("Trying member %s", str(typecode.type))
             try:
                 pyobj = typecode.text_to_data(text, elt, ps)
-            except Exception, ex:
+            except Exception as ex:
                 self.logger.debug("Fail to parse with %s: %s", typecode, ex)
                 continue
 
@@ -1759,7 +1752,7 @@ class List(SimpleType):
 
 
 def RegisterType(C, clobber=0, *args, **keywords):
-    instance = apply(C, args, keywords)
+    instance = C(*args, **keywords)
     for t in C.__dict__.get('parselist', []):
         prev = Any.parsemap.get(t)
         if prev:
@@ -1771,10 +1764,10 @@ def RegisterType(C, clobber=0, *args, **keywords):
         Any.parsemap[t] = instance
     for t in C.__dict__.get('seriallist', []):
         ti = type(t)
-        if ti in [types.TypeType, types.ClassType]:
+        if ti in [type, type]:
             key = t
         elif ti in _stringtypes:
-            key = (types.ClassType, t)
+            key = (type, t)
         else:
             raise TypeError(str(t) + ' is not a class name')
         prev = Any.serialmap.get(key)
@@ -1848,18 +1841,18 @@ def RegisterType(C, clobber=0, *args, **keywords):
 #        _RegisterTypeWithSchemaAndClass(importedSchemaTypes = generatedTypes, schemaTypeName=key, classModuleName=value[0], className=value[1], generatedClassSuffix=generatedClassSuffix)
 
 
-from TCnumbers import *
-from TCtimes import *
-from schema import GTD, GED, WrapImmutable
-from TCcompound import *
-from TCapache import *
+from .TCnumbers import *
+from .TCtimes import *
+from .schema import GTD, GED, WrapImmutable
+from .TCcompound import *
+from .TCapache import *
 
 # aliases backwards compatiblity
 _get_type_definition, _get_global_element_declaration, Wrap  = GTD, GED, WrapImmutable
 
-f = lambda x: type(x) == types.ClassType and issubclass(x, TypeCode) and getattr(x, 'type', None) is not None
-TYPES = filter(f, map(lambda y: eval(y), dir()))
+f = lambda x: type(x) == type and issubclass(x, TypeCode) and getattr(x, 'type', None) is not None
+TYPES = list(filter(f, [eval(y) for y in dir()]))
 
 
 if __name__ == '__main__':
-    print _copyright
+    print(_copyright)

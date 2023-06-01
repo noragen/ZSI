@@ -7,18 +7,18 @@ try:
                     'h:lp:qst:w',
                     ( 'host=', 'list', 'port=',
                         'quit', 'statusonly', 'test=', 'wsdl', 'help'))
-except getopt.GetoptError, e:
-    print >>sys.stderr, sys.argv[0] + ': ' + str(e)
+except getopt.GetoptError as e:
+    print(sys.argv[0] + ': ' + str(e), file=sys.stderr)
     sys.exit(1)
 if args:
-    print sys.argv[0] + ': Usage error; try --help.'
+    print(sys.argv[0] + ': Usage error; try --help.')
     sys.exit(1)
 
 hostname, portnum, tests, quitting, getwsdl, verbose = \
         'localhost', 1122, [0,1], 0, 0, 1
 for opt, val in opts:
     if opt in [ '--help' ]:
-        print '''Options include:
+        print('''Options include:
     --host HOST (-h HOST)       Name of server host
     --port PORT (-p PORT)       Port server is listening on
     --quit (-q)                 Send server a QUIT command
@@ -27,7 +27,7 @@ for opt, val in opts:
     --statusonly (-s)           Do not output reply packets; just status code
     --wsdl (-w)                 Get the WSDL file
 Default is -h%s -p%d -t%s''' % \
-    (hostname, portnum, ','.join([str(x) for x in tests]))
+    (hostname, portnum, ','.join([str(x) for x in tests])))
         sys.exit(0)
     if opt in [ '-h', '--host' ]:
         hostname = val
@@ -39,12 +39,12 @@ Default is -h%s -p%d -t%s''' % \
         quitting = 1
     elif opt in [ '-t', '--testnum' ]:
         if val in [ '*', 'all' ]:
-            tests = range(len(testlist))
+            tests = list(range(len(testlist)))
         else:
             tests = [ int(t) for t in val.split(',') ]
     elif opt in [ '-l', '--list' ]:
         for i in range(len(testlist)):
-            print i, testlist[i][0]
+            print(i, testlist[i][0])
         sys.exit(0)
     elif opt in [ '-w', '--wsdl' ]:
         getwsdl = 1
@@ -53,7 +53,7 @@ if quitting:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         s.connect((hostname, portnum))
-    except socket.error, e:
+    except socket.error as e:
         if e.args[1] == 'Connection refused': sys.exit(0)
         raise
     f = s.makefile('r+')
@@ -68,11 +68,11 @@ if getwsdl:
     f.write('GET /wsdl HTTP/1.0\r\n\r\n')
     f.flush()
     status = f.readline()
-    print status,
+    print(status, end=' ')
     while 1:
         l = f.readline()
         if l == '': break
-        print l,
+        print(l, end=' ')
     sys.exit(0)
 
 for T in tests:
@@ -81,7 +81,7 @@ for T in tests:
     s.connect((hostname, portnum))
     f = s.makefile('r+')
 
-    print '-' * 60, '\n\n\n', T, descr
+    print('-' * 60, '\n\n\n', T, descr)
     f.write('POST / HTTP/1.0\r\n')
     f.write('SOAPAction: "http://soapinterop.org/"\r\n')
     if header == None:
@@ -93,10 +93,10 @@ for T in tests:
     f.flush()
 
     status = f.readline()
-    print status,
+    print(status, end=' ')
     while 1:
         l = f.readline()
         if l == '': break
-        if verbose: print l,
+        if verbose: print(l, end=' ')
 
     f.close()

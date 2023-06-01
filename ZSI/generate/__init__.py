@@ -1,10 +1,11 @@
 # $Id: __init__.py 1261 2006-10-10 23:45:43Z boverhof $
 
-__all__ = ['wsdl2python', 'utility', 'containers', 'commands']
+__all__ = ['wsdl2python', 'utility', 'containers', 'commands', 'WSISpec', 'WSInteropError', 'Wsdl2PythonError', \
+    'WsdlGeneratorError', 'WSDLFormatError']
 
 class WSDLFormatError(Exception):
-   '''Detected errors in the WSDL document.
-   '''
+    """Detected errors in the WSDL document.
+    """
 
 class WsdlGeneratorError(Exception):
     pass
@@ -13,8 +14,8 @@ class Wsdl2PythonError(Exception):
     pass
 
 class WSInteropError(Exception):
-   '''Conformance to WS-I Basic-Profile 1.0 specification
-   '''
+    """Conformance to WS-I Basic-Profile 1.0 specification
+    """
 
 class WSISpec:
     R2203 = 'An rpc-literal binding in a DESCRIPTION MUST refer, in its soapbind:body element(s), only to wsdl:part element(s) that have been defined using the type attribute.'

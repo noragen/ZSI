@@ -32,7 +32,7 @@ class TestCase(unittest.TestCase):
 
         ps = ParsedSoap(msg)
         fault = FaultFromFaultMessage(ps)
-        self.failUnless(fault.code == ('','ServerFaultCode'), 'faultcode should be (namespace,name) tuple')
+        self.assertTrue(fault.code == ('','ServerFaultCode'), 'faultcode should be (namespace,name) tuple')
 
     def check_type_attribute_qname_in_default_ns(self):
         msg = """
@@ -49,11 +49,11 @@ class TestCase(unittest.TestCase):
 # Creates permutation of test options: "check", "check_any", etc
 #
 _SEP = '_'
-for t in [i[0].split(_SEP) for i in filter(lambda i: callable(i[1]), TestCase.__dict__.items())]:
+for t in [i[0].split(_SEP) for i in [i for i in list(TestCase.__dict__.items()) if callable(i[1])]]:
     test = ''
     for f in t:
         test += f
-        if globals().has_key(test): test += _SEP; continue
+        if test in globals(): test += _SEP; continue
         def _closure():
             name = test
             def _makeTestSuite():

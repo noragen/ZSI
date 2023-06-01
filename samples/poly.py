@@ -70,13 +70,13 @@ class TC_Polymorphic(TC.TypeCode):
     def __getattr__(self, attr):
         if attr == 'choice':
             choice = TC.Choice(
-                [getattr(v, 'typecode') for k,v in self.name2class.items()],
+                [getattr(v, 'typecode') for k,v in list(self.name2class.items())],
                 'Item')
             self.__dict__['choice'] = choice
             return choice
         if attr == 'class2name':
             class2name = {}
-            for k,v in self.name2class.items(): class2name[v] = k
+            for k,v in list(self.name2class.items()): class2name[v] = k
             self.__dict__['class2name'] = class2name
             return class2name
         raise AttributeError(attr)
@@ -106,7 +106,7 @@ test = '''<SOAP-ENV:Envelope
 
 ps = ParsedSoap(test)
 a = myTC.parse(ps.body_root, ps)
-print a
+print(a)
 
 if 0:
     # XXX.  Does not work. :(

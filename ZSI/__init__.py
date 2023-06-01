@@ -173,7 +173,7 @@ if six.PY3:
 	
 ##
 ##  Low-level DOM oriented utilities; useful for typecode implementors.
-_attrs = lambda E: (E.attributes and E.attributes.values()) or []
+_attrs = lambda E: (E.attributes and list(E.attributes.values())) or []
 _children = lambda E: E.childNodes or []
 _child_elements = lambda E: [n for n in (E.childNodes or [])
                         if n.nodeType == _Node.ELEMENT_NODE]
@@ -412,18 +412,18 @@ class WSActionException(ZSIException):
 
 ##
 ##  Importing the rest of ZSI.
-import version
+from . import version
 
 
 def Version():
     return version.Version
 
-from writer import SoapWriter
-from parse import ParsedSoap
-from fault import Fault, \
+from .writer import SoapWriter
+from .parse import ParsedSoap
+from .fault import Fault, \
     FaultFromActor, FaultFromException, FaultFromFaultMessage, \
     FaultFromNotUnderstood, FaultFromZSIException
-import TC
+from . import TC
 TC.RegisterType(TC.String, minOccurs=0, nillable=False)
 TC.RegisterType(TC.URI, minOccurs=0, nillable=False)
 TC.RegisterType(TC.Base64String, minOccurs=0, nillable=False)
@@ -453,13 +453,13 @@ TC.RegisterType(TC.Apache.Map, minOccurs=0, nillable=False)
 ## Register Wrappers for builtin types.
 ## TC.AnyElement wraps builtins so element name information can be saved
 ##
-import schema
+from . import schema
 
 for i in [int, float, str, tuple, list]:
     schema._GetPyobjWrapper.RegisterBuiltin(i)
 
 if six.PY2:
-    schema._GetPyobjWrapper.RegisterBuiltin(unicode) #unicode
+    schema._GetPyobjWrapper.RegisterBuiltin(str) #unicode
 
 ## Load up Wrappers for builtin types
 schema.RegisterAnyElement()
@@ -471,4 +471,4 @@ schema.RegisterAnyElement()
 #    pass
 
 if __name__ == '__main__':
-    print _copyright
+    print(_copyright)

@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 from ZSI import *
 from ZSI import _copyright, resolvers, _child_elements, _textprotect
-import sys, time, cStringIO as StringIO
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+import sys, time, io as StringIO
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from sclasses import Operation, WSDL_DEFINITION, TC_SOAPStruct
 
@@ -27,10 +27,10 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
         '''Log a debug/trace message.'''
         F = self.server.tracefile
         if not F: return
-        print >>F, '=' * 60, '\n%s %s %s %s:' % \
-            (what, self.client_address, self.path, time.ctime(time.time()))
-        print >>F, text
-        print >>F, '=' * 60, '\n'
+        print('=' * 60, '\n%s %s %s %s:' % \
+            (what, self.client_address, self.path, time.ctime(time.time())), file=F)
+        print(text, file=F)
+        print('=' * 60, '\n', file=F)
         F.flush()
 
     def do_QUIT(self):
@@ -71,10 +71,10 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
                 IN = self.rfile.read(cl)
                 self.trace(IN, 'RECEIVED')
                 ps = ParsedSoap(IN)
-        except ParseException, e:
+        except ParseException as e:
             self.send_fault(FaultFromZSIException(e))
             return
-        except Exception, e:
+        except Exception as e:
             # Faulted while processing; assume it's in the header.
             self.send_fault(FaultFromException(e, 1, sys.exc_info()[2]))
             return
@@ -118,7 +118,7 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
 
             try:
                 results = op.TCin.parse(ps.body_root, ps)
-            except ParseException, e:
+            except ParseException as e:
                 self.send_fault(FaultFromZSIException(e))
             self.trace(str(results), 'PARSED')
             if op.convert:
@@ -130,7 +130,7 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
                     name = 'Z:' + n + 'Response', inline=1)
             sw.close()
             self.send_xml(reply.getvalue())
-        except Exception, e:
+        except Exception as e:
             # Fault while processing; now it's in the body.
             self.send_fault(FaultFromException(e, 0, sys.exc_info()[2]))
             return
@@ -172,11 +172,11 @@ import getopt
 try:
     (opts, args) = getopt.getopt(sys.argv[1:], 'l:p:t:u:',
                         ('log=', 'port=', 'tracefile=', 'url=') )
-except getopt.GetoptError, e:
-    print >>sys.stderr, sys.argv[0] + ': ' + str(e)
+except getopt.GetoptError as e:
+    print(sys.argv[0] + ': ' + str(e), file=sys.stderr)
     sys.exit(1)
 if args:
-    print >>sys.stderr, sys.argv[0] + ': Usage error.'
+    print(sys.argv[0] + ': Usage error.', file=sys.stderr)
     sys.exit(1)
 
 portnum = 1122

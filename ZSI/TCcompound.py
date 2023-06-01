@@ -7,10 +7,10 @@ from ZSI import _copyright, _children, _child_elements, \
     _inttypes, _stringtypes, _seqtypes, _find_arraytype, _find_href, \
     _find_type, _get_idstr, EvaluateException
 
-from TC import _get_xsitype, TypeCode, Any, AnyElement, AnyType, \
+from .TC import _get_xsitype, TypeCode, Any, AnyElement, AnyType, \
      Nilled
 
-from schema import ElementDeclaration, TypeDefinition, \
+from .schema import ElementDeclaration, TypeDefinition, \
     _get_substitute_element, _is_substitute_element
 
 from ZSI.wstools.Namespaces import SOAP
@@ -125,7 +125,7 @@ class ComplexType(TypeCode):
         if TypeCode.typechecks:
             # XXX Not sure how to determine if new-style class..
             if self.pyclass is not None and \
-                type(self.pyclass) is not types.ClassType and not isinstance(self.pyclass, object):
+                type(self.pyclass) is not type and not isinstance(self.pyclass, object):
                 raise TypeError('pyclass must be None or an old-style/new-style class, not ' +
                         str(type(self.pyclass)))
             _check_typecode_list(self.ofwhat, 'ComplexType')
@@ -163,7 +163,7 @@ class ComplexType(TypeCode):
             # element declaration is initialized with a tag.
             try:
                 pyobj = self.pyclass()
-            except Exception, e:
+            except Exception as e:
                 raise TypeError("Constructing element (%s,%s) with pyclass(%s), %s"
                     % (self.nspname, self.pname, self.pyclass.__name__, str(e)))
         else:
@@ -180,7 +180,7 @@ class ComplexType(TypeCode):
             setattr(pyobj, self.mixed_aname, self.simple_value(elt, ps, mixed=True))
 
         # Clone list of kids (we null it out as we process)
-        c, crange = c[:], range(len(c))
+        c, crange = c[:], list(range(len(c)))
         # Loop over all items we're expecting
 
         if debug:
@@ -331,7 +331,7 @@ class ComplexType(TypeCode):
         else:
             d = pyobj
             f = lambda attr: pyobj.get(attr)
-            if TypeCode.typechecks and type(d) != types.DictType:
+            if TypeCode.typechecks and type(d) != dict:
                 raise TypeError("Classless complexType didn't get dictionary")
 
         indx, lenofwhat = 0, len(self.ofwhat)
@@ -474,7 +474,7 @@ class Struct(ComplexType):
             )
 
         # Check Constraints
-        whats = map(lambda what: (what.nspname, what.pname), self.ofwhat)
+        whats = [(what.nspname, what.pname) for what in self.ofwhat]
         for idx in range(len(self.ofwhat)):
             what = self.ofwhat[idx]
             key = (what.nspname, what.pname)
@@ -664,4 +664,4 @@ class Array(TypeCode):
 
 
 if __name__ == '__main__':
-    print _copyright
+    print(_copyright)

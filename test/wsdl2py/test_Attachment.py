@@ -61,7 +61,7 @@ class TestCase(ServiceTestCase):
         request._attachment = open("stubs/TestService_client.py", 'r')
         sw = SoapWriter({}, header=True, outputclass=None, encodingStyle=None)
         sw.serialize(request)
-        print "the request message is: " + str(sw)
+        print("the request message is: " + str(sw))
         #there is not server side, so for the moment we just create the message and print it on screen
         #TODO add server side implmementation
 

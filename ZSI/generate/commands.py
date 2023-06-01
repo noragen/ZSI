@@ -4,12 +4,12 @@
 # See Copyright for copyright notice!
 ############################################################################
 
-import exceptions, sys, optparse, os, warnings, traceback
+import sys, optparse, os, warnings, traceback
 from os.path import isfile, join, split
 
 #from operator import xor
 import ZSI
-from ConfigParser import ConfigParser
+from configparser import ConfigParser
 from ZSI.generate.wsdl2python import WriteServiceModule, ServiceDescription as wsdl2pyServiceDescription
 from ZSI.wstools import WSDLTools, XMLSchema
 from ZSI.wstools.logging import setBasicLoggerDEBUG,setBasicLoggerWARN
@@ -19,7 +19,7 @@ from ZSI.generate.wsdl2dispatch import ServiceModuleWriter as ServiceDescription
 from ZSI.generate.wsdl2dispatch import WSAServiceModuleWriter as ServiceDescriptionWSA
 
 
-warnings.filterwarnings('ignore', '', exceptions.UserWarning)
+warnings.filterwarnings('ignore', '', UserWarning)
 def SetDebugCallback(option, opt, value, parser, *args, **kwargs):
     setBasicLoggerDEBUG()
     warnings.resetwarnings()
@@ -118,8 +118,8 @@ def wsdl2py(args=None):
         (options, args) = op.parse_args(args)
 
     if len(args) != 1:
-        print>>sys.stderr, 'Expecting a file/url as argument (WSDL).'
-        sys.exit(os.EX_USAGE)
+        print('Expecting a file/url as argument (WSDL).', file=sys.stderr)
+        sys.exit(70)
 
     location = args[0]
     if options.schema is True:
@@ -130,15 +130,19 @@ def wsdl2py(args=None):
     load = reader.loadFromFile
     if not isfile(location):
         load = reader.loadFromURL
+        
+    wsdl = load(location)
 
+    """
     try:
         wsdl = load(location)
-    except Exception, e:
-        print >> sys.stderr, "Error loading %s: \n\t%s" % (location, e)
+    except Exception as e:
+        print("Error loading %s: \n\t%s" % (location, e), file=sys.stderr)
         traceback.print_exc(sys.stderr)
         # exit code UNIX specific, Windows?
         if hasattr(os, 'EX_NOINPUT'): sys.exit(os.EX_NOINPUT)
         sys.exit("error loading %s" %location)
+    """
 
     if isinstance(wsdl, XMLSchema.XMLSchema):
         wsdl.location = location
@@ -227,18 +231,15 @@ def _wsdl2py(options, wsdl):
     else:
         wsm = WriteServiceModule(wsdl, addressing=options.address)
         client_mod = wsm.getClientModuleName()
-        client_file = join(options.output_dir, '%s.py' %client_mod)
+        client_file = join(options.output_dir, f'{client_mod}.py')
         append(client_file)
-        fd = open(client_file, 'w+')
-        wsm.writeClient(fd)
-        fd.close()
-
+        with open(client_file, 'w+', encoding = "UTF-8") as fd:
+            wsm.writeClient(fd)
     types_mod = wsm.getTypesModuleName()
-    types_file = join(options.output_dir, '%s.py' %types_mod)
+    types_file = join(options.output_dir, f'{types_mod}.py')
     append(types_file)
-    fd = open(types_file, 'w+' )
-    wsm.writeTypes(fd)
-    fd.close()
+    with open(types_file, 'w+', encoding = "UTF-8" ) as fd:
+        wsm.writeTypes(fd)
 
     return files
 
@@ -252,7 +253,7 @@ def _wsdl2dispatch(options, wsdl):
         kw['base'] = WSResource
         ss = ServiceDescription(**kw)
         if options.address is True:
-            raise RuntimeError, 'WS-Address w/twisted currently unsupported, edit the "factory" attribute by hand'
+            raise RuntimeError('WS-Address w/twisted currently unsupported, edit the "factory" attribute by hand')
     else:
         # TODO: make all this handler arch
         if options.address is True:
@@ -334,7 +335,7 @@ def _writedoc(doc, thing, forceload=0):
         file = open(fname, 'w')
         file.write(page)
         file.close()
-    except (ImportError, pydoc.ErrorDuringImport), value:
+    except (ImportError, pydoc.ErrorDuringImport) as value:
         traceback.print_exc(sys.stderr)
     else:
         return name + '.html'
@@ -365,7 +366,7 @@ def _writeclientdoc(doc, thing, forceload=0):
         file = open(name, 'w')
         file.write(page)
         file.close()
-    except (ImportError, pydoc.ErrorDuringImport), value:
+    except (ImportError, pydoc.ErrorDuringImport) as value:
         log.debug(str(value))
 
     pydoc.HTMLDoc.docmodule = docmodule
@@ -376,7 +377,7 @@ def _writetypesdoc(doc, thing, forceload=0):
     try:
         object, name = pydoc.resolve(thing, forceload)
         name = os.path.join(doc, name + '.html')
-    except (ImportError, pydoc.ErrorDuringImport), value:
+    except (ImportError, pydoc.ErrorDuringImport) as value:
         log.debug(str(value))
         return
 
@@ -397,7 +398,7 @@ def _writetypesdoc(doc, thing, forceload=0):
 
                 try:
                     typecode = iklass()
-                except (AttributeError,RuntimeError), ex:
+                except (AttributeError,RuntimeError) as ex:
                     elements_dict[iname] = _writebrokedoc(doc, ex, iname)
                     continue
 
@@ -410,7 +411,7 @@ def _writetypesdoc(doc, thing, forceload=0):
             if issubclass(iklass, TypeDefinition):
                 try:
                     typecode = iklass(None)
-                except (AttributeError,RuntimeError), ex:
+                except (AttributeError,RuntimeError) as ex:
                     types_dict[iname] = _writebrokedoc(doc, ex, iname)
                     continue
 
@@ -448,7 +449,7 @@ def _writetypesdoc(doc, thing, forceload=0):
         for iname,iclass in cdict[name]:
             fname = fdict[(name,iname)]
 
-            if elements_dict.has_key(iname):
+            if iname in elements_dict:
                 push('class <a href="%s">%s</a>: element declaration typecode<br/>'\
                     %(fname,iname))
                 pyclass = elements_dict[iname]
@@ -457,7 +458,7 @@ def _writetypesdoc(doc, thing, forceload=0):
                     push('<li><a href="%s">pyclass</a>: instances serializable to XML<br/></li>'\
                         %elements_dict[iname])
                     push('</ul>')
-            elif types_dict.has_key(iname):
+            elif iname in types_dict:
                 push('class <a href="%s">%s</a>: type definition typecode<br/>' %(fname,iname))
                 pyclass = types_dict[iname]
                 if pyclass is not None:
@@ -479,7 +480,7 @@ def _writetypesdoc(doc, thing, forceload=0):
         file = open(name, 'w')
         file.write(page)
         file.close()
-    except (ImportError, pydoc.ErrorDuringImport), value:
+    except (ImportError, pydoc.ErrorDuringImport) as value:
         log.debug(str(value))
 
     pydoc.HTMLDoc.docclass = doclass
@@ -493,7 +494,7 @@ def _writebrokedoc(doc, ex, name, forceload=0):
         file = open(fname, 'w')
         file.write(page)
         file.close()
-    except (ImportError, pydoc.ErrorDuringImport), value:
+    except (ImportError, pydoc.ErrorDuringImport) as value:
         log.debug(str(value))
 
     return name + '.html'
@@ -515,7 +516,7 @@ def _writepydoc(doc, *args):
         name = os.path.sep.join(f.strip('.py').split(os.path.sep))
         try:
             e = __import__(name)
-        except Exception,ex:
+        except Exception as ex:
             raise
 #            _writebrokedoc(doc, ex, name)
 #            continue
@@ -530,7 +531,7 @@ def _writepydoc(doc, *args):
 
         try:
             _writedoc(doc, e)
-        except IndexError,ex:
+        except IndexError as ex:
             _writebrokedoc(doc, ex, name)
             continue
 

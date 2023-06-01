@@ -7,7 +7,7 @@ from ZSI import *
 from ZSI import _copyright
 import base64, os
 
-_b64_decode = base64.decodestring
+from base64 import b64decode, b64encode
 
 # Typecode to parse a ZSI BasicAuth header.
 _auth_tc = TC.Struct(None,
@@ -46,8 +46,8 @@ class ClientBinding:
         if ba:
             ba = ba.split(' ')
             if len(ba) == 2 and ba[0].lower() == 'basic':
-                ba = _b64_decode(ba[1])
-                self.auth = (AUTH.httpbasic,) + tuple(ba.split(':'))
+                ba = b64decode(ba[1])
+                self.auth = (AUTH.httpbasic,) + tuple(ba.decode().split(':'))
                 return self.auth
         self.auth = (AUTH.none,)
         return self.auth
@@ -62,4 +62,4 @@ class ClientBinding:
         '''
         return self.ps
 
-if __name__ == '__main__': print _copyright
+if __name__ == '__main__': print(_copyright)

@@ -91,7 +91,7 @@ def _test_local_serialize1():
         sw = SoapWriter(envelope=False)
         sw.serialize(pyobj)
         xml = str(sw)
-        print xml
+        print(xml)
 
         et = ElementTree.fromstring(xml)
 
@@ -99,7 +99,7 @@ def _test_local_serialize1():
         assert(et.tag == '{urn:test}GlobalElementLocalType'), "root GED"
 
         for i,j in zip([ 'Unqualified1', 'Unqualified2', 'Unqualified3', 'Unqualified4'],
-            map(lambda c: c.tag, et.getchildren())):
+            [c.tag for c in et.getchildren()]):
 
             assert(i == j), 'Match Failed: expected "%s" not "%s"' %(i,j)
 

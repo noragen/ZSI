@@ -13,7 +13,7 @@ class Service(NoMessagePartServer):
         request,response = NoMessagePartServer.soap_Hello(self, ps, **kw)
 
         if request is not None:
-            raise RuntimeException, "REQUEST SHOULD BE NONE"
+            raise RuntimeException("REQUEST SHOULD BE NONE")
         response.Result = "XXX"
         return request,response
 

@@ -16,15 +16,15 @@ import EchoServer_interface
 # Here we use a Tie approach
 class EchoServer:
     def authorize(self, auth_info, post, action):
-        print "NOT Authorizing TIE Echo"
+        print("NOT Authorizing TIE Echo")
         ctx = GetSOAPContext()
-        print dir(ctx)
-        print "Container: ", ctx.connection
-        print "Parsed SOAP: ", ctx.parsedsoap
-        print "Container: ", ctx.container
-        print "HTTP Headers:\n", ctx.httpheaders
-        print "----"
-        print "XML Data:\n", ctx.xmldata
+        print(dir(ctx))
+        print("Container: ", ctx.connection)
+        print("Parsed SOAP: ", ctx.parsedsoap)
+        print("Container: ", ctx.container)
+        print("HTTP Headers:\n", ctx.httpheaders)
+        print("----")
+        print("XML Data:\n", ctx.xmldata)
         return 0
 
     def Echo(self, input):
@@ -36,15 +36,15 @@ class EchoServIn(EchoServer_interface.EchoServer):
         EchoServer_interface.EchoServer.__init__(self, post, kw=kw)
 
     def authorize(self, auth_info, post, action):
-        print "Authorizing INHERIT Echo"
+        print("Authorizing INHERIT Echo")
         ctx = GetSOAPContext()
-        print dir(ctx)
-        print "Container: ", ctx.connection
-        print "Parsed SOAP: ", ctx.parsedsoap
-        print "Container: ", ctx.container
-        print "HTTP Headers:\n", ctx.httpheaders
-        print "----"
-        print "XML Data:\n", ctx.xmldata
+        print(dir(ctx))
+        print("Container: ", ctx.connection)
+        print("Parsed SOAP: ", ctx.parsedsoap)
+        print("Container: ", ctx.container)
+        print("HTTP Headers:\n", ctx.httpheaders)
+        print("----")
+        print("XML Data:\n", ctx.xmldata)
         return 1
 
     def Echo(self, input):

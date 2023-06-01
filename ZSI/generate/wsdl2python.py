@@ -7,20 +7,13 @@
 
 # $Id: wsdl2python.py 1402 2007-07-06 22:51:32Z boverhof $
 
-import os, sys, warnings
+import sys
+
 from ZSI import _get_idstr
-from ZSI.wstools.logging import getLogger as _GetLogger
-from ZSI.wstools import WSDLTools
-from ZSI.wstools.WSDLTools import SoapAddressBinding,\
-    SoapBodyBinding, SoapBinding,MimeContentBinding,\
-    HttpUrlEncodedBinding
-from ZSI.wstools.XMLSchema import SchemaReader, ElementDeclaration, SchemaError
-from ZSI.typeinterpreter import BaseTypeInterpreter
-from ZSI.generate import WsdlGeneratorError, Wsdl2PythonError
-from containers import *
-from ZSI.generate import utility
-from ZSI.generate.utility import NamespaceAliasDict as NAD
 from ZSI.generate.utility import GetModuleBaseNameFromWSDL
+from ZSI.wstools.XMLSchema import SchemaReader
+from ZSI.wstools.logging import getLogger as _GetLogger
+from .containers import *
 
 """
 classes:
@@ -45,6 +38,7 @@ classes:
 
 """
 
+
 class WriteServiceModule:
     """top level driver class invoked by wsd2py
     class variables:
@@ -57,7 +51,7 @@ class WriteServiceModule:
     logger = _GetLogger("WriteServiceModule")
 
     def __init__(self, wsdl, addressing=False, notification=False,
-                 do_extended=False, extPyClasses=None, configParser = None):
+                 do_extended=False, extPyClasses=None, configParser=None):
         self._wsdl = wsdl
         self._addressing = addressing
         self._notification = notification
@@ -67,34 +61,34 @@ class WriteServiceModule:
         self.client_module_path = None
         self.types_module_name = None
         self.types_module_path = None
-        self.messages_module_path = None # used in extended generation
+        self.messages_module_path = None  # used in extended generation
         self.do_extended = do_extended
         self.extPyClasses = extPyClasses
 
     def getClientModuleName(self):
         """client module name.
         """
-        name = GetModuleBaseNameFromWSDL(self._wsdl)
-        if not name:
-            raise WsdlGeneratorError, 'could not determine a service name'
+        if name := GetModuleBaseNameFromWSDL(self._wsdl):
+            return (
+                name
+                if self.client_module_suffix is None
+                else f'{name}{self.client_module_suffix}'
+            )
+        else:
+            raise WsdlGeneratorError('could not determine a service name')
 
-        if self.client_module_suffix is None:
-            return name
-
-        return '%s%s' %(name, self.client_module_suffix)
-
-#    def getMessagesModuleName(self):
-#        name = GetModuleBaseNameFromWSDL(self._wsdl)
-#        if not name:
-#            raise WsdlGeneratorError, 'could not determine a service name'
-#
-#        if self.messages_module_suffix is None:
-#            return name
-#
-#        if len(self.messages_module_suffix) == 0:
-#            return self.getClientModuleName()
-#
-#        return '%s%s' %(name, self.messages_module_suffix)
+    #    def getMessagesModuleName(self):
+    #        name = GetModuleBaseNameFromWSDL(self._wsdl)
+    #        if not name:
+    #            raise WsdlGeneratorError, 'could not determine a service name'
+    #
+    #        if self.messages_module_suffix is None:
+    #            return name
+    #
+    #        if len(self.messages_module_suffix) == 0:
+    #            return self.getClientModuleName()
+    #
+    #        return '%s%s' %(name, self.messages_module_suffix)
 
     def setTypesModuleName(self, name):
         self.types_module_name = name
@@ -105,14 +99,14 @@ class WriteServiceModule:
         if self.types_module_name is not None:
             return self.types_module_name
 
-        name = GetModuleBaseNameFromWSDL(self._wsdl)
-        if not name:
-            raise WsdlGeneratorError, 'could not determine a service name'
-
-        if self.types_module_suffix is None:
-            return name
-
-        return '%s%s' %(name, self.types_module_suffix)
+        if name := GetModuleBaseNameFromWSDL(self._wsdl):
+            return (
+                name
+                if self.types_module_suffix is None
+                else f'{name}{self.types_module_suffix}'
+            )
+        else:
+            raise WsdlGeneratorError('could not determine a service name')
 
     def setClientModulePath(self, path):
         """setup module path to where client module before calling fromWsdl.
@@ -125,11 +119,11 @@ class WriteServiceModule:
         """
         return self.types_module_path
 
-#    def getMessagesModulePath(self):
-#        '''module path to messages module
-#           same as types path
-#        '''
-#        return self.messages_module_path
+    #    def getMessagesModulePath(self):
+    #        '''module path to messages module
+    #           same as types path
+    #        '''
+    #        return self.messages_module_path
 
     def setTypesModulePath(self, path):
         """setup module path to where service module before calling fromWsdl.
@@ -137,16 +131,16 @@ class WriteServiceModule:
         """
         self.types_module_path = path
 
-#    def setMessagesModulePath(self, path):
-#        """setup module path to where message module before calling fromWsdl.
-#        module path to types module eg. MyApp.types
-#        """
-#        self.messages_module_path = path
+    #    def setMessagesModulePath(self, path):
+    #        """setup module path to where message module before calling fromWsdl.
+    #        module path to types module eg. MyApp.types
+    #        """
+    #        self.messages_module_path = path
 
     def gatherNamespaces(self):
-        '''This method must execute once..  Grab all schemas
+        """This method must execute once..  Grab all schemas
         representing each targetNamespace.
-        '''
+        """
         if self.usedNamespaces is not None:
             return
 
@@ -156,7 +150,7 @@ class WriteServiceModule:
         def recommended_ns(s):
             tns = s.getTargetNamespace()
             recommended = None
-            for k, v in s.attributes.get('xmlns', {}).items():
+            for k, v in list(s.attributes.get('xmlns', {}).items()):
                 if k == '':
                     continue
                 if v == tns:
@@ -167,21 +161,19 @@ class WriteServiceModule:
 
         # Add all schemas defined in wsdl
         # to used namespace and to the Alias dict
-        for schema in self._wsdl.types.values():
+        for schema in list(self._wsdl.types.values()):
             tns = schema.getTargetNamespace()
-            self.logger.debug('Register schema(%s) -- TNS(%s)'\
-                %(_get_idstr(schema), tns),)
-            if self.usedNamespaces.has_key(tns) is False:
+            self.logger.debug(f'Register schema({_get_idstr(schema)}) -- TNS({tns})')
+            if tns not in self.usedNamespaces:
                 self.usedNamespaces[tns] = []
             self.usedNamespaces[tns].append(schema)
             NAD.add(tns, recommended_ns(schema))
 
         # Add all xsd:import schema instances
         # to used namespace and to the Alias dict
-        for k,v in SchemaReader.namespaceToSchema.items():
-            self.logger.debug('Register schema(%s) -- TNS(%s)'\
-                %(_get_idstr(v), k),)
-            if self.usedNamespaces.has_key(k) is False:
+        for k, v in list(SchemaReader.namespaceToSchema.items()):
+            self.logger.debug(f'Register schema({_get_idstr(v)}) -- TNS({k})')
+            if k not in self.usedNamespaces:
                 self.usedNamespaces[k] = []
             self.usedNamespaces[k].append(v)
             NAD.add(k, recommended_ns(v))
@@ -197,27 +189,27 @@ class WriteServiceModule:
         """
         sdClass = sdClass or ServiceDescription
         assert issubclass(sdClass, ServiceDescription), \
-            'parameter sdClass must subclass ServiceDescription'
+                        'parameter sdClass must subclass ServiceDescription'
 
-#        header = '%s \n# %s.py \n# generated by %s\n%s\n'\
-#                  %('#'*50, self.getClientModuleName(), self.__module__, '#'*50)
-        print >>fd, '#'*50
-        print >>fd, '# file: %s.py' %self.getClientModuleName()
-        print >>fd, '# '
-        print >>fd, '# client stubs generated by "%s"' %self.__class__
-        print >>fd, '#     %s' %' '.join(sys.argv)
-        print >>fd, '# '
-        print >>fd, '#'*50
+        #        header = '%s \n# %s.py \n# generated by %s\n%s\n'\
+        #                  %('#'*50, self.getClientModuleName(), self.__module__, '#'*50)
+        print('#' * 50, file=fd)
+        print(f'# file: {self.getClientModuleName()}.py', file=fd)
+        print('# ', file=fd)
+        print(f'# client stubs generated by "{self.__class__}"', file=fd)
+        print(f"#     {' '.join(sys.argv)}", file=fd)
+        print('# ', file=fd)
+        print('#' * 50, file=fd)
 
         self.services = []
-        for service in self._wsdl.services:
+        for service in self._wsdl.services.values():
             sd = sdClass(self._addressing, do_extended=self.do_extended,
                          wsdl=self._wsdl)
             if len(self._wsdl.types) > 0:
                 sd.setTypesModuleName(self.getTypesModuleName(),
                                       self.getTypesModulePath())
-#                sd.setMessagesModuleName(self.getMessagesModuleName(),
-#                                         self.getMessagesModulePath())
+            #                sd.setMessagesModuleName(self.getMessagesModuleName(),
+            #                                         self.getMessagesModulePath())
 
             self.gatherNamespaces()
             sd.fromWsdl(service, **kw)
@@ -227,17 +219,17 @@ class WriteServiceModule:
     def writeTypes(self, fd):
         """write out types module to file descriptor.
         """
-        print >>fd, '#'*50
-        print >>fd, '# file: %s.py' %self.getTypesModuleName()
-        print >>fd, '#'
-        print >>fd, '# schema types generated by "%s"' %self.__class__
-        print >>fd, '#    %s' %' '.join(sys.argv)
-        print >>fd, '#'
-        print >>fd, '#'*50
+        print('#' * 50, file=fd)
+        print(f'# file: {self.getTypesModuleName()}.py', file=fd)
+        print('#', file=fd)
+        print(f'# schema types generated by "{self.__class__}"', file=fd)
+        print(f"#    {' '.join(sys.argv)}", file=fd)
+        print('#', file=fd)
+        print('#' * 50, file=fd)
 
-        print >>fd, TypesHeaderContainer()
+        print(TypesHeaderContainer(), file=fd)
         self.gatherNamespaces()
-        for l in self.usedNamespaces.values():
+        for l in list(self.usedNamespaces.values()):
             sd = SchemaDescription(do_extended=self.do_extended,
                                    extPyClasses=self.extPyClasses)
             for schema in l:
@@ -254,13 +246,13 @@ class ServiceDescription:
         self.typesModuleName = None
         self.messagesModuleName = None
         self.wsAddressing = addressing
-        self.imports   = ServiceHeaderContainer()
-        self.messagesImports   = ServiceHeaderContainer()
-        self.locator   = ServiceLocatorContainer()
-        self.bindings   = []
-        self.messages  = []
-        self.do_extended=do_extended
-        self._wsdl = wsdl # None unless do_extended == True
+        self.imports = ServiceHeaderContainer()
+        self.messagesImports = ServiceHeaderContainer()
+        self.locator = ServiceLocatorContainer()
+        self.bindings = []
+        self.messages = []
+        self.do_extended = do_extended
+        self._wsdl = wsdl  # None unless do_extended == True
 
     def setTypesModuleName(self, name, modulePath=None):
         """The types module to be imported.
@@ -268,35 +260,35 @@ class ServiceDescription:
         name -- name of types module
         modulePath -- optional path where module is located.
         """
-        self.typesModuleName = '%s' %name
+        self.typesModuleName = f'{name}'
         if modulePath is not None:
-            self.typesModuleName = '%s.%s' %(modulePath,name)
+            self.typesModuleName = f'{modulePath}.{name}'
 
-#    def setMessagesModuleName(self, name, modulePath=None):
-#        '''The types module to be imported.
-#        Parameters
-#        name -- name of types module
-#        modulePath -- optional path where module is located.
-#        '''
-#        self.messagesModuleName = '%s' %name
-#        if modulePath is not None:
-#            self.messagesModuleName = '%s.%s' %(modulePath,name)
+    #    def setMessagesModuleName(self, name, modulePath=None):
+    #        '''The types module to be imported.
+    #        Parameters
+    #        name -- name of types module
+    #        modulePath -- optional path where module is located.
+    #        '''
+    #        self.messagesModuleName = '%s' %name
+    #        if modulePath is not None:
+    #            self.messagesModuleName = '%s.%s' %(modulePath,name)
 
     def fromWsdl(self, service, **kw):
         self.imports.setTypesModuleName(self.typesModuleName)
-#        if self.separate_messages:
-#            self.messagesImports.setMessagesModuleName(self.messagesModuleName)
+        #        if self.separate_messages:
+        #            self.messagesImports.setMessagesModuleName(self.messagesModuleName)
         self.imports.appendImport(kw.get('imports', []))
 
         self.locator.setUp(service)
 
         try:
-            bindings =  map(lambda p: p.binding, service.ports)
-        except:
+            bindings = [p.binding for p in service.ports]
+        except Exception:
             warnings.warn('not all ports have binding declared,')
             bindings = ()
 
-        for port in service.ports:
+        for port in service.ports.values():
             if port.binding not in bindings:
                 continue
             while port.binding in bindings:
@@ -307,8 +299,8 @@ class ServiceDescription:
                                       wsdl=self._wsdl)
             try:
                 desc.setUp(port.getBinding())
-            except Wsdl2PythonError, ex:
-                self.logger.warning('Skipping port(%s)' %port.name)
+            except Wsdl2PythonError as ex:
+                self.logger.warning(f'Skipping port({port.name})')
                 if len(ex.args):
                     self.logger.warning(ex.args[0])
                 continue
@@ -328,28 +320,27 @@ class ServiceDescription:
 
             self.bindings.append(desc)
 
-
     def write(self, fd, msg_fd=None):
         """write out module to file descriptor.
         fd -- file descriptor to write out service description.
         msg_fd -- optional file descriptor for messages module.
         """
-#        if msg_fd != None:
-#            print >>fd, self.messagesImports
-#            print >>msg_fd, self.imports
-#        else:
-        print >>fd, self.imports
+        #        if msg_fd != None:
+        #            print >>fd, self.messagesImports
+        #            print >>msg_fd, self.imports
+        #        else:
+        print(self.imports, file=fd)
 
-        print >>fd, self.locator
+        print(self.locator, file=fd)
         for m in self.bindings:
-            print >>fd, m
+            print(m, file=fd)
 
-#        if msg_fd != None:
-#            for m in self.messages:
-#                print >>msg_fd, m
-#        else:
+        #        if msg_fd != None:
+        #            for m in self.messages:
+        #                print >>msg_fd, m
+        #        else:
         for m in self.messages:
-            print >>fd, m
+            print(m, file=fd)
 
 
 class MessageWriter:
@@ -369,27 +360,27 @@ class MessageWriter:
 
     def __str__(self):
         if not self.content:
-            raise Wsdl2PythonError, 'Must call setUp.'
+            raise Wsdl2PythonError('Must call setUp.')
         return self.content.getvalue()
 
     def setUp(self, soc, port, input=False):
-        assert isinstance(soc, ServiceOperationContainer),\
-            'expecting a ServiceOperationContainer instance'
-        assert isinstance(port, WSDLTools.Port),\
-            'expecting a WSDL.Port instance'
+        assert isinstance(soc, ServiceOperationContainer), \
+                'expecting a ServiceOperationContainer instance'
+        assert isinstance(port, WSDLTools.Port), \
+                'expecting a WSDL.Port instance'
 
-        rpc,literal = soc.isRPC(), soc.isLiteral(input)
-        kw,klass = {}, None
+        rpc, literal = soc.isRPC(), soc.isLiteral(input)
+        kw, klass = {}, None
 
         if rpc and literal:
             klass = ServiceRPCLiteralMessageContainer
         elif not rpc and literal:
             kw['do_extended'] = self.do_extended
             klass = ServiceDocumentLiteralMessageContainer
-        elif rpc and not literal:
+        elif rpc:
             klass = ServiceRPCEncodedMessageContainer
         else:
-            raise WsdlGeneratorError, 'doc/enc not supported.'
+            raise WsdlGeneratorError('doc/enc not supported.')
 
         self.content = klass(**kw)
         self.content.setUp(port, soc, input)
@@ -407,28 +398,28 @@ class SchemaDescription:
         self.__types = []
         self.__elements = []
         self.targetNamespace = None
-        self.do_extended=do_extended
+        self.do_extended = do_extended
         self.extPyClasses = extPyClasses
 
     def fromSchema(self, schema):
-        ''' Can be called multiple times, but will not redefine a
+        """ Can be called multiple times, but will not redefine a
         previously defined type definition or element declaration.
-        '''
+        """
         ns = schema.getTargetNamespace()
-        assert self.targetNamespace is None or self.targetNamespace == ns,\
-            'SchemaDescription instance represents %s, not %s'\
-            %(self.targetNamespace, ns)
+        assert (
+                self.targetNamespace is None or self.targetNamespace == ns
+        ), f'SchemaDescription instance represents {self.targetNamespace}, not {ns}'
 
         if self.targetNamespace is None:
             self.targetNamespace = ns
 
         self.classHead.ns = self.classFoot.ns = ns
-        for item in [t for t in schema.types if t.getAttributeName() not in self.__types]:
+        for item in [t for t in schema.types.values() if t.getAttributeName() not in self.getTypes()]:
             self.__types.append(item.getAttributeName())
             self.items.append(TypeWriter(do_extended=self.do_extended, extPyClasses=self.extPyClasses))
             self.items[-1].fromSchemaItem(item)
 
-        for item in [e for e in schema.elements if e.getAttributeName() not in self.__elements]:
+        for item in [e for e in schema.elements.values() if e.getAttributeName() not in self.getElements()]:
             self.__elements.append(item.getAttributeName())
             self.items.append(ElementWriter(do_extended=self.do_extended))
             self.items[-1].fromSchemaItem(item)
@@ -442,10 +433,11 @@ class SchemaDescription:
     def write(self, fd):
         """write out to file descriptor.
         """
-        print >>fd, self.classHead
+        print(self.classHead, file=fd)
         for t in self.items:
-            print >>fd, t
-        print >>fd, self.classFoot
+            print(t, file=fd)
+        print(self.classFoot, file=fd)
+
 
 class SchemaItemWriter:
     """contains/generates a single declaration"""
@@ -453,18 +445,18 @@ class SchemaItemWriter:
 
     def __init__(self, do_extended=False, extPyClasses=None):
         self.content = None
-        self.do_extended=do_extended
-        self.extPyClasses=extPyClasses
+        self.do_extended = do_extended
+        self.extPyClasses = extPyClasses
 
     def __str__(self):
-        '''this appears to set up whatever is in self.content.localElements,
+        """this appears to set up whatever is in self.content.localElements,
         local elements simpleType|complexType.
-        '''
+        """
         assert self.content is not None, 'Must call fromSchemaItem to setup.'
         return str(self.content)
 
     def fromSchemaItem(self, item):
-        raise NotImplementedError, ''
+        raise NotImplementedError('')
 
 
 class ElementWriter(SchemaItemWriter):
@@ -475,18 +467,17 @@ class ElementWriter(SchemaItemWriter):
         """set up global elements.
         """
         if item.isElement() is False or item.isLocal() is True:
-            raise TypeError, 'expecting global element declaration: %s' %item.getItemTrace()
+            raise TypeError(f'expecting global element declaration: {item.getItemTrace()}')
 
         local = False
-        qName = item.getAttribute('type')
-        if not qName:
-            etp = item.content
-            local = True
-        else:
+        if item.getAttribute('type'):
             etp = item.getTypeDefinition('type')
 
+        else:
+            etp = item.content
+            local = True
         if etp is None:
-            if local is True:
+            if local:
                 self.content = ElementLocalComplexTypeContainer(do_extended=self.do_extended)
             else:
                 self.content = ElementSimpleTypeContainer()
@@ -497,9 +488,9 @@ class ElementWriter(SchemaItemWriter):
         elif etp.isComplex():
             self.content = ElementLocalComplexTypeContainer(do_extended=self.do_extended)
         else:
-            raise Wsdl2PythonError, "Unknown element declaration: %s" %item.getItemTrace()
+            raise Wsdl2PythonError(f"Unknown element declaration: {item.getItemTrace()}")
 
-        self.logger.debug('ElementWriter setUp container "%r", Schema Item "%s"' %(
+        self.logger.debug('ElementWriter setUp container "%r", Schema Item "%s"' % (
             self.content, item.getItemTrace()))
 
         self.content.setUp(item)
@@ -511,8 +502,7 @@ class TypeWriter(SchemaItemWriter):
 
     def fromSchemaItem(self, item):
         if item.isDefinition() is False or item.isLocal() is True:
-            raise TypeError, \
-                'expecting global type definition not: %s' %item.getItemTrace()
+            raise TypeError(f'expecting global type definition not: {item.getItemTrace()}')
 
         self.content = None
         if item.isSimple():
@@ -523,8 +513,9 @@ class TypeWriter(SchemaItemWriter):
             elif item.content.isList():
                 self.content = ListContainer()
             else:
-                raise Wsdl2PythonError,\
-                    'unknown simple type definition: %s' %item.getItemTrace()
+                raise Wsdl2PythonError(
+                    f'unknown simple type definition: {item.getItemTrace()}'
+                )
 
             self.content.setUp(item)
             return
@@ -533,37 +524,31 @@ class TypeWriter(SchemaItemWriter):
             kw = {}
             if item.content is None or item.content.isModelGroup():
                 self.content = \
-                    ComplexTypeContainer(\
-                        do_extended=self.do_extended,
+                                        ComplexTypeContainer(
+                            do_extended=self.do_extended,
                         extPyClasses=self.extPyClasses
-                        )
+                    )
                 kw['empty'] = item.content is None
             elif item.content.isSimple():
-                    self.content = ComplexTypeSimpleContentContainer()
+                self.content = ComplexTypeSimpleContentContainer()
             elif item.content.isComplex():
-                    self.content = \
-                        ComplexTypeComplexContentContainer(\
-                            do_extended=self.do_extended
-                            )
+                self.content = ComplexTypeComplexContentContainer(do_extended=self.do_extended)
             else:
-                raise Wsdl2PythonError,\
-                    'unknown complex type definition: %s' %item.getItemTrace()
+                raise Wsdl2PythonError(
+                    f'unknown complex type definition: {item.getItemTrace()}'
+                )
 
-            self.logger.debug('TypeWriter setUp container "%r", Schema Item "%s"' %(
+            self.logger.debug('TypeWriter setUp container "%r", Schema Item "%s"' % (
                 self.content, item.getItemTrace()))
 
             try:
                 self.content.setUp(item, **kw)
-            except Exception, ex:
-                args = ['Failure in setUp: %s' %item.getItemTrace()]
+            except Exception as ex:
+                args = [f'Failure in setUp: {item.getItemTrace()}']
                 args += ex.args
                 ex.args = tuple(args)
                 raise
 
             return
 
-        raise TypeError,\
-            'expecting SimpleType or ComplexType: %s' %item.getItemTrace()
-
-
-
+        raise TypeError(f'expecting SimpleType or ComplexType: {item.getItemTrace()}')

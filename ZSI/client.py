@@ -14,10 +14,10 @@ from ZSI.auth import AUTH
 from ZSI.TC import String
 from ZSI.TCcompound import Struct
 import base64
-import httplib
-import Cookie
+import http.client
+import http.cookies
 import time
-import urlparse
+import urllib.parse
 from ZSI.address import Address
 from ZSI.wstools.logging import getLogger as _GetLogger
 _b64_encode = base64.encodestring
@@ -134,8 +134,8 @@ class _Binding(object):
     receiving SOAP messages are available.
     '''
 
-    defaultHttpTransport = httplib.HTTPConnection
-    defaultHttpsTransport = httplib.HTTPSConnection
+    defaultHttpTransport = http.client.HTTPConnection
+    defaultHttpsTransport = http.client.HTTPSConnection
     logger = _GetLogger('ZSI.client.Binding')
 
     def __init__(
@@ -185,7 +185,7 @@ class _Binding(object):
         self.sig_handler = sig_handler
         self.address = None
         self.endPointReference = kw.get('endPointReference', None)
-        self.cookies = Cookie.SimpleCookie()
+        self.cookies = http.cookies.SimpleCookie()
         self.http_callbacks = {}
 
         if 'auth' in kw:
@@ -224,7 +224,7 @@ class _Binding(object):
         '''Empty the list of cookies.
         '''
 
-        self.cookies = Cookie.SimpleCookie()
+        self.cookies = http.cookies.SimpleCookie()
 
     def AddHeader(self, header, value):
         '''Add a header to send.
@@ -237,7 +237,7 @@ class _Binding(object):
         '''Add cookies from self.cookies to request in self.h
         '''
 
-        for (cname, morsel) in self.cookies.items():
+        for (cname, morsel) in list(self.cookies.items()):
             attrs = []
             value = morsel.get('version', '')
             if value != '' and value != '0':
@@ -326,8 +326,7 @@ class _Binding(object):
                     aslist=False)
             try:
                 if type(obj) in _seqtypes:
-                    obj = dict(map(lambda i: (i.typecode.pname, i),
-                               obj))
+                    obj = dict([(i.typecode.pname, i) for i in obj])
             except AttributeError:
 
                 # can't do anything but serialize this in a SOAP:Array
@@ -376,7 +375,7 @@ class _Binding(object):
             nil,
             nil,
             nil,
-            ) = urlparse.urlparse(url)
+            ) = urllib.parse.urlparse(url)
         transport = self.transport
         if transport is None and url is not None:
             if scheme == 'https':
@@ -389,7 +388,7 @@ class _Binding(object):
 
         # Send the request.
 
-        if issubclass(transport, httplib.HTTPConnection) is False:
+        if issubclass(transport, http.client.HTTPConnection) is False:
             raise TypeError('transport must be a HTTPConnection')
 
         soapdata = str(sw)
@@ -411,9 +410,9 @@ class _Binding(object):
         # Tracing?
 
         if self.trace:
-            print >> self.trace, '_' * 33, time.ctime(time.time()), \
-                'REQUEST:'
-            print >> self.trace, soapdata
+            print('_' * 33, time.ctime(time.time()), \
+                'REQUEST:', file=self.trace)
+            print(soapdata, file=self.trace)
 
         url = url or self.url
         request_uri = _get_postvalue_from_absoluteURI(url)
@@ -437,7 +436,7 @@ class _Binding(object):
                              + self.startCID + '"; type="text/xml"')
         self.__addcookies()
 
-        for (header, value) in headers.items():
+        for (header, value) in list(headers.items()):
             self.h.putheader(header, value)
 
         SOAPActionValue = '"%s"' % (soapaction or self.soapaction)
@@ -486,7 +485,7 @@ class _Binding(object):
         '''
 
         if self.trace:
-            print >> self.trace, '------ Digest Auth Header'
+            print('------ Digest Auth Header', file=self.trace)
         url = url or self.url
         if response.status != 401:
             raise RuntimeError('Expecting HTTP 401 response.')
@@ -528,13 +527,13 @@ class _Binding(object):
              self.data) = (response.status, response.reason,
                            response.msg, response.read())
             if trace:
-                print >> trace, '_' * 33, time.ctime(time.time()), \
-                    'RESPONSE:'
+                print('_' * 33, time.ctime(time.time()), \
+                    'RESPONSE:', file=trace)
                 for i in (self.reply_code, self.reply_msg):
-                    print >> trace, str(i)
-                print >> trace, '-------'
-                print >> trace, str(self.reply_headers)
-                print >> trace, self.data
+                    print(str(i), file=trace)
+                print('-------', file=trace)
+                print(str(self.reply_headers), file=trace)
+                print(self.data, file=trace)
             saved = None
             for d in response.msg.getallmatchingheaders('set-cookie'):
                 if d[0] in [' ', '\t']:
@@ -558,7 +557,7 @@ class _Binding(object):
             # The httplib doesn't understand the HTTP continuation header.
             # Horrible internals hack to patch things up.
 
-            self.h._HTTPConnection__state = httplib._CS_REQ_SENT
+            self.h._HTTPConnection__state = http.client._CS_REQ_SENT
             self.h._HTTPConnection__response = None
         return self.data
 
@@ -760,4 +759,4 @@ class NamedParamBinding(Binding):
 
 
 if __name__ == '__main__':
-    print _copyright
+    print(_copyright)

@@ -19,11 +19,10 @@ def _x():
 
 
 try:
-    _x.func_name = '_y'
+    _x.__name__ = '_y'
 except:
-    raise RuntimeError, \
-        'use python-2.4 or later, cannot set function names in python "%s"' \
-        % sys.version
+    raise RuntimeError('use python-2.4 or later, cannot set function names in python "%s"' \
+        % sys.version)
 del _x
 
 
@@ -104,15 +103,13 @@ class pyclass_type(type):
                 (get, set) = \
                     cls.__create_text_functions_from_what(typecode)
 
-                if classdict.has_key(get.__name__):
-                    raise AttributeError, \
-                        'attribute %s previously defined.' \
-                        % get.__name__
+                if get.__name__ in classdict:
+                    raise AttributeError('attribute %s previously defined.' \
+                        % get.__name__)
 
-                if classdict.has_key(set.__name__):
-                    raise AttributeError, \
-                        'attribute %s previously defined.' \
-                        % set.__name__
+                if set.__name__ in classdict:
+                    raise AttributeError('attribute %s previously defined.' \
+                        % set.__name__)
 
                 classdict[get.__name__] = get
                 classdict[set.__name__] = set
@@ -121,27 +118,24 @@ class pyclass_type(type):
                 (get, set, new_func) = \
                     cls.__create_functions_from_what(what)
 
-                if classdict.has_key(get.__name__):
-                    raise AttributeError, \
-                        'attribute %s previously defined.' \
-                        % get.__name__
+                if get.__name__ in classdict:
+                    raise AttributeError('attribute %s previously defined.' \
+                        % get.__name__)
 
                 classdict[get.__name__] = get
-                if classdict.has_key(set.__name__):
-                    raise AttributeError, \
-                        'attribute %s previously defined.' \
-                        % set.__name__
+                if set.__name__ in classdict:
+                    raise AttributeError('attribute %s previously defined.' \
+                        % set.__name__)
 
                 classdict[set.__name__] = set
                 if new_func is not None:
-                    if classdict.has_key(new_func.__name__):
-                        raise AttributeError, \
-                            'attribute %s previously defined.' \
-                            % new_func.__name__
+                    if new_func.__name__ in classdict:
+                        raise AttributeError('attribute %s previously defined.' \
+                            % new_func.__name__)
 
                     classdict[new_func.__name__] = new_func
 
-                assert not classdict.has_key(what.pname), \
+                assert what.pname not in classdict, \
                     'collision with pname="%s", bail..' % what.pname
 
                 pname = what.pname
@@ -155,7 +149,7 @@ class pyclass_type(type):
 
                 pname = pname[0].upper() + pname[1:]
                 if __debug__:
-                    assert not pydoc.Helper.keywords.has_key(pname), \
+                    assert pname not in pydoc.Helper.keywords, \
                         'unexpected keyword: %s' % pname
 
                 classdict[pname] = property(get, set, None,
@@ -171,18 +165,16 @@ class pyclass_type(type):
         if hasattr(typecode, 'attribute_typecode_dict'):
             attribute_typecode_dict = typecode.attribute_typecode_dict \
                 or {}
-            for (key, what) in attribute_typecode_dict.items():
+            for (key, what) in list(attribute_typecode_dict.items()):
                 (get, set) = cls.__create_attr_functions_from_what(key,
                         what)
-                if classdict.has_key(get.__name__):
-                    raise AttributeError, \
-                        'attribute %s previously defined.' \
-                        % get.__name__
+                if get.__name__ in classdict:
+                    raise AttributeError('attribute %s previously defined.' \
+                        % get.__name__)
 
-                if classdict.has_key(set.__name__):
-                    raise AttributeError, \
-                        'attribute %s previously defined.' \
-                        % set.__name__
+                if set.__name__ in classdict:
+                    raise AttributeError('attribute %s previously defined.' \
+                        % set.__name__)
 
                 classdict[get.__name__] = get
                 classdict[set.__name__] = set
@@ -200,8 +192,7 @@ class pyclass_type(type):
                 def set(self, value):
                     if not (value is None or hasattr(value, '__iter__'
                             )):
-                        raise TypeError, \
-                            'expecting an iterable instance'
+                        raise TypeError('expecting an iterable instance')
                     setattr(self, what.aname, value)
 
             else:
@@ -219,8 +210,7 @@ class pyclass_type(type):
                 def set(self, value):
                     if not (value is None or hasattr(value, '__iter__'
                             )):
-                        raise TypeError, \
-                            'expecting an iterable instance'
+                        raise TypeError('expecting an iterable instance')
                     setattr(self, what().aname, value)
 
             else:
@@ -290,8 +280,8 @@ class pyclass_type(type):
 
         if new_func is not None:
             new_func.__name__ = 'new_%s' % what.pname
-        get.func_name = 'get_element_%s' % what.pname
-        set.func_name = 'set_element_%s' % what.pname
+        get.__name__ = 'get_element_%s' % what.pname
+        set.__name__ = 'set_element_%s' % what.pname
         return (get, set, new_func)
 
     __create_functions_from_what = \
@@ -337,7 +327,7 @@ class pyclass_type(type):
 
             return getattr(self, what.mixed_aname, None)
 
-        get.im_func = 'get_text'
+        get.__func__ = 'get_text'
 
         def set(self, value):
             '''set text content.
@@ -346,7 +336,7 @@ class pyclass_type(type):
 
             setattr(self, what.mixed_aname, value)
 
-        get.im_func = 'set_text'
+        get.__func__ = 'set_text'
 
         return (get, set)
 

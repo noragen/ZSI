@@ -75,8 +75,7 @@ class UserTuple:
     def __gt__(self, other): return self.data >  self.__cast(other)
     def __ge__(self, other): return self.data >= self.__cast(other)
     def __cast(self, other):
-        if isinstance(other, UserTuple): return other.data
-        else: return other
+        return other.data if isinstance(other, UserTuple) else other
     def __cmp__(self, other):
         return cmp(self.data, self.__cast(other))
     def __contains__(self, item): return item in self.data

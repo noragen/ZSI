@@ -2,7 +2,7 @@
 
 import time
 import unittest
-from cStringIO import StringIO
+from io import StringIO
 
 import ZSI
 from ZSI.writer import SoapWriter
@@ -11,7 +11,7 @@ from ZSI.schema import GED, TypeDefinition, ElementDeclaration
 from ZSI.parse import ParsedSoap
 
 class TestList1_Def(ZSI.TC.List, TypeDefinition):
-    itemType = (u'http://www.w3.org/2001/XMLSchema', u'dateTime')
+    itemType = ('http://www.w3.org/2001/XMLSchema', 'dateTime')
     schema = "urn:test"
     type = (schema, "tUsage")
     def __init__(self, pname, **kw):
@@ -35,8 +35,8 @@ class ListTestCase(unittest.TestCase):
 
     def check_list_defs(self):
         gl = globals()
-        for klass in map(lambda h: gl[h], filter(lambda g: (g.startswith('TestList') and
-            issubclass(gl[g],ZSI.TC.List)), gl)):
+        for klass in [gl[h] for h in [g for g in gl if (g.startswith('TestList') and
+            issubclass(gl[g],ZSI.TC.List))]]:
 
             typecode = klass('whatever', nillable=True)
             data = None

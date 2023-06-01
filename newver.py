@@ -3,12 +3,12 @@
 # This script does not use 2.x features so that you can build an RPM
 # on a system that doesn't have 2.x installed (e.g., basic RedHat).
 
-import ConfigParser
+import configparser
 import os
 import sys
 import time
 
-cf = ConfigParser.ConfigParser()
+cf = configparser.ConfigParser()
 cf.read('setup.cfg')
 
 major = cf.getint('version', 'major')

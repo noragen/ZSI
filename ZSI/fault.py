@@ -290,4 +290,4 @@ def FaultFromFaultMessage(ps):
 
 
 if __name__ == '__main__':
-    print _copyright
+    print(_copyright)

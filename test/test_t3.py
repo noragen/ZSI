@@ -11,7 +11,7 @@ class t3TestCase(unittest.TestCase):
         a = None
         try:
             3 / 0
-        except Exception, e:
+        except Exception as e:
             a = e
         f = FaultFromException(a, 0)
         text = f.AsSOAP()
@@ -23,7 +23,7 @@ class t3TestCase(unittest.TestCase):
         if ps.IsAFault():
             f = FaultFromFaultMessage(ps)
             #print f.AsSOAP()
-            self.failUnless(f.AsSOAP().find(str(a)) > 0)
+            self.assertTrue(f.AsSOAP().find(str(a)) > 0)
         #print '--'*20
 
 

@@ -3,9 +3,9 @@
 import mimetools
 import unittest
 try:
-    import cStringIO as StringIO
+    import io as StringIO
 except ImportError:
-    import StringIO
+    import io
 
 from ZSI import resolvers
 from ZSI.parse import DefaultReader as Reader
@@ -15,7 +15,7 @@ class t5TestCase(unittest.TestCase):
     "Test case wrapper for old ZSI t5 test case"
 
     def checkt5(self):
-        istr = StringIO.StringIO(intext)
+        istr = io.StringIO(intext)
         m = mimetools.Message(istr)
         if  m.gettype()[0:10] == "multipart/":
             cid = resolvers.MIMEResolver(m['content-type'], istr)
