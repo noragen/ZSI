@@ -102,11 +102,11 @@ def GetClassNameFromSchemaItem(item, do_extended=False):
 
 
 def FromMessageGetSimpleElementDeclaration(message):
-    '''If message consists of one part with an element attribute,
+    """If message consists of one part with an element attribute,
     and this element is a simpleType return a string representing
     the python type, else return None.
 
-    '''
+    """
 
     assert isinstance(message, WSDLTools.Message), \
         'expecting WSDLTools.Message'
@@ -1340,10 +1340,7 @@ class TypecodeContainerBase(TypesContainerBase):
         # Used if an external pyclass was specified for this type.
 
         self.do_extended = do_extended
-        if extPyClasses is None:
-            self.extPyClasses = {}
-        else:
-            self.extPyClasses = extPyClasses
+        self.extPyClasses = {} if extPyClasses is None else extPyClasses
 
         # <--
 
@@ -1352,20 +1349,16 @@ class TypecodeContainerBase(TypesContainerBase):
         for item in self.localTypes:
             content = None
             assert True is item.isElement() is item.isLocal(), \
-                'expecting local elements only'
+                                'expecting local elements only'
 
-            etp = item.content
-            qName = item.getAttribute('type')
-            if not qName:
+            if qName := item.getAttribute('type'):
+                etp = item.getTypeDefinition('type')
+            else:
                 etp = item.content
                 local = True
-            else:
-                etp = item.getTypeDefinition('type')
-
             if etp is None:
-                if local is True:
-                    content = \
-                        ElementLocalComplexTypeContainer(do_extended=self.do_extended)
+                if local:
+                    content = ElementLocalComplexTypeContainer(do_extended=self.do_extended)
                 else:
                     content = ElementSimpleTypeContainer()
             elif etp.isLocal() is False:
@@ -1373,39 +1366,26 @@ class TypecodeContainerBase(TypesContainerBase):
             elif etp.isSimple() is True:
                 content = ElementLocalSimpleTypeContainer()
             elif etp.isComplex():
-                content = \
-                    ElementLocalComplexTypeContainer(do_extended=self.do_extended)
+                content = ElementLocalComplexTypeContainer(do_extended=self.do_extended)
             else:
-                raise Wsdl2PythonError('Unknown element declaration: %s'
-                                       % item.getItemTrace())
+                raise Wsdl2PythonError(f'Unknown element declaration: {item.getItemTrace()}')
 
             content.setUp(item)
 
-            out += '''
+            out += '\n\n'
 
-'''
-            if self.parentClass:
-                content.parentClass = '%s.%s' % (self.parentClass,
-                                                 self.getClassName())
-            else:
-                content.parentClass = '%s.%s' % (self.getNSAlias(),
-                                                 self.getClassName())
+            content.parentClass = f'{self.parentClass or self.getNSAlias()}.{self.getClassName()}'
+
 
             for l in content.getvalue().split('\n'):
-                if l:
-                    out += '%s%s\n' % (ID1, l)
-                else:
-                    out += '\n'
-
-            out += '''
-
-'''
+                out += '%s%s\n' % (ID1, l) if l else '\n'
+            out += '\n\n'
 
         return out
 
     def getAttributeName(self, name):
-        '''represents the aname
-        '''
+        """represents the aname
+        """
 
         if self.func_aname is None:
             return name
@@ -1416,8 +1396,8 @@ class TypecodeContainerBase(TypesContainerBase):
         return f(name)
 
     def getMixedTextAName(self):
-        '''returns an aname representing mixed text content.
-        '''
+        """returns an aname representing mixed text content.
+        """
 
         return self.getAttributeName(self.mixed_content_aname)
 
@@ -1440,16 +1420,13 @@ class TypecodeContainerBase(TypesContainerBase):
     # --> EXTENDED
 
     def hasExtPyClass(self):
-        if self.name in self.extPyClasses:
-            return True
-        else:
-            return False
+        return self.name in self.extPyClasses
 
     # <--
 
     def getPyClass(self):
-        '''Name of generated inner class that will be specified as pyclass.
-        '''
+        """Name of generated inner class that will be specified as pyclass.
+        """
 
         # --> EXTENDED
 
@@ -1462,8 +1439,8 @@ class TypecodeContainerBase(TypesContainerBase):
         return 'Holder'
 
     def getPyClassDefinition(self):
-        '''Return a list containing pyclass definition.
-        '''
+        """Return a list containing pyclass definition.
+        """
 
         kw = KW.copy()
 
@@ -1477,8 +1454,7 @@ class TypecodeContainerBase(TypesContainerBase):
         # <--
 
         kw['pyclass'] = self.getPyClass()
-        definition = []
-        definition.append('%(ID3)sclass %(pyclass)s:' % kw)
+        definition = ['%(ID3)sclass %(pyclass)s:' % kw]
         if self.metaclass is not None:
             kw['type'] = self.metaclass
             definition.append('%(ID4)s__metaclass__ = %(type)s' % kw)
@@ -1512,52 +1488,45 @@ class TypecodeContainerBase(TypesContainerBase):
         return definition
 
     def nsuriLogic(self):
-        '''set a variable "ns" that represents the targetNamespace in
+        """set a variable "ns" that represents the targetNamespace in
         which this item is defined.  Used for namespacing local elements.
-        '''
+        """
 
-        if self.parentClass:
-            return 'ns = %s.%s.schema' % (self.parentClass,
-                                          self.getClassName())
-        return 'ns = %s.%s.schema' % (self.getNSAlias(),
-                                      self.getClassName())
+        return f'ns = {self.parentClass or self.getNSAlias()}.{self.getClassName()}.schema'
+
 
     def schemaTag(self):
         if self.ns is not None:
             return 'schema = _TARGET_NAMESPACE'
-        raise ContainerError('failed to set schema targetNamespace(%s)'
-                             % self.__class__)
+        raise ContainerError(f'failed to set schema targetNamespace({self.__class__})')
 
     def typeTag(self):
         if self.name is not None:
-            return 'type = (schema, "%s")' % self.name
-        raise ContainerError('failed to set type name(%s)'
-                             % self.__class__)
+            return f'type = (schema, "{self.name}")'
+        raise ContainerError(f'failed to set type name({self.__class__})')
 
     def literalTag(self):
         if self.name is not None:
-            return 'literal = "%s"' % self.name
-        raise ContainerError('failed to set element name(%s)'
-                             % self.__class__)
+            return f'literal = "{self.name}"'
+        raise ContainerError(f'failed to set element name({self.__class__})')
 
     def getExtraFlags(self):
         if self.mixed:
-            self.extraFlags += 'mixed=True, mixed_aname="%s", ' \
-                               % self.getMixedTextAName()
+            self.extraFlags += f'mixed=True, mixed_aname="{self.getMixedTextAName()}", '
 
         return self.extraFlags
 
     def simpleConstructor(self, superclass=None):
 
         if superclass:
-            return '%s.__init__(self, **kw)' % superclass
+            return f'{superclass}.__init__(self, **kw)'
         else:
             return 'def __init__(self, **kw):'
 
     def pnameConstructor(self, superclass=None):
 
         if superclass:
-            return '%s.__init__(self, pname, **kw)' % superclass
+            return f'{superclass}.__init__(self, pname, **kw)'
         else:
             return 'def __init__(self, pname, **kw):'
 
@@ -1571,8 +1540,7 @@ class TypecodeContainerBase(TypesContainerBase):
                 content.  TODO: should only support the first two.
         """
 
-        self.logger.debug('_setUpElements: %s'
-                          % self._item.getItemTrace())
+        self.logger.debug(f'_setUpElements: {self._item.getItemTrace()}')
         if hasattr(self, '_done'):
             # return '\n'.join(self.elementAttrs)
 
@@ -1618,8 +1586,7 @@ class TypecodeContainerBase(TypesContainerBase):
                 content.remove(orig)
                 continue
 
-            raise ContainerError('unexpected schema item: %s'
-                                 % c.getItemTrace())
+            raise ContainerError(f'unexpected schema item: {c.getItemTrace()}')
 
         for c in flat:
             if c.isDeclaration() and c.isElement():
@@ -1646,26 +1613,22 @@ class TypecodeContainerBase(TypesContainerBase):
                         parent = parent.content
                         defs.append(parent)
 
-                if None == c.getAttribute('name') and c.isWildCard():
-                    e = '%sself.%s = %s' % (ID3,
-                                            self.getAttributeName('any'), defaultValue)
-                else:
-                    e = '%sself.%s = %s' % (ID3,
-                                            self.getAttributeName(c.getAttribute('name'
-                                                                                 )), defaultValue)
+                e = (
+                    f"{ID3}self.{self.getAttributeName('any')} = {defaultValue}"
+                    if c.getAttribute('name') is None and c.isWildCard()
+                    else f"{ID3}self.{self.getAttributeName(c.getAttribute('name'))} = {defaultValue}"
+                )
                 self.elementAttrs.append(e)
                 continue
 
             # TODO: This seems wrong
 
             if c.isReference():
-                e = '%sself._%s = None' % (ID3,
-                                           self.mangle(c.getAttribute('ref')[1]))
+                e = f"{ID3}self._{self.mangle(c.getAttribute('ref')[1])} = None"
                 self.elementAttrs.append(e)
                 continue
 
-            raise ContainerError('unexpected item: %s'
-                                 % c.getItemTrace())
+            raise ContainerError(f'unexpected item: {c.getItemTrace()}')
 
         # return '\n'.join(self.elementAttrs)
 
@@ -1693,8 +1656,7 @@ class TypecodeContainerBase(TypesContainerBase):
         if type(content) is not tuple:
             mg = content
             if not mg.isModelGroup():
-                raise Wsdl2PythonError('Expecting ModelGroup: %s'
-                                       % mg.getItemTrace())
+                raise Wsdl2PythonError(f'Expecting ModelGroup: {mg.getItemTrace()}')
 
             self.logger.debug('ModelGroup(%r) contents(%r): %s' % (mg,
                                                                    mg.content, mg.getItemTrace()))
@@ -1761,7 +1723,6 @@ class TypecodeContainerBase(TypesContainerBase):
             # TODO: Remove _getOccurs
 
             (min, max, nil) = self._getOccurs(c)
-            max = None
             maxOccurs = 1
 
             parent = c
@@ -1845,23 +1806,23 @@ class TypecodeContainerBase(TypesContainerBase):
 
                     del ns
                 elif content is not None and content.isLocal() \
-                        and content.isComplex():
+                            and content.isComplex():
                     tc.name = c.getAttribute('name')
                     tc.klass = 'self.__class__.%s' \
-                               % element_class_name(tc.name)
+                                   % element_class_name(tc.name)
 
                     # TODO: Not an element reference, confusing nomenclature
 
                     tc.setStyleElementReference()
                     self.localTypes.append(c)
                 elif content is not None and content.isLocal() \
-                        and content.isSimple():
+                            and content.isSimple():
 
                     # Local Simple Type
 
                     tc.name = c.getAttribute('name')
                     tc.klass = 'self.__class__.%s' \
-                               % element_class_name(tc.name)
+                                   % element_class_name(tc.name)
 
                     # TODO: Not an element reference, confusing nomenclature
 
@@ -1940,27 +1901,23 @@ class TypecodeContainerBase(TypesContainerBase):
             raise
 
         bases = []
-        bases.append('if %s.%s not in %s.%s.__bases__:' % (prefix,
-                                                           type_class_name(self.sKlass), self.getNSAlias(),
-                                                           self.getClassName()))
-        bases.append('%sbases = list(%s.%s.__bases__)' % (ID1,
-                                                          self.getNSAlias(), self.getClassName()))
-        bases.append('%sbases.insert(0, %s.%s)' % (ID1, prefix,
-                                                   type_class_name(self.sKlass)))
-        bases.append('%s%s.%s.__bases__ = tuple(bases)' % (ID1,
-                                                           self.getNSAlias(), self.getClassName()))
+        bases.append(
+            f'if {prefix}.{type_class_name(self.sKlass)} not in {self.getNSAlias()}.{self.getClassName()}.__bases__:')
+        bases.append(f'{ID1}bases = list({self.getNSAlias()}.{self.getClassName()}.__bases__)')
+        bases.append(f'{ID1}bases.insert(0, {prefix}.{type_class_name(self.sKlass)})')
+        bases.append(f'{ID1}{self.getNSAlias()}.{self.getClassName()}.__bases__ = tuple(bases)')
 
         s = ''
         for b in bases:
-            s += '%s%s\n' % (indent, b)
+            s += f'{indent}{b}\n'
 
         return s
 
 
 class MessageTypecodeContainer(TypecodeContainerBase):
-    '''Used for RPC style messages, where we have
+    """Used for RPC style messages, where we have
     serveral parts serialized within a rpc wrapper name.
-    '''
+    """
 
     logger = _GetLogger('MessageTypecodeContainer')
 
@@ -1969,8 +1926,8 @@ class MessageTypecodeContainer(TypecodeContainerBase):
         self.mgContent = parts
 
     def _getOccurs(self, e):
-        '''return a 3 item tuple
-        '''
+        """return a 3 item tuple
+        """
 
         minOccurs = maxOccurs = '1'
         nillable = True
@@ -2020,16 +1977,16 @@ class MessageTypecodeContainer(TypecodeContainerBase):
         return (', %s\n' % indent).join(list)
 
     def getAttributeNames(self):
-        '''returns a list of anames representing the parts
+        """returns a list of anames representing the parts
         of the message.
-        '''
+        """
 
         return [self.getAttributeName(e.name) for e in self.tcListElements]
 
     def getParameterNames(self):
-        '''returns a list of pnames representing the parts
+        """returns a list of pnames representing the parts
         of the message.
-        '''
+        """
 
         return [e.name for e in self.tcListElements]
 
@@ -2038,22 +1995,22 @@ class MessageTypecodeContainer(TypecodeContainerBase):
 
 
 class TcListComponentContainer(ContainerBase):
-    '''Encapsulates a single value in the TClist list.
+    """Encapsulates a single value in the TClist list.
     it inherits TypecodeContainerBase only to get the mangle() method,
     it does not call the baseclass ctor.
 
     TODO: Change this inheritance scheme.
-    '''
+    """
 
     logger = _GetLogger('TcListComponentContainer')
 
     def __init__(self, qualified=True):
-        '''
+        """
         qualified -- qualify element.  All GEDs should be qualified,
             but local element declarations qualified if form attribute
             is qualified, else they are unqualified. Only relevant for
             standard style.
-        '''
+        """
 
         # TypecodeContainerBase.__init__(self)
 
@@ -2088,23 +2045,23 @@ class TcListComponentContainer(ContainerBase):
         self.global_type = (namespace, name)
 
     def setStyleElementDeclaration(self):
-        '''set the element style.
+        """set the element style.
             standard -- GED or local element
-        '''
+        """
 
         self.style = 'standard'
 
     def setStyleElementReference(self):
-        '''set the element style.
+        """set the element style.
             ref -- element reference
-        '''
+        """
 
         self.style = 'ref'
 
     def setStyleAnyElement(self):
-        '''set the element style.
+        """set the element style.
             anyElement -- <any> element wildcard
-        '''
+        """
 
         self.name = 'any'
         self.style = 'anyElement'
@@ -2115,17 +2072,16 @@ class TcListComponentContainer(ContainerBase):
     #        self.style = 'recursion'
 
     def unQualified(self):
-        '''Do not qualify element.
-        '''
+        """Do not qualify element.
+        """
 
         self.qualified = False
 
     def _getOccurs(self):
-        return 'minOccurs=%s, maxOccurs=%s, nillable=%s' % (self.min,
-                                                            self.max, self.nil)
+        return f'minOccurs={self.min}, maxOccurs={self.max}, nillable={self.nil}'
 
     def _getProcessContents(self):
-        return 'processContents="%s"' % self.processContents
+        return f'processContents="{self.processContents}"'
 
     def _getvalue(self):
         kw = {
@@ -2142,25 +2098,23 @@ class TcListComponentContainer(ContainerBase):
             (kw['nsuri'], kw['type']) = gt
 
         if self.style == 'standard':
-            kw['pname'] = '"%s"' % self.name
+            kw['pname'] = f'"{self.name}"'
             if self.qualified is True:
-                kw['pname'] = '(ns,"%s")' % self.name
+                kw['pname'] = f'(ns,"{self.name}")'
             if gt is None:
-                return '%(klass)s(pname=%(pname)s, aname="%(aname)s", %(occurs)s, %(typed)s, %(encoded)s)' \
-                    % kw
-            return 'GTD("%(nsuri)s","%(type)s",lazy=%(lazy)s)(pname=%(pname)s, aname="%(aname)s", %(occurs)s, %(typed)s, %(encoded)s)' \
-                % kw
+                return '{klass}(pname={pname}, aname="{aname}", {occurs}, {typed}, {encoded})'.format(**kw)
+            return 'GTD("{nsuri}","{type}",lazy={lazy})(pname={pname}, aname="{aname}", {occurs}, {typed}, {encoded})' \
+                .format(**kw)
 
         if self.style == 'ref':
             if gt is None:
-                return '%(klass)s(%(occurs)s, %(encoded)s)' % kw
-            return 'GED("%(nsuri)s","%(type)s",lazy=%(lazy)s, isref=True)(%(occurs)s, %(encoded)s)' \
-                % kw
+                return '{klass}({occurs}, {encoded})'.format(**kw)
+            return 'GED("{nsuri}","{type}",lazy={lazy}, isref=True)({occurs}, {encoded})' \
+                .format(**kw)
 
         kw['process'] = self._getProcessContents()
         if self.style == 'anyElement':
-            return 'ZSI.TC.AnyElement(aname="%(aname)s", %(occurs)s, %(process)s)' \
-                % kw
+            return 'ZSI.TC.AnyElement(aname="{aname}", {occurs}, {process})'.format(**kw)
 
         #        if self.style == 'recursion':
         #            return 'ZSI.TC.AnyElement(aname="%(aname)s", %(occurs)s, %(process)s)' %kw
@@ -2173,15 +2127,15 @@ class TcListComponentContainer(ContainerBase):
 
 
 class RPCMessageTcListComponentContainer(TcListComponentContainer):
-    '''Container for rpc/literal rpc/encoded message typecode.
-    '''
+    """Container for rpc/literal rpc/encoded message typecode.
+    """
 
     logger = _GetLogger('RPCMessageTcListComponentContainer')
 
     def __init__(self, qualified=True, encoded=None):
-        '''
+        """
         encoded -- encoded namespaceURI, if None treat as rpc/literal.
-        '''
+        """
 
         TcListComponentContainer.__init__(self, qualified=qualified)
         self._encoded = encoded
@@ -2316,8 +2270,8 @@ class ElementSimpleTypeContainer(TypecodeContainerBase):
 
 
 class ElementLocalSimpleTypeContainer(TypecodeContainerBase):
-    '''local simpleType container
-    '''
+    """local simpleType container
+    """
 
     type = DEC
     logger = _GetLogger('ElementLocalSimpleTypeContainer')
@@ -2511,8 +2465,7 @@ class ElementLocalComplexTypeContainer(TypecodeContainerBase,
         assert tp.isElement() is True and (tp.content is None
                                            or tp.content.isComplex() is True
                                            and tp.content.isLocal() is True), \
-            'expecting element w/local complexType not: %s' \
-            % tp.content.getItemTrace()
+            'expecting element w/local complexType not: %s' % tp.content.getItemTrace()
 
         self.name = tp.getAttribute('name')
         self.ns = tp.getTargetNamespace()
