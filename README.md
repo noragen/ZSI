@@ -71,7 +71,7 @@ scripts/             # CLI-Wrapper (z. B. wsdl2py)
 
 Eine priorisierte Next-Level-Roadmap für Performance, Modernisierung und Qualität:
 
-- `improvements.md`
+- [improvements.md](improvements.md)
 
 ## Projekt-Update (Modernisierung, Stand: Februar 2026)
 
