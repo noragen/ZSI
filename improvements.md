@@ -124,6 +124,30 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [x] Security-Hardening für Resolver/Untrusted-Input dokumentieren und testen (`README.md`, `RELEASE.md`, `scripts/security_input_guard.py`, `test/test_security_input_guard.py`)
 - [x] DX-Doku ergänzen (Architektur-Notizen + Troubleshooting)
 
+## Features (Next Next Level)
+
+- [ ] XSD Capability Matrix einführen (pro Schema: unterstützte Konstrukte, bekannte Limits, Workarounds)
+- [ ] Kompatibilitätsmodus für branchenspezifische "Schema v1.2"-Profile dokumentieren (z. B. CAP/GDTF) inkl. Beispielvalidierung
+- [ ] Optionaler Strict-Validation-Mode (`--strict-schema`) für frühzeitige Fehlererkennung in Generator und Runtime
+- [ ] Optionaler Compatibility-Mode (`--compat`) für toleranteres Parsing bei Legacy-Partnern
+- [ ] Streaming-Parse-Prototyp für große SOAP-Payloads (geringerer Memory-Footprint)
+- [ ] Namespaces/Type-Lookups mit gezielten Caches und Messpunkten weiter optimieren
+- [ ] Erweiterte Fault-Diagnostik mit korrelierbarer Request-ID und kompakter Context-Summary
+- [ ] Structured Logging (JSON) für Generator/Runtime/Resolver mit einheitlichem Event-Schema
+- [ ] OpenTelemetry-Hooks für Parse/Serialize/Resolver-Latenzen ergänzen
+- [ ] Security-Policy-Datei (Allowlist/Timeout/Retry/Limits) für Resolver zentral konfigurierbar machen
+- [ ] XML-Hardening-Testsuite für untrusted Input (Billion Laughs-ähnliche Muster, tiefe Rekursion, große Attribute)
+- [ ] Fuzzing-Smoke für Parser-/Typecode-Eingaben in CI (kleiner budgetierter Job)
+- [ ] Golden-File-Tests für `wsdl2py`-Output (Determinismus und Diff-Stabilität über Versionen)
+- [ ] Snapshot-Benchmarks mit Trendvergleich und CI-Warnschwellen erweitern
+- [ ] Multi-Python-CI auf 3.10/3.11/3.12 ausbauen
+- [ ] Optionaler `mypy`-Pilot für ausgewählte Module (`generate/*`, `parse.py`, `schema.py`)
+- [ ] Public-API-Vertrag definieren und per API-Surface-Test absichern
+- [ ] Plugin-Hook-System für projektspezifische Generator-Anpassungen (ohne Fork-Zwang)
+- [ ] Migrationsleitfaden ZSI -> Zeep (Feature-Gaps, Risiko, Parallelbetrieb, Cutover-Plan)
+- [ ] Interop-Korpus aus realen WSDL/XSD-Beispielen als dauerhafte Regression-Suite aufbauen
+- [ ] Security/Release/Perf-Dashboards aus CI-Artefakten generieren (leichtgewichtig, statisch)
+
 ## Definition of Done für Verbesserungen
 
 - messbarer Nutzen (Zeit, Stabilität, DX)
