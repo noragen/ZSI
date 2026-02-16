@@ -9,3 +9,5 @@ _run_local.log
 _tmp
 _gencheck_modernization
 test/wsdl2py/stubs
+.perf/
+.tmp_fast*/

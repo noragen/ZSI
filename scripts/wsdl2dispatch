@@ -1,9 +1,19 @@
-#!/bin/env python
+#!/usr/bin/env python3
 ############################################################################
 # Joshua Boverhof<JRBoverhof@lbl.gov>, LBNL
 # Monte Goode <MMGoode@lbl.gov>, LBNL
 # See Copyright for copyright notice!
 ###########################################################################
 
-from ZSI.generate.commands import wsdl2dispatch
-wsdl2dispatch()
+from ZSI.generate.commands import wsdl2py
+
+
+def main():
+    # wsdl2dispatch is deprecated in ZSI.generate.commands.
+    # wsdl2py generates dispatch/server bindings in default mode.
+    wsdl2py()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

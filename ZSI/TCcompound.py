@@ -220,20 +220,25 @@ class ComplexType(TypeCode):
 
         # Clone list of kids (we null it out as we process)
         c, crange = c[:], list(range(len(c)))
+        resolved_ofwhat = [
+            _instantiate_hidden_typecode(what) if callable(what) else what
+            for what in self.ofwhat
+        ]
         # Loop over all items we're expecting
 
         if debug:
             self.logger.debug("ofwhat: %s", str(self.ofwhat))
 
-        for j, c_elt in [(j, c[j]) for j in crange if c[j]]:
-            for i, what in [(i, self.ofwhat[i]) for i in range(len(self.ofwhat))]:
+        for j in crange:
+            c_elt = c[j]
+            if not c_elt:
+                continue
+
+            matched = False
+            for i, what in enumerate(resolved_ofwhat):
                 # Loop over all available kids
                 if debug:
                     self.logger.debug("what: (%s,%s)", what.nspname, what.pname)
-
-                # retrieve typecode if it is hidden
-                if callable(what):
-                    what = _instantiate_hidden_typecode(what)
 
                 # Loop over all available kids
                 if debug:
@@ -262,6 +267,7 @@ class ComplexType(TypeCode):
                         self.logger.debug("substitutionGroup: %s", subwhat)
 
                 if match:
+                    matched = True
                     max_occurs = what.maxOccurs
                     repeated = max_occurs == 'unbounded'
                     if not repeated:
@@ -289,11 +295,12 @@ class ComplexType(TypeCode):
                 if self.inorder is True and i == j:
                     raise EvaluateException('Out of order complexType',
                             ps.Backtrace(c_elt))
-            else:
-                if hasattr(what, 'default'):
-                    setattr(pyobj, what.aname, what.default)
-                elif what.minOccurs > 0 and not hasattr(pyobj, what.aname):
-                    raise EvaluateException('Element "' + what.aname + \
+            if not matched and resolved_ofwhat:
+                last_what = resolved_ofwhat[-1]
+                if hasattr(last_what, 'default'):
+                    setattr(pyobj, last_what.aname, last_what.default)
+                elif last_what.minOccurs > 0 and not hasattr(pyobj, last_what.aname):
+                    raise EvaluateException('Element "' + last_what.aname + \
                         '" missing from complexType', ps.Backtrace(elt))
 
         if isinstance(pyobj, ComplexType._DictHolder):
@@ -380,7 +387,11 @@ class ComplexType(TypeCode):
             if TypeCode.typechecks and type(d) != dict:
                 raise TypeError("Classless complexType didn't get dictionary")
 
-        indx, lenofwhat = 0, len(self.ofwhat)
+        resolved_ofwhat = [
+            _instantiate_hidden_typecode(what) if callable(what) else what
+            for what in self.ofwhat
+        ]
+        indx, lenofwhat = 0, len(resolved_ofwhat)
         if debug:
             self.logger.debug('element declaration (%s,%s)', self.nspname,
                               self.pname)
@@ -392,11 +403,7 @@ class ComplexType(TypeCode):
 
         while indx < lenofwhat:
             occurs = 0
-            what = self.ofwhat[indx]
-
-            # retrieve typecode if hidden
-            if callable(what):
-                what = _instantiate_hidden_typecode(what)
+            what = resolved_ofwhat[indx]
 
             if debug:
                 self.logger.debug('serialize what -- %s',

@@ -15,11 +15,22 @@ import types
 
 from ZSI.wstools.Namespaces import SOAP, XMLNS
 from ZSI.wstools.Utility import SplitQName
+from typing import Any
 
 _find_actor = lambda E: E.getAttributeNS(SOAP.ENV, 'actor') or E.getAttributeNS(SOAP.ENV12, 'actor') or None
 _find_mu = lambda E: E.getAttributeNS(SOAP.ENV, 'mustUnderstand') or E.getAttributeNS(SOAP.ENV12, 'mustUnderstand')
 _find_root = lambda E: E.getAttributeNS(SOAP.ENC, 'root') or E.getAttributeNS(SOAP.ENC12, 'root')
 _find_id = lambda E: _find_attr(E, 'id')
+
+
+def _element_context(elt):
+    if elt is None:
+        return '(?, ?)'
+    return (elt.namespaceURI, elt.localName or elt.nodeName)
+
+
+def _format_with_element_context(message, elt):
+    return '%s [element=%r]' % (message, _element_context(elt))
 
 
 class DefaultReader:
@@ -292,20 +303,21 @@ class ParsedSoap:
         # Do a breadth-first search, in the data first.  Most likely
         # to find multi-ref targets shallow in the data area.
 
-        list = self.data_elements[:] + [self.body_root]
+        nodes = self.data_elements[:] + [self.body_root]
         if headers:
-            list.extend(self.header_elements)
-        while list:
-            e = list.pop()
+            nodes.extend(self.header_elements)
+        while nodes:
+            e = nodes.pop()
             if e.nodeType == _Node.ELEMENT_NODE:
                 nodeid = _find_id(e)
                 if nodeid:
                     self.id_cache[nodeid] = e
                     if nodeid == frag:
                         return e
-            list += _children(e)
-        raise EvaluateException('''Can't find node for HREF "%s"'''
-                                % href, self.Backtrace(elt))
+            nodes.extend(_children(e))
+        raise EvaluateException(_format_with_element_context(
+                                '''Can't find node for HREF "%s"''' % href, elt),
+                                self.Backtrace(elt))
 
     def ResolveHREF(
         self,
@@ -316,14 +328,20 @@ class ParsedSoap:
 
         r = getattr(tc, 'resolver', self.resolver)
         if not r:
-            raise EvaluateException('No resolver for "' + uri + '"')
+            tc_name = getattr(tc, 'pname', tc.__class__.__name__)
+            tc_ns = getattr(tc, 'nspname', None)
+            raise EvaluateException('No resolver for "%s" [typecode=%r]'
+                                    % (uri, (tc_ns, tc_name)))
         try:
             if type(uri) == str:
                 uri = str(uri)
             retval = r(uri, tc, self, **keywords)
         except Exception as e:
+            tc_name = getattr(tc, 'pname', tc.__class__.__name__)
+            tc_ns = getattr(tc, 'nspname', None)
             raise EvaluateException('''Can't resolve "''' + uri + '" ('
-                                    + str(e.__class__) + '): ' + str(e))
+                                    + str(e.__class__) + '): ' + str(e)
+                                    + ' [typecode=%r]' % ((tc_ns, tc_name),))
         return retval
 
     def GetMyHeaderElements(self, actorlist=None):
@@ -375,7 +393,7 @@ class ParsedSoap:
             return 0
         return e.namespaceURI in (SOAP.ENV, SOAP.ENV12) and e.localName == 'Fault'
 
-    def Parse(self, how):
+    def Parse(self, how: Any) -> Any:
         '''Parse the message.
         '''
 
@@ -411,30 +429,39 @@ class ParsedSoap:
         '''
 
         d = {}
-        lenofwhat = len(ofwhat)
-        (c, crange) = (self.header_elements[:],
-                       list(range(len(self.header_elements))))
-        for (i, what) in [(i, ofwhat[i]) for i in range(lenofwhat)]:
+        c = self.header_elements[:]
+        crange = range(len(c))
+        for what in ofwhat:
             if isinstance(what, AnyElement):
                 raise EvaluateException('not supporting <any> as child of SOAP-ENC:Header'
                         )
 
             v = []
-
-            (namespaceURI, tagName) = (what.nspname, what.pname)
-            for (j, c_elt) in [(j, c[j]) for j in crange if c[j]]:
-                (prefix, name) = SplitQName(c_elt.tagName)
-                nsuri = c_elt.namespaceURI
-                if tagName == name and namespaceURI == nsuri:
-                    pyobj = what.parse(c_elt, self)
-                else:
+            namespaceURI, tagName = what.nspname, what.pname
+            for j in crange:
+                c_elt = c[j]
+                if c_elt is None:
                     continue
+                name = c_elt.localName or SplitQName(c_elt.tagName)[1]
+                if tagName != name or namespaceURI != c_elt.namespaceURI:
+                    continue
+                pyobj = what.parse(c_elt, self)
                 v.append(pyobj)
                 c[j] = None
-            if what.minOccurs > len(v) > what.maxOccurs:
-                raise EvaluateException('number of occurances(%d) doesnt fit constraints (%d,%s)'
-                         % (len(v), what.minOccurs, what.maxOccurs))
-            if what.maxOccurs == 1:
+            max_occurs = what.maxOccurs
+            if max_occurs == 'unbounded':
+                max_occurs_ok = True
+            else:
+                try:
+                    max_occurs_ok = len(v) <= int(max_occurs)
+                except (TypeError, ValueError):
+                    max_occurs_ok = True
+            if len(v) < what.minOccurs or not max_occurs_ok:
+                raise EvaluateException('number of occurances(%d) doesnt fit constraints (%d,%s) [header=%r]'
+                         % (len(v), what.minOccurs, what.maxOccurs,
+                            (what.nspname, what.pname)))
+            is_single = what.maxOccurs == 1 or what.maxOccurs == '1'
+            if is_single:
                 if len(v) == 0:
                     v = None
                 else:

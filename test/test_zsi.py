@@ -15,6 +15,7 @@ import test_URI
 import test_rfc2617
 import test_QName
 import test_AnyType
+import test_security_input_guard
 
 TEST_MODULES = (
     test_t1,
@@ -32,6 +33,7 @@ TEST_MODULES = (
     test_rfc2617,
     test_QName,
     test_AnyType,
+    test_security_input_guard,
 )
 
 def makeTestSuite():
@@ -42,3 +44,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

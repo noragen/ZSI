@@ -1,3 +1,23 @@
 [build-system]
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+include = '\.pyi?$'
+extend-exclude = '''
+(
+  ^/test/wsdl2py/stubs/
+)
+'''
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+extend-exclude = [
+  "test/wsdl2py/stubs",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP"]

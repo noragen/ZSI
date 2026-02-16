@@ -1,3 +1,19 @@
 Sample code, no copyright; use as you see fit.
 ZSI tips and techniques.
 Self-commented, if at all.
+
+Modernization update (2026)
+===========================
+
+The samples remain useful as reference material, but they are historical and
+not all are guaranteed as production-ready examples.
+
+Recommended baseline validation before sample experiments:
+
+python test\test_zsi.py
+python test\wsdl2py\runTests.py local
+
+See also:
+- samples\WSGI\README
+- samples\Echo\README
+- doc\dx-parsing-wsdl2py-troubleshooting.md

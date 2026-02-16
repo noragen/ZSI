@@ -10,24 +10,25 @@
 # $Id: utility.py 1226 2006-05-26 18:11:19Z boverhof $
 
 import re
+from typing import Optional
 from ZSI.generate import WsdlGeneratorError
 from ZSI.wstools.Utility import SplitQName
 from ZSI.wstools.Namespaces import SCHEMA
 
-NCName_to_ModuleName = lambda name: re.sub('\.', '_', TextProtect(name))
-NCName_to_ClassName = lambda name: re.sub('\.', '_', TextProtect(name))
+NCName_to_ModuleName = lambda name: re.sub(r'\.', '_', TextProtect(name))
+NCName_to_ClassName = lambda name: re.sub(r'\.', '_', TextProtect(name))
 TextProtect = lambda s: re.sub('[-./:# ]', '_', s)
 TextProtectAttributeName = lambda name: TextProtect('_%s' % name)
 
 
-def NormalizeNamespace(ns):
+def NormalizeNamespace(ns: Optional[str]) -> str:
     """Normalize absent namespace values to an empty string."""
     if ns is None:
         return ''
     return ns
 
 
-def Namespace2ModuleName(ns):
+def Namespace2ModuleName(ns: Optional[str]) -> str:
     ns = NormalizeNamespace(ns)
     if ns == '':
         return 'no_target_namespace'
@@ -46,7 +47,7 @@ def GetModuleBaseNameFromWSDL(wsdl):
     return NCName_to_ModuleName(base_name)
 
 
-def namespace_name(cls, ns, recommended):
+def namespace_name(cls, ns: Optional[str], recommended: Optional[str]) -> str:
     if recommended is None:
         return 'ns%s' % len(cls.alias_list)
     else:

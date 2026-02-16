@@ -1,5 +1,8 @@
 #! /usr/bin/env python
-import getopt, socket, sys
+import errno
+import getopt
+import socket
+import sys
 from cpackets import testlist
 
 try:
@@ -54,9 +57,10 @@ if quitting:
     try:
         s.connect((hostname, portnum))
     except socket.error as e:
-        if e.args[1] == 'Connection refused': sys.exit(0)
+        if getattr(e, 'errno', None) == errno.ECONNREFUSED:
+            sys.exit(0)
         raise
-    f = s.makefile('r+')
+    f = s.makefile('rw')
     f.write('QUIT / HTTP/1.0\r\n')
     f.flush()
     sys.exit(0)
@@ -64,7 +68,7 @@ if quitting:
 if getwsdl:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((hostname, portnum))
-    f = s.makefile('r+')
+    f = s.makefile('rw')
     f.write('GET /wsdl HTTP/1.0\r\n\r\n')
     f.flush()
     status = f.readline()
@@ -79,7 +83,7 @@ for T in tests:
     descr, IN, header = testlist[T]
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((hostname, portnum))
-    f = s.makefile('r+')
+    f = s.makefile('rw')
 
     print('-' * 60, '\n\n\n', T, descr)
     f.write('POST / HTTP/1.0\r\n')

@@ -13,3 +13,10 @@ Next candidates:
 
 - optional cleanup/refactor of remaining legacy comments and historical compatibility shims
 - extend release/docs maintenance (`RELEASE.md`, `README.md`) as changes land
+
+Done in current modernization wave:
+
+- Documentation refresh completed across `.md` files and folder content in
+  `doc/`, `interop/`, `samples/`, `scripts/`.
+- Added DX troubleshooting note: `doc/dx-parsing-wsdl2py-troubleshooting.md`.
+- Added script/tooling overview: `scripts/README.md`.

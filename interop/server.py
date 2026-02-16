@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 from ZSI import *
 from ZSI import _copyright, resolvers, _child_elements, _textprotect
-import sys, time, io as StringIO
+import sys, time
+from io import StringIO
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from sclasses import Operation, WSDL_DEFINITION, TC_SOAPStruct
@@ -11,12 +12,16 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
 
     def send_xml(self, text, code=200):
         '''Send some XML.'''
+        if isinstance(text, str):
+            payload = text.encode('utf-8')
+        else:
+            payload = text
         self.send_response(code)
         self.send_header('Content-type', 'text/xml; charset="utf-8"')
-        self.send_header('Content-Length', str(len(text)))
+        self.send_header('Content-Length', str(len(payload)))
         self.end_headers()
-        self.wfile.write(text)
-        self.trace(text, 'SENT')
+        self.wfile.write(payload)
+        self.trace(payload, 'SENT')
         self.wfile.flush()
 
     def send_fault(self, f):
@@ -124,7 +129,7 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
             if op.convert:
                 results = op.convert(results)
             if op.nsdict: nsdict.update(op.nsdict)
-            reply = StringIO.StringIO()
+            reply = StringIO()
             sw = SoapWriter(reply, nsdict=nsdict, header=self.headertext)
             sw.serialize(results, op.TCout,
                     name = 'Z:' + n + 'Response', inline=1)
@@ -147,7 +152,7 @@ class InteropRequestHandler(BaseHTTPRequestHandler):
             elif h.localName == 'echoMeStructRequest':
                 tc = TC_SOAPStruct('echoMeStructRequest', inline=1)
                 data = tc.parse(h, ps)
-                s = StringIO.StringIO()
+                s = StringIO()
                 sw = SoapWriter(s, envelope=0)
                 tc.serialize(sw, data, name='E:echoMeStructResponse')
                 sw.close()

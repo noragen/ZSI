@@ -16,6 +16,7 @@ This guide covers:
 
 1. Announce release intent to maintainers/contributors.
 1. Ensure `README.md`, `CHANGES`, and relevant docs reflect the release scope.
+1. Confirm resolver/untrusted-input hardening guidance is current (`README.md`) and checks pass.
 1. Verify version metadata in `setup.cfg` (`[version]` and packaging-related fields).
 1. Commit all pending release-relevant changes.
 1. Run required tests in your active Python environment.
@@ -49,6 +50,7 @@ PowerShell:
 
 ```powershell
 python test\test_zsi.py
+python test\test_security_input_guard.py
 python test\test_zsi_net.py
 python test\wsdl2py\runTests.py local
 ```
@@ -57,6 +59,20 @@ Notes:
 
 - `test\test_zsi_net.py` may require network availability/external services.
 - `test\wsdl2py\runTests.py local` is the key integration check for generator/runtime paths.
+- `test\test_security_input_guard.py` validates URI hardening constraints for untrusted resolver input.
+
+## Security Gate Checks
+
+Run the minimal resolver-input gate before release if resolver-related code/docs changed:
+
+```powershell
+python scripts\security_input_guard.py --uri "https://schemas.example.internal/wsdl/service.wsdl" --allow-prefix "https://schemas.example.internal/"
+```
+
+Expected result:
+
+- exit code `0`
+- output contains `[security-uri-check] OK`
 
 ## Tagging
 

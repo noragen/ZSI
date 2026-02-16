@@ -20,6 +20,44 @@ from ZSI.generate.wsdl2dispatch import WSAServiceModuleWriter as ServiceDescript
 
 
 warnings.filterwarnings('ignore', '', UserWarning)
+
+
+def _add_context_to_exception(ex, context):
+    """Append diagnostic context to an existing exception without changing type."""
+    if not context:
+        return
+    try:
+        text = str(ex)
+        if context in text:
+            return
+        if ex.args:
+            ex.args = ('%s [%s]' % (ex.args[0], context),) + ex.args[1:]
+        else:
+            ex.args = (context,)
+    except Exception:
+        pass
+
+
+def _describe_wsdl(wsdl):
+    details = []
+    location = getattr(wsdl, 'location', None)
+    if location:
+        details.append('location=%s' % location)
+    target_ns = getattr(wsdl, 'targetNamespace', None)
+    if not target_ns and hasattr(wsdl, 'types'):
+        try:
+            if len(wsdl.types):
+                target_ns = list(wsdl.types.keys())[0]
+        except Exception:
+            target_ns = None
+    if target_ns:
+        details.append('targetNamespace=%s' % target_ns)
+    name = getattr(wsdl, 'name', None)
+    if name:
+        details.append('name=%s' % name)
+    return ', '.join(details)
+
+
 def SetDebugCallback(option, opt, value, parser, *args, **kwargs):
     setBasicLoggerDEBUG()
     warnings.resetwarnings()
@@ -30,17 +68,20 @@ def SetPyclassMetaclass(option, opt, value, parser, *args, **kwargs):
         TypecodeContainerBase, TypesHeaderContainer
 
     TypecodeContainerBase.metaclass = kwargs['metaclass']
-    TypesHeaderContainer.imports.append(\
-            'from %(module)s import %(metaclass)s' %kwargs
-            )
-    ServiceHeaderContainer.imports.append(\
-            'from %(module)s import %(metaclass)s' %kwargs
-            )
+    import_stmt = 'from %(module)s import %(metaclass)s' % kwargs
+    if import_stmt not in TypesHeaderContainer.imports:
+        TypesHeaderContainer.imports.append(import_stmt)
+    if import_stmt not in ServiceHeaderContainer.imports:
+        ServiceHeaderContainer.imports.append(import_stmt)
 
 def SetUpLazyEvaluation(option, opt, value, parser, *args, **kwargs):
     from ZSI.generate.containers import TypecodeContainerBase
     TypecodeContainerBase.lazy = True
 
+def SetUpFastGeneration(option, opt, value, parser, *args, **kwargs):
+    """Prototype: use faster generation defaults with reduced output."""
+    parser.values.fast = True
+    SetUpLazyEvaluation(option, opt, value, parser, *args, **kwargs)
 
 
 def wsdl2py(args=None):
@@ -49,10 +90,11 @@ def wsdl2py(args=None):
     and type definitions.  By default invoking this script produces three files,
     each named after the wsdl definition name, in the current working directory.
 
-    Generated Modules Suffix:
+    Generated Modules Suffix (default mode):
         _client.py -- client locator, rpc proxy port, messages
         _types.py  -- typecodes representing
         _server.py -- server-side bindings
+    In --fast mode, _server.py generation is skipped.
 
     Parameters:
         args -- optional can provide arguments, rather than parsing
@@ -93,6 +135,11 @@ def wsdl2py(args=None):
                   callback_kwargs={},
                   help="EXPERIMENTAL: recursion error solution, lazy evalution of typecodes")
 
+    op.add_option("-f", "--fast",
+                  action="callback", callback=SetUpFastGeneration,
+                  callback_kwargs={},
+                  help="EXPERIMENTAL: faster generation prototype (enables lazy typecodes and skips _server.py generation)")
+
     # Use Twisted
     op.add_option("-w", "--twisted",
                   action="store_true", dest='twisted', default=False,
@@ -130,8 +177,13 @@ def wsdl2py(args=None):
     load = reader.loadFromFile
     if not isfile(location):
         load = reader.loadFromURL
-        
-    wsdl = load(location)
+
+    try:
+        wsdl = load(location)
+    except Exception as ex:
+        _add_context_to_exception(ex, 'phase=load, wsdl=%s, loader=%s' % (
+            location, load.__name__))
+        raise
 
     """
     try:
@@ -146,13 +198,34 @@ def wsdl2py(args=None):
 
     if isinstance(wsdl, XMLSchema.XMLSchema):
         wsdl.location = location
-        files = _wsdl2py(options, wsdl)
+        try:
+            files = _wsdl2py(options, wsdl)
+        except Exception as ex:
+            _add_context_to_exception(ex, 'phase=generate-types, %s'
+                                      % _describe_wsdl(wsdl))
+            raise
     else:
-        files = _wsdl2py(options, wsdl)
-        files.append(_wsdl2dispatch(options, wsdl))
+        try:
+            files = _wsdl2py(options, wsdl)
+        except Exception as ex:
+            _add_context_to_exception(ex, 'phase=generate-client-types, %s'
+                                      % _describe_wsdl(wsdl))
+            raise
+        if not getattr(options, 'fast', False):
+            try:
+                files.append(_wsdl2dispatch(options, wsdl))
+            except Exception as ex:
+                _add_context_to_exception(ex, 'phase=generate-server, %s'
+                                          % _describe_wsdl(wsdl))
+                raise
 
     if getattr(options, 'pydoc', False):
-        _writepydoc(os.path.join('docs', 'API'), *files)
+        try:
+            _writepydoc(os.path.join('docs', 'API'), *files)
+        except Exception as ex:
+            _add_context_to_exception(ex, 'phase=generate-pydoc, files=%s'
+                                      % ','.join(files))
+            raise
 
     if is_cmdline:
         return

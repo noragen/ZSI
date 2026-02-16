@@ -27,3 +27,21 @@ c.  WS-Routing (not yet implemented in ZSI :).  See WSDL at
     http://www.whitemesa.net/wsdl/interop_base_end.wsdl
 
 
+Modernization update (2026)
+===========================
+
+Status:
+- Interop assets are kept as legacy compatibility material.
+- Core execution and validation now happen through Python 3 test paths.
+- `interop/client.py` and `interop/server.py` are maintained for Python 3 runtime compatibility.
+
+Recommended local checks:
+
+python test\test_zsi.py
+python test\wsdl2py\runTests.py local
+
+Security note:
+- If interop scenarios use external resolver URLs, validate input first:
+  python scripts\security_input_guard.py --uri "https://schemas.example.internal/wsdl/service.wsdl" --allow-prefix "https://schemas.example.internal/"
+
+

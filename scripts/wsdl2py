@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python3
 ############################################################################
 # Joshua Boverhof<JRBoverhof@lbl.gov>, LBNL
 # Monte Goode <MMGoode@lbl.gov>, LBNL
@@ -6,4 +6,12 @@
 ###########################################################################
 
 from ZSI.generate.commands import wsdl2py
-wsdl2py()
+
+
+def main():
+    wsdl2py()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

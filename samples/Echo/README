@@ -142,3 +142,21 @@ Expected CLIENT Output:
 C:\xfer\Echo-extended>EchoClient.py
 Test TIE StringTest TIE StringTest TIE String
 Failed to echo (Inherited):  Not authorized
+
+
+MODERNIZATION UPDATE (2026)
+===========================
+
+This example is preserved as a legacy extension sample. It is still useful for
+understanding container/service patterns, but command snippets above are
+historical.
+
+Preferred Python 3 command style:
+
+python scripts\wsdl2py samples\Echo\Echo.wsdl
+python samples\Echo\EchoServer.py
+python samples\Echo\EchoClient.py
+
+Optional fast generation path while iterating:
+
+python scripts\wsdl2py --fast samples\Echo\Echo.wsdl

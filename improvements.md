@@ -1,24 +1,24 @@
 # ZSI Next-Level Improvements
 
-Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und qualitativ auf das naechste Level zu bringen.
+Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und qualitativ auf das nächste Level zu bringen.
 
 ## Ziele
 
-- Hoehere Performance bei Parse/Serialize und `wsdl2py`
+- Höhere Performance bei Parse/Serialize und `wsdl2py`
 - Modernere, wartbare Python-3-Codebasis
 - Bessere Test- und Release-Sicherheit
 - Klarere Developer Experience (DX)
 
-## Prioritaeten
+## Prioritäten
 
-- `P0` = sofort hoher Nutzen / geringe bis mittlere Komplexitaet
-- `P1` = hoher Nutzen / mittlere Komplexitaet
-- `P2` = strategisch wichtig / groessere Arbeiten
+- `P0` = sofort hoher Nutzen / geringe bis mittlere Komplexität
+- `P1` = hoher Nutzen / mittlere Komplexität
+- `P2` = strategisch wichtig / größere Arbeiten
 
 ## P0 Quick Wins
 
 - Profiling-Baseline aufsetzen:
-  - `cProfile`-Runs fuer `test\test_zsi.py` und `test\wsdl2py\runTests.py local`
+  - `cProfile`-Runs für `test\test_zsi.py` und `test\wsdl2py\runTests.py local`
   - Top-Hotspots je Lauf dokumentieren
 - Performance-Regression-Guard:
   - kleiner Benchmark-Smoke (Zeitbudget + Trendvergleich)
@@ -26,10 +26,10 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
   - doppelte `pyclass_type`-Imports in generierten Stubs eliminieren
 - Low-risk Micro-Optimierungen:
   - unnötige String-/List-Kopien in Parse/Serialize-Pfaden reduzieren
-  - einfache Caches fuer wiederholte Namespace-/Lookup-Operationen
+  - einfache Caches für wiederholte Namespace-/Lookup-Operationen
 - Test-Hygiene:
   - flakey/umgebungsabhaengige Tests markieren/isolieren
-  - stabile `local`-Testausfuehrung als Standard dokumentieren
+  - stabile `local`-Testausführung als Standard dokumentieren
 
 ## P1 Performance & Runtime
 
@@ -37,13 +37,13 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
   - `ZSI/TCcompound.py`
   - `ZSI/parse.py`
   - `ZSI/writer.py`
-- Lazy-Typecode-Pfad weiter haerten:
+- Lazy-Typecode-Pfad weiter härten:
   - `_Mirage`/Reveal-Logik vereinheitlichen
   - wiederholte Instanziierungen minimieren
 - XML-Handling evaluieren:
-  - Kosten fuer DOM-Aufbau vs. gezieltere Verarbeitung messen
+  - Kosten für DOM-Aufbau vs. gezieltere Verarbeitung messen
 - Memory-Footprint:
-  - grosse SOAP-Payloads (Streaming/inkrementelle Verarbeitung) untersuchen
+  - große SOAP-Payloads (Streaming/inkrementelle Verarbeitung) untersuchen
 
 ## P1 Generator (wsdl2py) Next Steps
 
@@ -53,29 +53,29 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - Optionaler `--fast`-Modus:
   - weniger Runtime-Magie in generierten Klassen
   - mehr direkte Verweise, wo sicher
-- Stabilitaet bei WSDL-Edge-Cases:
+- Stabilität bei WSDL-Edge-Cases:
   - leere `wsdl:message`
   - schwierige substitution groups
   - große WSDLs (z. B. VIM) als Dauer-Regressionstest
 
 ## P1 Modern Python
 
-- Typannotationen schrittweise einfuehren:
+- Typannotationen schrittweise einführen:
   - Start bei `generate/*`, `parse.py`, `schema.py`
 - Lint/Format-Stack modernisieren:
   - `ruff` + `black` (oder klar definierte Alternative)
-- Alte Kompatibilitaetsreste aufraeumen:
+- Alte Kompatibilitätsreste aufräumen:
   - ungenutzte Legacy-Pfade, tote Kommentare, alte Namenskonventionen
 
-## P2 Qualitaet & Architektur
+## P2 Qualität & Architektur
 
 - Klarere Modulgrenzen:
-  - Generator, Runtime, Transport, XML-Tools staerker trennen
-- API-Stabilitaet:
+  - Generator, Runtime, Transport, XML-Tools stärker trennen
+- API-Stabilität:
   - explizite Public API definieren
   - interne APIs markieren
 - Fehlerbilder verbessern:
-  - praezisere Exceptions mit Kontext (WSDL-Teil, Namespace, Operation)
+  - präzisere Exceptions mit Kontext (WSDL-Teil, Namespace, Operation)
 
 ## P2 Tests, CI, Releases
 
@@ -94,42 +94,46 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
   - klare URI-Allowlist-Policies
   - Timeout-/Retry-Defaults dokumentieren
 - Input-Hardening:
-  - untrusted XML-Szenarien pruefen
-  - defensive Limits fuer große/rekursive Payloads
+  - untrusted XML-Szenarien prüfen
+  - defensive Limits für große/rekursive Payloads
+- Minimaler Hardening-Baustein:
+  - `scripts/security_input_guard.py` validiert untrusted Resolver-URIs (Scheme, Credentials, Prefix)
+  - `test/test_security_input_guard.py` deckt Positiv-/Negativfälle als Regression ab
 
 ## DX & Doku
 
 - README erweitern:
-  - schnelle Startpfade fuer User vs. Maintainer trennen
+  - schnelle Startpfade für User vs. Maintainer trennen
 - Architektur-Notizen:
   - "How parsing works", "How wsdl2py works"
 - Troubleshooting:
-  - typische Fehler + bekannte Loesungen
+  - typische Fehler + bekannte Lösungen
 
-## Konkreter 4-Wochen-Plan
+## Konkrete Checkliste
 
-### Woche 1
+- [x] Profiling-Baseline erstellen (`test\test_zsi.py`, `test\wsdl2py\runTests.py local`)
+- [x] Benchmark-Smoke mit einfachen Zeit-Budgets einführen
+- [x] Top-2 Runtime-Hotspots in `ZSI/TCcompound.py` / `ZSI/parse.py` optimieren
+- [x] `wsdl2py`-Output weiter deduplizieren (Imports, Boilerplate)
+- [x] Option für schnelleren Generatorpfad (`--fast`) evaluieren/prototypen
+- [x] Typannotationen in `ZSI/generate/*`, `ZSI/parse.py`, `ZSI/schema.py` starten
+- [x] Lint/Format-Stack konsolidieren (`ruff`/`black` oder klar definierte Alternative)
+- [x] CI-Matrix für `unit` + `integration-local` aufsetzen
+- [x] Release-Checks automatisieren (Build+Test+Tag-Gates)
+- [x] Fehlerdiagnostik verbessern (präzisere Exceptions mit WSDL-/Namespace-Kontext)
+- [x] Security-Hardening für Resolver/Untrusted-Input dokumentieren und testen (`README.md`, `RELEASE.md`, `scripts/security_input_guard.py`, `test/test_security_input_guard.py`)
+- [x] DX-Doku ergänzen (Architektur-Notizen + Troubleshooting)
 
-- Profiling-Baseline + Benchmark-Smoke
-- `wsdl2py`-Import-Dedupe
+## Definition of Done für Verbesserungen
 
-### Woche 2
-
-- Top-2 Hotspots optimieren
-- erste Typannotationen in `generate/*`
-
-### Woche 3
-
-- CI-Splits (`unit`, `local integration`)
-- Fehlerdiagnostik verbessern (Exception-Kontext)
-
-### Woche 4
-
-- Release-Automation vorbereiten
-- Doku-Politur (`README.md`, `RELEASE.md`, Troubleshooting)
-
-## Definition of Done fuer Verbesserungen
-
-- messbarer Nutzen (Zeit, Stabilitaet, DX)
-- gruen in Kernsuite + `wsdl2py local`
+- messbarer Nutzen (Zeit, Stabilität, DX)
+- grün in Kernsuite + `wsdl2py local`
 - dokumentiert in `CHANGES` + ggf. `README.md`/`RELEASE.md`
+
+## Abschlussziel
+
+- [x] Sämtliche Dokumentationen, Extensions und Samples sind auf den aktuellen
+  Modernisierungsstand nachgezogen:
+  `.md`-Dateien sowie Inhalte in `doc/`, `interop/`, `samples/` und `scripts/`
+  wurden aktualisiert (inkl. Runbooks, DX-/Troubleshooting-Hinweisen und
+  Security-/Release-Checks).

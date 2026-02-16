@@ -359,8 +359,10 @@ class ServiceHeaderContainer(ServiceContainerBase):
         '''
 
         if type(statement) in (list, tuple):
-            self.extras += statement
-        else:
+            for item in statement:
+                if item not in self.extras:
+                    self.extras.append(item)
+        elif statement not in self.extras:
             self.extras.append(statement)
 
     def _setContent(self):
@@ -369,8 +371,8 @@ class ServiceHeaderContainer(ServiceContainerBase):
         if self.types:
             self.write(f'from {self.types} import *')
 
-        imports = self.basic[:]
-        imports += self.extras
+        imports = self.basic[:] + self.extras
+        imports = list(dict.fromkeys(imports))
         self.writeArray(imports)
 
 
@@ -1289,7 +1291,7 @@ class TypesHeaderContainer(TypesContainerBase):
     logger = _GetLogger('TypesHeaderContainer')
 
     def _setContent(self):
-        self.writeArray(TypesHeaderContainer.imports)
+        self.writeArray(list(dict.fromkeys(TypesHeaderContainer.imports)))
 
 
 NamespaceClassContainerBase = TypesContainerBase
