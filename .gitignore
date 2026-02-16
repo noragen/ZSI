@@ -5,4 +5,7 @@ build
 .project
 .idea
 _run_local.log
-__pycache__
+**__pycache__
+_tmp
+_gencheck_modernization
+test/wsdl2py/stubs
