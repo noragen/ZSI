@@ -24,29 +24,26 @@ Abhängigkeiten:
 PowerShell (Windows):
 
 ```powershell
-conda run -n zsi python -m pip install --upgrade pip
-conda run -n zsi python -m pip install -r requirements.txt
-conda run -n zsi python -m pip install -e .
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 Alternativ mit Mamba:
 
 ```powershell
-mamba run -n zsi python -m pip install -r requirements.txt
-mamba run -n zsi python -m pip install -e .
+python -m pip install -r requirements.txt
+python -m pip install -e .
 ```
 
 ## Test-Run
-
-Wichtig: Die Tests erwarten, dass das Repo-Root im `PYTHONPATH` liegt.
 
 ### Lokale Tests
 
 PowerShell:
 
 ```powershell
-$env:PYTHONPATH='.'
-conda run -n zsi python test\test_zsi.py
+python test\test_zsi.py
 ```
 
 ### Tests inkl. Netzwerk
@@ -54,8 +51,7 @@ conda run -n zsi python test\test_zsi.py
 PowerShell:
 
 ```powershell
-$env:PYTHONPATH='.'
-conda run -n zsi python test\test_zsi_net.py
+python test\test_zsi_net.py
 ```
 
 ## Repo-Struktur
@@ -70,3 +66,32 @@ samples/             # Beispielcode
 doc/                 # LaTeX-Dokumentation und Beispiele
 scripts/             # CLI-Wrapper (z. B. wsdl2py)
 ```
+
+## Projekt-Update (Modernisierung, Stand: Februar 2026)
+
+Dieser Abschnitt ergänzt die bestehende README und dokumentiert die zuletzt
+integrierten Modernisierungen für Python 3 im Projekt.
+
+### Was modernisiert wurde
+
+- `wsdl2py`-Generatorpfade auf Python-3-kompatible Ausgabe stabilisiert
+  (u. a. Klassenreferenzen, Metaclass-Syntax, Exception-Syntax).
+- Laufzeitpfade für Lazy-Typecodes/Mirage robust gemacht
+  (`ZSI/schema.py`, `ZSI/TCcompound.py`, `ZSI/generate/pyclass.py`).
+- Doc/Lit-Edge-Case mit leerem SOAP-Body (`<wsdl:message/>` ohne Parts)
+  über Generator, Dispatch, Parser und Writer durchgängig unterstützt.
+- Legacy-Tests auf moderne Python-APIs angepasst (z. B. ElementTree-Zugriffe).
+
+### Verifizierter Teststand
+
+Im Environment `zsi` wurden erfolgreich ausgeführt:
+
+```powershell
+python test\test_zsi.py
+python test\wsdl2py\runTests.py local
+```
+
+Aktueller Status:
+
+- `test\test_zsi.py`: OK
+- `test\wsdl2py\runTests.py local`: OK
