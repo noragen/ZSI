@@ -67,6 +67,12 @@ doc/                 # LaTeX-Dokumentation und Beispiele
 scripts/             # CLI-Wrapper (z. B. wsdl2py)
 ```
 
+## Weiterentwicklung
+
+Eine priorisierte Next-Level-Roadmap für Performance, Modernisierung und Qualität:
+
+- `improvements.md`
+
 ## Projekt-Update (Modernisierung, Stand: Februar 2026)
 
 Dieser Abschnitt ergänzt die bestehende README und dokumentiert die zuletzt
