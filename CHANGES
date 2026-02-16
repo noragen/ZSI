@@ -1,3 +1,25 @@
+Changes for 2.1.0 released 16-Feb-2026:
+    -   Python 3 modernization completed across core runtime, generator paths,
+        interop helpers, scripts, and project documentation.
+    -   Added profiling baseline tooling and benchmark smoke checks:
+        `scripts/profile_baseline.py`, `scripts/benchmark_smoke.py`.
+    -   Added CI workflow with Linux/Windows test matrix and release gates,
+        including artifact validation and release tag document checks.
+    -   Added `wsdl2py --fast` prototype mode (lazy typecode path enabled,
+        server skeleton generation skipped for faster iteration).
+    -   Improved `wsdl2py` output stability by deduplicating generated imports.
+    -   Implemented low-risk runtime hotspot optimizations in parse/compound
+        paths and tightened behavior around header occurrence checks.
+    -   Improved diagnostics by including contextual details (phase, WSDL
+        location, namespace/type/element context) in key exceptions.
+    -   Added resolver URI hardening helper and tests for untrusted input:
+        `scripts/security_input_guard.py`, `test/test_security_input_guard.py`.
+    -   Added runtime diagnostics regression tests:
+        `test/wsdl2py/test_RuntimeDiagnostics.py`.
+    -   Added DX architecture/troubleshooting note and refreshed release/docs
+        runbooks in README/RELEASE and `doc/`, `interop/`, `samples/`, `scripts/`.
+    -   Consolidated dev quality tooling with `ruff` and `black`.
+
 Change for xxx released xxx:
     -   Make XMLSchema.py work in cases where threading isn't built in
     -   Add client-side Cookie Support (Jorgen Frojk Kjaersgaard)
