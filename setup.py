@@ -1,12 +1,8 @@
 #! /usr/bin/env python
 # $Header$
 import sys
-try:
-    from setuptools import setup
-    hasSetuptools = True
-except ImportError:
-    from distutils.core import setup
-    hasSetuptools = False
+
+from setuptools import setup
 
 _url = "http://pywebsvcs.sf.net/"
 
@@ -40,22 +36,6 @@ _packages = [ "ZSI", "ZSI.generate", "ZSI.wstools"]
 if sys.version_info[0:2] >= (2, 4):
     _packages.append("ZSI.twisted")
 
-
-# setuptools specific logic
-additional_params = {}
-if hasSetuptools:
-    additional_params['entry_points'] = {
-        'console_scripts': [
-            'wsdl2py = ZSI.generate.commands:wsdl2py',
-        ],
-    }
-    additional_params['setup_requires'] = [ "setuptools >= 0.6c3", ]
-    additional_params['dependency_links'] = [
-        "http://sourceforge.net/project/showfiles.php?group_id=6473&package_id=6541&release_id=286213",
-    ]
-else:
-    additional_params['scripts'] = ["scripts/wsdl2py",]
-
 setup(
     name="ZSI",
     version=_version,
@@ -68,5 +48,9 @@ setup(
     maintainer_email="pywebsvcs-talk@lists.sf.net",
     url=_url,
     long_description="For additional information, please see " + _url,
-    **additional_params
+    entry_points={
+        "console_scripts": [
+            "wsdl2py = ZSI.generate.commands:wsdl2py",
+        ],
+    },
 )

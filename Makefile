@@ -1,41 +1,17 @@
-#
+PYTHON ?= python
 
-# Change this to point to your Python2 exectuable
-PYTHON24 = python2.4
-PYTHON25 = python2.5
-PYTHON = python2.5
+.PHONY: test test-unit lint clean install-dev
 
-# This should be the Python that generated RPMs depend on and install
-# into; this may be different from the Python used to build the RPM.
-RPM_TARGET_PYTHON=/usr/bin/python
+test: test-unit
 
+test-unit:
+	$(PYTHON) -c "import os,sys,unittest; sys.path[:0]=[os.getcwd(), os.path.join(os.getcwd(),'test')]; import test_zsi; result=unittest.TextTestRunner().run(test_zsi.makeTestSuite()); raise SystemExit(0 if result.wasSuccessful() else 1)"
 
-all:	rpm
+lint:
+	@echo "Lint placeholder: no linter configured yet."
 
-ins:
-	soup $(PYTHON) setup.py install
+clean:
+	$(PYTHON) -c "import pathlib, shutil; [shutil.rmtree(p, ignore_errors=True) for p in pathlib.Path('.').glob('**/__pycache__')]; [p.unlink() for p in pathlib.Path('.').glob('**/*.py[co]') if p.is_file()]; [shutil.rmtree(pathlib.Path(d), ignore_errors=True) for d in ('build', 'dist', 'ZSI.egg-info')]"
 
-kit:	doc sdist eggs # make a kit
-
-#rpm:	ZSI/version.py
-#	rm -f dist/*
-#	#$(PYTHON) setup.py bdist_rpm --python=$(RPM_TARGET_PYTHON)
-
-sdist:	ZSI/version.py
-	rm -rf dist/*
-	$(PYTHON) setup.py sdist
-
-eggs:	ZSI/version.py
-	$(PYTHON24) setup.py bdist_egg
-	$(PYTHON25) setup.py bdist_egg
-
-doc:	doc/version.tex		# build the docs
-	$(MAKE) -C doc
-
-ver:			# update the build number
-	$(PYTHON) newver.py --incr
-
-.PHONY: all ins kit rpm doc ver
-
-ZSI/version.py doc/version.tex:	setup.cfg
-	$(PYTHON) newver.py
+install-dev:
+	$(PYTHON) -m pip install -r requirements-dev.txt
