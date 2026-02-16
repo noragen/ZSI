@@ -3,11 +3,42 @@
 # Joshua R. Boverhof, LBNL
 # See LBNLCopyright for copyright notice!
 ###########################################################################
-from compiler.ast import Module
 import io, copy, getopt
 import os, sys, unittest, urllib.parse, signal, time, warnings, subprocess
+import types
 from configparser import ConfigParser, NoSectionError, NoOptionError
 from ZSI.wstools.TimeoutSocket import TimeoutError
+
+try:
+    import distutils  # noqa: F401
+except ModuleNotFoundError:
+    # Python 3.12+: provide the subset used by ZSI.generate.commands.
+    distutils = types.ModuleType('distutils')
+    distutils.log = types.SimpleNamespace(
+        debug=lambda *args, **kwargs: None,
+        info=lambda *args, **kwargs: None,
+        warn=lambda *args, **kwargs: None,
+        warning=lambda *args, **kwargs: None,
+        error=lambda *args, **kwargs: None,
+    )
+    distutils_command = types.ModuleType('distutils.command')
+    distutils_build_py = types.ModuleType('distutils.command.build_py')
+    distutils_util = types.ModuleType('distutils.util')
+
+    class _BuildPy:
+        pass
+
+    def _convert_path(path):
+        return path.replace('/', os.sep)
+
+    distutils_build_py.build_py = _BuildPy
+    distutils_util.convert_path = _convert_path
+
+    sys.modules['distutils'] = distutils
+    sys.modules['distutils.command'] = distutils_command
+    sys.modules['distutils.command.build_py'] = distutils_build_py
+    sys.modules['distutils.util'] = distutils_util
+
 from ZSI.generate import commands
 
 """Global Variables:
@@ -34,7 +65,9 @@ TESTS = 'tests'
 SECTION_CONFIGURATION = 'configuration'
 SECTION_DISPATCH = 'dispatch'
 TRACEFILE = sys.stdout
-TOPDIR = os.getcwd()
+BASEDIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(BASEDIR, CONFIG_FILE)
+TOPDIR = BASEDIR
 MODULEDIR = os.path.join(TOPDIR, 'stubs')
 SECTION_SERVERS = 'servers'
 
@@ -50,9 +83,10 @@ if DEBUG:
     from ZSI.wstools.logging import setBasicLoggerDEBUG
     setBasicLoggerDEBUG()
 
-sys.path.append('%s/%s' %(os.getcwd(), 'stubs'))
+sys.path.append(MODULEDIR)
 ENVIRON = copy.copy(os.environ)
-ENVIRON['PYTHONPATH'] = ENVIRON.get('PYTHONPATH', '') + ':' + MODULEDIR
+_pythonpath = ENVIRON.get('PYTHONPATH', '')
+ENVIRON['PYTHONPATH'] = MODULEDIR if not _pythonpath else _pythonpath + os.pathsep + MODULEDIR
 
 
 def _SimpleMain():
@@ -79,7 +113,7 @@ def _LaunchContainer(cmd):
     host = CONFIG_PARSER.get(SECTION_DISPATCH, 'host')
     port = CONFIG_PARSER.get(SECTION_DISPATCH, 'port')
     try:
-        process = subprocess.Popen(['python', cmd, port], env=ENVIRON)
+        process = subprocess.Popen([sys.executable, cmd, port], env=ENVIRON)
     except:
         print('error executing: %s' %cmd, file=sys.stderr)
         raise
@@ -168,11 +202,6 @@ class ServiceTestCase(unittest.TestCase):
 
     write = lambda self, arg: self.out.write(arg)
 
-    if sys.version_info[:2] >= (2,5):
-        _exc_info = unittest.TestCase._exc_info
-    else:
-        _exc_info = unittest.TestCase._TestCase__exc_info
-
     def __call__(self, *args, **kwds):
         self.run(*args, **kwds)
 
@@ -186,7 +215,7 @@ class ServiceTestCase(unittest.TestCase):
             except KeyboardInterrupt:
                 raise
             except:
-                result.addError(self, self._exc_info())
+                result.addError(self, sys.exc_info())
                 return
 
             ok = False
@@ -196,18 +225,18 @@ class ServiceTestCase(unittest.TestCase):
                 t2 = time.time()
                 ok = True
             except self.failureException:
-                result.addFailure(self, self._exc_info())
+                result.addFailure(self, sys.exc_info())
             except KeyboardInterrupt:
                 raise
             except:
-                result.addError(self, self._exc_info())
+                result.addError(self, sys.exc_info())
 
             try:
                 self.tearDown()
             except KeyboardInterrupt:
                 raise
             except:
-                result.addError(self, self._exc_info())
+                result.addError(self, sys.exc_info())
                 ok = False
             if ok:
                 result.addSuccess(self)
@@ -314,7 +343,7 @@ class ServiceTestCase(unittest.TestCase):
         if None is cfn is tfn is sfn:
             return
 
-        for n,m in [(i,__import__(i.split('.py')[0])) for i in files]:
+        for n,m in [(i, __import__(os.path.splitext(i)[0])) for i in files]:
             if tfn is not None and tfn == n:
                 self.types_module = m
             elif cfn is not None and cfn == n:
@@ -344,9 +373,9 @@ class ServiceTestCase(unittest.TestCase):
            ServiceTestCase.CleanUp()
 
         ServiceTestCase._lastToDispatch = expath
-        ServiceTestCase._process = \
-            _LaunchContainer(os.path.join(os.path.abspath(TOPDIR),
-                                                          *expath.split('/')))
+        ServiceTestCase._process = _LaunchContainer(
+            os.path.normpath(os.path.join(os.path.abspath(TOPDIR), expath))
+        )
 
 
     def CleanUp(cls):
@@ -357,7 +386,13 @@ class ServiceTestCase(unittest.TestCase):
         """
         if cls._process is None:
             return
-        os.kill(cls._process.pid, signal.SIGKILL)
+        try:
+            if hasattr(signal, 'SIGKILL'):
+                os.kill(cls._process.pid, signal.SIGKILL)
+            else:
+                cls._process.kill()
+        except OSError:
+            pass
         cls._process = None
     CleanUp = classmethod(CleanUp)
 

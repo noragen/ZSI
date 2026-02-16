@@ -287,10 +287,12 @@ class _XMLSchemaAdapter:
 
 import os, pydoc, sys, warnings, inspect
 import  os.path
+import logging
 
-from distutils import log
-from distutils.command.build_py import build_py
-from distutils.util import convert_path
+try:
+    from setuptools._distutils import log
+except Exception:
+    log = logging.getLogger(__name__)
 
 #from setuptools import find_packages
 #from setuptools import Command

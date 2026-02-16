@@ -147,10 +147,13 @@ class WriteServiceModule:
         self.logger.debug('gatherNamespaces')
         self.usedNamespaces = {}
 
-        def recommended_ns(s):
-            tns = s.getTargetNamespace()
+        def recommended_ns(schema):
+            if schema is None:
+                return None
+            tns = schema.getTargetNamespace()
             recommended = None
-            for k, v in list(s.attributes.get('xmlns', {}).items()):
+            attributes = getattr(schema, 'attributes', None) or {}
+            for k, v in list(attributes.get('xmlns', {}).items()):
                 if k == '':
                     continue
                 if v == tns:
@@ -162,6 +165,8 @@ class WriteServiceModule:
         # Add all schemas defined in wsdl
         # to used namespace and to the Alias dict
         for schema in list(self._wsdl.types.values()):
+            if schema is None:
+                continue
             tns = schema.getTargetNamespace()
             self.logger.debug(f'Register schema({_get_idstr(schema)}) -- TNS({tns})')
             if tns not in self.usedNamespaces:
@@ -172,6 +177,8 @@ class WriteServiceModule:
         # Add all xsd:import schema instances
         # to used namespace and to the Alias dict
         for k, v in list(SchemaReader.namespaceToSchema.items()):
+            if v is None:
+                continue
             self.logger.debug(f'Register schema({_get_idstr(v)}) -- TNS({k})')
             if k not in self.usedNamespaces:
                 self.usedNamespaces[k] = []

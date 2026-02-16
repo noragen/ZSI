@@ -65,7 +65,7 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
       <name>guest.disk</name>
       <val xsi:type="ArrayOfGuestDiskInfo">
         <GuestDiskInfo xsi:type="GuestDiskInfo">
-          <diskPath>C:\</diskPath>
+          <diskPath>C:\\</diskPath>
           <capacity>19312922624</capacity>
           <freeSpace>15236939776</freeSpace>
         </GuestDiskInfo>
