@@ -25,12 +25,20 @@ class _localtimezone(_tzinfo):
         if _time.daylight: self.__dstoffset = _timedelta(seconds=-_time.altzone)
         self.__dstdiff = self.__dstoffset - self.__stdoffset
 
+    def __is_dst(self, dt):
+        try:
+            tt = _localtime(_mktime((dt.year, dt.month, dt.day,
+                     dt.hour, dt.minute, dt.second, dt.weekday(), 0, -1)))
+        except (OverflowError, OSError, ValueError):
+            # Some synthetic dates (e.g. year 2 from gTime normalization)
+            # are out of range for platform mktime/localtime.
+            return False
+        return tt.tm_isdst > 0
+
     """ """
     def dst(self, dt):
         """datetime -> DST offset in minutes east of UTC."""
-        tt = _localtime(_mktime((dt.year, dt.month, dt.day,
-                 dt.hour, dt.minute, dt.second, dt.weekday(), 0, -1)))
-        if tt.tm_isdst > 0: return self.__dstdiff
+        if self.__is_dst(dt): return self.__dstdiff
         return _zero
 
     #def fromutc(...)
@@ -38,15 +46,11 @@ class _localtimezone(_tzinfo):
 
     def tzname(self, dt):
         """datetime -> string name of time zone."""
-        tt = _localtime(_mktime((dt.year, dt.month, dt.day,
-                 dt.hour, dt.minute, dt.second, dt.weekday(), 0, -1)))
-        return _time.tzname[tt.tm_isdst > 0]
+        return _time.tzname[self.__is_dst(dt)]
 
     def utcoffset(self, dt):
         """datetime -> minutes east of UTC (negative for west of UTC)."""
-        tt = _localtime(_mktime((dt.year, dt.month, dt.day,
-                 dt.hour, dt.minute, dt.second, dt.weekday(), 0, -1)))
-        if tt.tm_isdst > 0: return self.__dstoffset
+        if self.__is_dst(dt): return self.__dstoffset
         return self.__stdoffset
 
 class _fixedoffset(_tzinfo):
@@ -88,6 +92,9 @@ def _fix_timezone(tv, tz_from = "Z", tz_to = None):
 
     # Fix local copy of time tuple
     ltv = list(_fix_none_fields(tv))
+    for i in range(6):
+        if isinstance(ltv[i], float):
+            ltv[i] = int(ltv[i])
 
     if ltv[0] < MINYEAR + 1 or ltv[0] > MAXYEAR - 1:
         return tv # Unable to fix timestamp

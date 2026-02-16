@@ -160,16 +160,16 @@ class TypeCode:
         """Get the parselist and human-readable version, errorlist is returned,
         because it is used in error messages.
         """
-        d = self.__class__.__dict__
-        parselist = d.get('parselist')
-        errorlist = d.get('errorlist')
+        cls = self.__class__
+        parselist = getattr(cls, 'parselist', None)
+        errorlist = getattr(cls, 'errorlist', None)
         if parselist and not errorlist:
             errorlist = []
             for t in parselist:
                 if t[1] not in errorlist:
                     errorlist.append(t[1])
             errorlist = ' or '.join(errorlist)
-            d['errorlist'] = errorlist
+            setattr(cls, 'errorlist', errorlist)
         return (parselist, errorlist)
 
     def checkname(self, elt, ps):
@@ -596,7 +596,7 @@ class Any(TypeCode):
 
     def get_formatted_content(self, pyobj):
         tc = type(pyobj)
-        if tc == types.InstanceType:
+        if hasattr(pyobj, '__dict__') and not isinstance(pyobj, type):
             tc = pyobj.__class__
             if hasattr(pyobj, 'typecode'):
                 #serializer = pyobj.typecode.serialmap.get(tc)
@@ -611,9 +611,31 @@ class Any(TypeCode):
             if not serializer and isinstance(pyobj, time.struct_time):
                 from ZSI.TCtimes import gDateTime
                 serializer = gDateTime()
+        serializer = self._get_integer_fallback_serializer(serializer, pyobj)
         if serializer:
             return serializer.get_formatted_content(pyobj)
         raise EvaluateException('Failed to find serializer for pyobj %s' % pyobj)
+
+    def _get_integer_fallback_serializer(self, serializer, pyobj):
+        # Python 3 has a single int type. Pick unbounded xsd:integer when
+        # the currently selected integer serializer cannot represent pyobj.
+        if type(pyobj) is not int:
+            return serializer
+
+        integer_serializer = Any.parsemap.get((None, 'integer'))
+        if integer_serializer is None:
+            return serializer
+        if serializer is None:
+            return integer_serializer
+
+        type_tuple = getattr(serializer, 'type', None)
+        if type(type_tuple) not in _seqtypes or len(type_tuple) < 2:
+            return serializer
+        typename = type_tuple[1]
+        rmin, rmax = Integer.ranges.get(typename, (_ignored, _ignored))
+        if (rmin != _ignored and pyobj < rmin) or (rmax != _ignored and pyobj > rmax):
+            return integer_serializer
+        return serializer
 
     def serialize(self, elt, sw, pyobj, name=None, **kw):
         if hasattr(pyobj, 'typecode') and pyobj.typecode is not self:
@@ -658,7 +680,7 @@ class Any(TypeCode):
             self.nspname = parentNspname
             return
 
-        if tc == types.InstanceType:
+        if hasattr(pyobj, '__dict__') and not isinstance(pyobj, type):
             tc = pyobj.__class__
             if hasattr(pyobj, 'typecode'):
                 #serializer = pyobj.typecode.serialmap.get(tc)
@@ -673,12 +695,13 @@ class Any(TypeCode):
             if not serializer and isinstance(pyobj, time.struct_time):
                 from ZSI.TCtimes import gDateTime
                 serializer = gDateTime()
+        serializer = self._get_integer_fallback_serializer(serializer, pyobj)
 
         if not serializer:
             # Last-chance; serialize instances as dictionary
             if pyobj is None:
                 self.serialize_as_nil(elt.createAppendElement(ns, n))
-            elif type(pyobj) != types.InstanceType:
+            elif not (hasattr(pyobj, '__dict__') and not isinstance(pyobj, type)):
                 raise EvaluateException('''Any can't serialize ''' + \
                         repr(pyobj))
             else:
@@ -727,14 +750,14 @@ class String(SimpleType):
         if self.strip:
             text = text.strip()
         if self.pyclass is not None:
-            return self.pyclass(text.encode(UNICODE_ENCODING))
-        return text.encode(UNICODE_ENCODING)
+            return self.pyclass(text)
+        return text
 
     def get_formatted_content(self, pyobj):
+        if isinstance(pyobj, bytes):
+            return pyobj.decode(UNICODE_ENCODING, errors='replace')
         if type(pyobj) not in _stringtypes:
             pyobj = str(pyobj)
-        if type(pyobj) == str:
-            return pyobj.encode(UNICODE_ENCODING)
         return pyobj
 
 
@@ -836,10 +859,17 @@ class Base64String(String):
         val = b64decode(text.replace(' ', '').replace('\n', '').replace('\r', ''))
         if self.pyclass is not None:
             return self.pyclass(val)
-        return val
+        return val.decode('latin-1')
 
     def get_formatted_content(self, pyobj):
-        pyobj = '\n' + b64encode(pyobj)
+        if isinstance(pyobj, str):
+            try:
+                pyobj = pyobj.encode('latin-1')
+            except UnicodeEncodeError:
+                pyobj = pyobj.encode(UNICODE_ENCODING)
+        elif not isinstance(pyobj, bytes):
+            pyobj = str(pyobj).encode(UNICODE_ENCODING)
+        pyobj = '\n' + b64encode(pyobj).decode('ascii')
         return String.get_formatted_content(self, pyobj)
 
 
@@ -857,7 +887,11 @@ class Base64Binary(String):
         return val
 
     def get_formatted_content(self, pyobj):
-        pyobj = b64encode(pyobj).strip()
+        if isinstance(pyobj, str):
+            pyobj = pyobj.encode(UNICODE_ENCODING)
+        elif not isinstance(pyobj, bytes):
+            pyobj = str(pyobj).encode(UNICODE_ENCODING)
+        pyobj = b64encode(pyobj).strip().decode('ascii')
         return pyobj
 
 
@@ -874,10 +908,17 @@ class HexBinaryString(String):
         val = hexdecode(text)
         if self.pyclass is not None:
             return self.pyclass(val)
-        return val
+        return val.decode('latin-1')
 
     def get_formatted_content(self, pyobj):
-        pyobj = hexencode(pyobj).upper()
+        if isinstance(pyobj, str):
+            try:
+                pyobj = pyobj.encode('latin-1')
+            except UnicodeEncodeError:
+                pyobj = pyobj.encode(UNICODE_ENCODING)
+        elif not isinstance(pyobj, bytes):
+            pyobj = str(pyobj).encode(UNICODE_ENCODING)
+        pyobj = hexencode(pyobj).upper().decode('ascii')
         return String.get_formatted_content(self, pyobj)
 
 

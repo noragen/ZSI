@@ -3,6 +3,7 @@ try:
     import io as StringIO
 except ImportError:
     import io
+import io
 import unittest
 import sys
 import time
@@ -31,8 +32,8 @@ class t1TestCase(unittest.TestCase):
                     self.badTests.append((key,val))
             except:
                 pass
-        self.goodTests.sort(lambda a,b: cmp(a[0], b[0]))
-        self.badTests.sort(lambda a,b: cmp(a[0], b[0]))
+        self.goodTests.sort(key=lambda item: item[0])
+        self.badTests.sort(key=lambda item: item[0])
 
     def check_bug1724481(self):
         # [ 1724481 ] Error handling of enum serialization broken"

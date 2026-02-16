@@ -223,7 +223,14 @@ class ComplexType(TypeCode):
                         self.logger.debug("substitutionGroup: %s", subwhat)
 
                 if match:
-                    if what.maxOccurs > 1:
+                    max_occurs = what.maxOccurs
+                    repeated = max_occurs == 'unbounded'
+                    if not repeated:
+                        try:
+                            repeated = int(max_occurs) > 1
+                        except (TypeError, ValueError):
+                            repeated = False
+                    if repeated:
                         attr = getattr(pyobj, what.aname, None)
                         if attr is not None:
                             attr.append(value)
@@ -370,7 +377,17 @@ class ComplexType(TypeCode):
             # Default to typecode, if self-describing instance, and check
             # to make sure it is derived from what.
             whatTC = what
-            if whatTC.maxOccurs > 1 and v is not None:
+            max_occurs = whatTC.maxOccurs
+            repeated = max_occurs == 'unbounded'
+            max_occurs_limit = None
+            if not repeated:
+                try:
+                    max_occurs_limit = int(max_occurs)
+                    repeated = max_occurs_limit > 1
+                except (TypeError, ValueError):
+                    repeated = False
+
+            if repeated and v is not None:
                 if type(v) not in _seqtypes:
                     raise EvaluateException('pyobj (%s,%s), aname "%s": maxOccurs %s, expecting a %s' %
                                             (self.nspname, self.pname, what.aname, whatTC.maxOccurs, _seqtypes),
@@ -378,9 +395,9 @@ class ComplexType(TypeCode):
 
                 for v2 in v:
                     occurs += 1
-                    if occurs > whatTC.maxOccurs:
+                    if max_occurs_limit is not None and occurs > max_occurs_limit:
                         raise EvaluateException('occurances (%d) exceeded maxOccurs(%d) for <%s>' %
-                                                (occurs, whatTC.maxOccurs, what.pname),
+                                                (occurs, max_occurs_limit, what.pname),
                                                 sw.Backtrace(elt))
 
                     what = _get_type_or_substitute(whatTC, v2, sw, elt)

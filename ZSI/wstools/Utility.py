@@ -29,7 +29,7 @@ import weakref
 from http.client import HTTPConnection, HTTPSConnection
 from io import StringIO
 from os.path import isfile, join as opj, split as ops, exists as ope
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 
 from .TimeoutSocket import TimeoutSocket
 
@@ -94,7 +94,7 @@ except:
 
 def basejoin(head, tail):
     res = opj(ops(head)[0], tail)
-    return res if ope(res) else urllib.basejoin(head, tail)
+    return res if ope(res) else urljoin(head, tail)
 
 
 if sys.version_info[0:2] < (2, 4, 0, 'final', 0)[0:2]:
@@ -106,8 +106,8 @@ if sys.version_info[0:2] < (2, 4, 0, 'final', 0)[0:2]:
 
     def basejoin(base, url):
         if url.startswith(token) is True:
-            return urllib.basejoin(base, url[2:])
-        return urllib.basejoin(base, url)
+            return urljoin(base, url[2:])
+        return urljoin(base, url)
 
 
 class NamespaceError(Exception):
@@ -625,7 +625,8 @@ class DOM:
             if node.nodeType != ELEMENT_NODE:
                 node = node.parentNode
                 continue
-            result = node._attrsNS.get(attrkey, None)
+            attrs_ns = getattr(node, '_attrsNS', None) or {}
+            result = attrs_ns.get(attrkey, None)
             if result is not None:
                 return result.value
             if hasattr(node, '__imported__'):
@@ -644,7 +645,8 @@ class DOM:
             if node.nodeType != ELEMENT_NODE:
                 node = node.parentNode
                 continue
-            result = node._attrsNS.get(attrkey, None)
+            attrs_ns = getattr(node, '_attrsNS', None) or {}
+            result = attrs_ns.get(attrkey, None)
             if result is not None:
                 return result.value
             if hasattr(node, '__imported__'):

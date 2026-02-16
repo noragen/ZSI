@@ -12,6 +12,8 @@ class MyInt_Def(TC.Integer, schema.TypeDefinition):
         # ComplexType/SimpleContent derivation of built-in type
         schema = "urn:vim25"
         type = (schema, "myInt")
+        # Keep parse-time type matching explicit for custom namespaces.
+        parselist = TC.Integer.parselist + [type]
         def __init__(self, pname, **kw):
             self.attribute_typecode_dict = {}
             TC.Integer.__init__(self, pname, **kw)

@@ -3,7 +3,17 @@
 import sys
 import unittest
 
-from ZSI import TC, ParsedSoap, ParseException, FaultFromZSIException, FaultFromException, SoapWriter
+from ZSI import (
+    TC,
+    ParsedSoap,
+    ParseException,
+    FaultFromZSIException,
+    FaultFromException,
+    SoapWriter,
+    EvaluateException,
+    FaultFromActor,
+    FaultFromNotUnderstood,
+)
 from functools import reduce
 
 

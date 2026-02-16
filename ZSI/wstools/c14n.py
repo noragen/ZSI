@@ -49,6 +49,8 @@ or
 
 import six
 import string
+import io
+from functools import cmp_to_key
 from xml.dom import Node
 try:
     from xml.ns import XMLNS
@@ -70,6 +72,17 @@ _children = lambda E: E.childNodes or []
 _IN_XML_NS = lambda n: n.name.startswith("xmlns")
 _inclusive = lambda n: n.unsuppressedPrefixes == None
 
+if not hasattr(string, "replace"):
+    string.replace = lambda s, a, b: s.replace(a, b)
+
+
+def _cmp(a, b):
+    if a is None:
+        a = ''
+    if b is None:
+        b = ''
+    return (a > b) - (a < b)
+
 
 # Does a document/PI has lesser/greater document order than the
 # first element?
@@ -79,9 +92,9 @@ def _sorter(n1,n2):
     '''_sorter(n1,n2) -> int
     Sorting predicate for non-NS attributes.'''
 
-    i = cmp(n1.namespaceURI, n2.namespaceURI)
+    i = _cmp(n1.namespaceURI, n2.namespaceURI)
     if i: return i
-    return cmp(n1.localName, n2.localName)
+    return _cmp(n1.localName, n2.localName)
 
 
 def _sorter_ns(n1,n2):
@@ -90,7 +103,7 @@ def _sorter_ns(n1,n2):
 
     if n1[0] == 'xmlns': return -1
     if n2[0] == 'xmlns': return 1
-    return cmp(n1[0], n2[0])
+    return _cmp(n1[0], n2[0])
 
 def _utilized(n, node, other_attrs, unsuppressedPrefixes):
     '''_utilized(n, node, other_attrs, unsuppressedPrefixes) -> boolean
@@ -386,7 +399,7 @@ class _implementation:
                         ns_unused_inherited[n] = v
 
             # Sort and render the ns, marking what was rendered.
-            ns_to_render.sort(_sorter_ns)
+            ns_to_render.sort(key=cmp_to_key(_sorter_ns))
             for n,v in ns_to_render:
                 self._do_attr(n, v)
                 ns_rendered[n]=v    #0417
@@ -398,7 +411,7 @@ class _implementation:
                 other_attrs.extend(list(xml_attrs_local.values()))
             else:
                 other_attrs.extend(list(xml_attrs.values()))
-            other_attrs.sort(_sorter)
+            other_attrs.sort(key=cmp_to_key(_sorter))
             for a in other_attrs:
                 self._do_attr(a.nodeName, a.value)
             W('>')

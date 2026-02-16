@@ -145,12 +145,23 @@ accompanying credits file.
 ##
 ##  Stuff imported from elsewhere.
 from xml.dom import Node as _Node
+import unittest as _unittest
 import six
 if six.PY2:
     import types as _types
 
 if six.PY3:
 	pass
+
+if not hasattr(_unittest, "makeSuite"):
+    def _makeSuite(testCaseClass, prefix='test', suiteClass=_unittest.TestSuite):
+        test_names = sorted(
+            name for name in dir(testCaseClass)
+            if name.startswith(prefix) and callable(getattr(testCaseClass, name))
+        )
+        return suiteClass([testCaseClass(name) for name in test_names])
+
+    _unittest.makeSuite = _makeSuite
 
 ##
 ##  Public constants.

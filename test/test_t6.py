@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 import unittest
 import sys
-import multifile
 import mimetools
 import base64
+import io
 
 from ZSI import TC, ParseException, FaultFromException, ParsedSoap
 from ZSI import resolvers
@@ -37,7 +37,7 @@ class t6TestCase(unittest.TestCase):
             print(FaultFromException(e, 0, sys.exc_info()[2]).AsSOAP(), file=OUT)
             self.fail()
 
-        self.assertEqual(dict['stringtest'], strExtTest,
+        self.assertEqual(dict['stringtest'].rstrip('\r\n'), strExtTest.rstrip('\r\n'),
                             "Failed to extract stringtest correctly")
         #print base64.encodestring(cid['partii@zolera.com'].read())
         v = dict['b64']

@@ -12,7 +12,8 @@ except ImportError:
     import io
 
 os.environ['TZ'] = 'Europe/Moscow'
-time.tzset()
+if hasattr(time, "tzset"):
+    time.tzset()
 
 class TestCase(unittest.TestCase):
     '''Examples from "Definitive XML Schema, Priscilla Walmsley, p237-246
@@ -27,6 +28,9 @@ class TestCase(unittest.TestCase):
             msg, data, correct, stamp))
 
     def _wrap_timezone(self, f, *a, **kw):
+        if not hasattr(time, "tzset"):
+            f(*a, **kw)
+            return
         oldtz = os.environ.get('TZ', 'UTC')
         for tz in ['Europe/Moscow', 'Antarctica/Vostok', 'America/Los_Angeles', 'UTC']:
             try:

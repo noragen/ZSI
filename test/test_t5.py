@@ -2,6 +2,7 @@
 
 import mimetools
 import unittest
+import io
 try:
     import io as StringIO
 except ImportError:
