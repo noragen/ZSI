@@ -11,6 +11,7 @@
 # $Id: containers.py 1499 2011-11-18 00:37:13Z boverhof $
 
 import contextlib
+import re
 import warnings
 
 import ZSI
@@ -181,7 +182,7 @@ class AttributeMixIn:
                         tc = ZSI.TC.String
 
                     if tc is not None:
-                        tc = f'{tc}()'
+                        tc = f'{strip_typeclass_string_to_module_class_string(tc)}()'
 
                 key = None
                 if a.getAttribute('form') == 'qualified':
@@ -236,7 +237,9 @@ class AttributeMixIn:
 
                         atd_list.append(f'{atd}[{key}] = ZSI.TC.String()')
                     else:
-                        atd_list.append(f'{atd}[{key}] = {BTI.get_typeclass(typeName, namespace)}()')
+                        atd_list.append(
+                            f'{atd}[{key}] = {strip_typeclass_string_to_module_class_string(BTI.get_typeclass(typeName, namespace))}()'
+                        )
                 else:
                     typeName = tp.getAttribute('name')
                     namespace = tp.getTargetNamespace()
@@ -329,7 +332,7 @@ class ServiceContainerBase(ContainerBase):
 
 
 class ServiceHeaderContainer(ServiceContainerBase):
-    imports = ['\nimport urlparse, types',
+    imports = ['\nimport types',
                'from ZSI.TCcompound import ComplexType, Struct',
                'from ZSI import client',
                'from ZSI.schema import GED, GTD', 'import ZSI']
@@ -511,6 +514,7 @@ class ServiceOperationContainer(ServiceContainerBase):
         self.inputName = None
         self.outputName = None
         self.inputSimpleType = None
+        self.inputHasParts = True
         self.outputSimpleType = None
         self.inputAction = None
         self.outputAction = None
@@ -549,9 +553,11 @@ class ServiceOperationContainer(ServiceContainerBase):
             ), f'Supporting encodingStyle={SOAP.ENC}, not {sbody.encodingStyle}'
             self.encodingStyle = sbody.encodingStyle
 
-        self.inputName = op.getInputMessage().name
+        input_message = op.getInputMessage()
+        self.inputName = input_message.name
+        self.inputHasParts = len(input_message.parts) > 0
         self.inputSimpleType = \
-                FromMessageGetSimpleElementDeclaration(op.getInputMessage())
+                FromMessageGetSimpleElementDeclaration(input_message)
         self.inputAction = op.getInputAction()
         self.soap_input_headers = \
                 bop.input.findBindings(WSDLTools.SoapHeaderBinding)
@@ -594,14 +600,37 @@ class ServiceOperationContainer(ServiceContainerBase):
 
         bindArgs += '**kw)'
 
-        if self.do_extended:
+        if not self.inputHasParts:
+            if self.do_extended:
+                method = [
+                    f'{ID1}# op: {self.name}',
+                    f'{ID1}def {self.name}(self, **kw):',
+                    f'{ID2}{wsactionIn}',
+                    f'{ID2}self.binding.Send(None, None, None, soapaction="{self.soapaction}", {bindArgs}',
+                ]
+            elif self.soap_input_headers:
+                method = [
+                    f'{ID1}# op: {self.name}',
+                    f'{ID1}def {self.name}(self, soapheaders=(), **kw):',
+                    f'{ID2}{wsactionIn}',
+                    f'{ID2}# TODO: Check soapheaders',
+                    f'{ID2}self.binding.Send(None, None, None, soapaction="{self.soapaction}", soapheaders=soapheaders, {bindArgs}',
+                ]
+            else:
+                method = [
+                    f'{ID1}# op: {self.name}',
+                    f'{ID1}def {self.name}(self, **kw):',
+                    f'{ID2}{wsactionIn}',
+                    f'{ID2}self.binding.Send(None, None, None, soapaction="{self.soapaction}", {bindArgs}',
+                ]
+        elif self.do_extended:
             method = self._extracted_from__setContent_25(wsactionIn, bindArgs)
         elif self.soap_input_headers:
             method = [
                 f'{ID1}# op: {self.name}',
                 f'{ID1}def {self.name}(self, request, soapheaders=(), **kw):',
                 f'{ID2}{tCheck}',
-                '%sraise TypeError, "%%s incorrect request type" %% (%s)'
+                '%sraise TypeError("%%s incorrect request type" %% (%s))'
                 % (ID3, 'request.__class__'),
                 f'{ID2}{wsactionIn}',
                 f'{ID2}# TODO: Check soapheaders',
@@ -612,7 +641,7 @@ class ServiceOperationContainer(ServiceContainerBase):
                 f'{ID1}# op: {self.name}',
                 f'{ID1}def {self.name}(self, request, **kw):',
                 f'{ID2}{tCheck}',
-                '%sraise TypeError, "%%s incorrect request type" %% (%s)'
+                '%sraise TypeError("%%s incorrect request type" %% (%s))'
                 % (ID3, 'request.__class__'),
                 f'{ID2}{wsactionIn}',
                 f'{ID2}self.binding.Send(None, None, request, soapaction="{self.soapaction}", {bindArgs}',
@@ -973,7 +1002,12 @@ class ServiceDocumentLiteralMessageContainer(ServiceContainerBase,
         # with message.parts.data.values()
 
         if len(message.parts) == 0:
-            raise Wsdl2PythonError('must specify part for doc/lit msg')
+            # WS-I allows empty doc/lit messages (<wsdl:message/>).
+            # Keep generation alive and expose the message symbol.
+            content.mName = message.name
+            content.ns = None
+            content.pName = None
+            return
 
         p = None
         if soapBodyBind.parts is not None:
@@ -1020,6 +1054,10 @@ class ServiceDocumentLiteralMessageContainer(ServiceContainerBase,
         #        self.ns = self.content.ns
 
         kw = KW.copy()
+        if getattr(self.content, 'mName', None) and not getattr(self.content, 'pName', None):
+            self.writeArray([f'{self.content.mName} = None'])
+            return
+
         kw.update(dict(message=self.content.mName,
                        nsuri=self.content.ns, name=self.content.pName))
 
@@ -1131,9 +1169,9 @@ class ServiceRPCEncodedMessageContainer(ServiceContainerBase,
 
             # Need typecode to be available when class is constructed.
             fdict['metaclass'] = TypecodeContainerBase.metaclass
+            message[0] = 'class %(pyclass)s(metaclass=%(metaclass)s):'
             message.insert(0, '_%(pyclass)sTypecode = %(typecode)s')
             message.insert(2, '%(ID1)stypecode = _%(pyclass)sTypecode')
-            message.insert(3, '%(ID1)s__metaclass__ = %(metaclass)s')
             message.append('%(pyclass)s.typecode.pyclass = %(pyclass)s')
 
         self.writeArray([l % fdict for l in message])
@@ -1230,9 +1268,9 @@ class ServiceRPCLiteralMessageContainer(ServiceContainerBase,
             fdict['typecode'] = fdict['typecode'] % fdict
             fdict['pyclass'] = pyclass
             fdict['metaclass'] = TypecodeContainerBase.metaclass
+            message[0] = 'class %(pyclass)s(metaclass=%(metaclass)s):'
             message.insert(0, '_%(pyclass)sTypecode = %(typecode)s')
             message.insert(2, '%(ID1)stypecode = _%(pyclass)sTypecode')
-            message.insert(3, '%(ID1)s__metaclass__ = %(metaclass)s')
             message.append('%(pyclass)s.typecode.pyclass = %(pyclass)s')
 
         self.writeArray([l % fdict for l in message])
@@ -1288,7 +1326,26 @@ BTI = BaseTypeInterpreter()
 
 
 def strip_typeclass_string_to_module_class_string(klass):
-    return str(klass).rpartition("'")[0].partition("'")[2]
+    if klass is None:
+        return ''
+
+    if isinstance(klass, str):
+        value = klass
+    else:
+        module = getattr(klass, '__module__', None)
+        qualname = getattr(klass, '__qualname__', None)
+        if module and qualname:
+            return f'{module}.{qualname}'
+        value = str(klass)
+
+    match = re.match(r"<class '([^']+)'>", value)
+    if match:
+        return match.group(1)
+    return value
+
+
+def sanitize_typecode_expression(value):
+    return re.sub(r"<class '([^']+)'>", r"\1", str(value))
 
 
 def strip_parameters(e):
@@ -1302,7 +1359,7 @@ class TypecodeContainerBase(TypesContainerBase):
     class variables:
         mixed_content_aname -- text content will be placed in this attribute.
         attributes_aname -- attributes will be placed in this attribute.
-        metaclass -- set this attribute to specify a pyclass __metaclass__
+        metaclass -- set this attribute to specify a pyclass metaclass
     '''
 
     mixed_content_aname = 'text'
@@ -1457,7 +1514,7 @@ class TypecodeContainerBase(TypesContainerBase):
         definition = ['%(ID3)sclass %(pyclass)s:' % kw]
         if self.metaclass is not None:
             kw['type'] = self.metaclass
-            definition.append('%(ID4)s__metaclass__ = %(type)s' % kw)
+            definition[0] = '%(ID3)sclass %(pyclass)s(metaclass=%(type)s):' % kw
         definition.append('%(ID4)stypecode = self' % kw)
 
         # TODO: Remove pyclass holder __init__ -->
@@ -1491,8 +1548,9 @@ class TypecodeContainerBase(TypesContainerBase):
         """set a variable "ns" that represents the targetNamespace in
         which this item is defined.  Used for namespacing local elements.
         """
-
-        return f'ns = {self.parentClass or self.getNSAlias()}.{self.getClassName()}.schema'
+        if self.parentClass:
+            return f'ns = {self.parentClass}.{self.getClassName()}.schema'
+        return f'ns = globals()["{self.getNSAlias()}"].{self.getClassName()}.schema'
 
 
     def schemaTag(self):
@@ -1519,6 +1577,9 @@ class TypecodeContainerBase(TypesContainerBase):
     def simpleConstructor(self, superclass=None):
 
         if superclass:
+            superclass = strip_typeclass_string_to_module_class_string(
+                superclass
+            )
             return f'{superclass}.__init__(self, **kw)'
         else:
             return 'def __init__(self, **kw):'
@@ -1526,6 +1587,9 @@ class TypecodeContainerBase(TypesContainerBase):
     def pnameConstructor(self, superclass=None):
 
         if superclass:
+            superclass = strip_typeclass_string_to_module_class_string(
+                superclass
+            )
             return f'{superclass}.__init__(self, pname, **kw)'
         else:
             return 'def __init__(self, pname, **kw):'
@@ -1749,27 +1813,32 @@ class TypecodeContainerBase(TypesContainerBase):
                     defs.append(parent)
 
             del defs
-            parent = c
-            while 1:
-                minOccurs = int(parent.getAttribute('minOccurs'))
-                if minOccurs == 0 or parent.isChoice():
+            minOccurs = int(c.getAttribute('minOccurs'))
+            ancestor = c
+            while True:
+                parent_getter = getattr(ancestor, '_parent', None)
+                if not callable(parent_getter):
+                    break
+                parent = parent_getter()
+                if parent is None or not hasattr(parent, 'isModelGroup'):
+                    break
+
+                node = parent
+                if node.isReference() and node.isModelGroup():
+                    node = node.getModelGroupReference()
+                if node.isDefinition() and node.isModelGroup():
+                    node = node.content
+
+                if hasattr(node, 'isChoice') and node.isChoice():
                     minOccurs = 0
                     break
 
-                parent = parent._parent()
-                if not parent.isModelGroup():
-                    minOccurs = int(c.getAttribute('minOccurs'))
-                    break
+                with contextlib.suppress(TypeError, ValueError, AttributeError):
+                    if int(node.getAttribute('minOccurs')) == 0:
+                        minOccurs = 0
+                        break
 
-                if parent.isReference():
-                    parent = parent.getModelGroupReference()
-                    continue
-
-                if parent.isDefinition():
-                    parent = parent.content
-                    continue
-
-                break
+                ancestor = node
 
             tc.setOccurs(minOccurs, maxOccurs, nil)
             processContents = self._getProcessContents(c)
@@ -1857,8 +1926,7 @@ class TypecodeContainerBase(TypesContainerBase):
 
         l = []
         for e in self.tcListElements:
-            classTypeWithParams = strip_typeclass_string_to_module_class_string(e.klass) + strip_parameters(e)
-            l.append(classTypeWithParams or str(e))
+            l.append(sanitize_typecode_expression(e))
 
         return (', %s\n' % indent).join(l)
 
@@ -1973,7 +2041,7 @@ class MessageTypecodeContainer(TypecodeContainerBase):
 
         list = []
         for e in self.tcListElements:
-            list.append(str(e))
+            list.append(sanitize_typecode_expression(e))
         return (', %s\n' % indent).join(list)
 
     def getAttributeNames(self):
@@ -2283,13 +2351,15 @@ class ElementLocalSimpleTypeContainer(TypecodeContainerBase):
             ns=self.ns,
             name=self.name,
             pname=(self.ns, self.name),
-            subclass=self.sKlass,
+            subclass=strip_typeclass_string_to_module_class_string(self.sKlass),
             literal=self.literalTag(),
             schema=self.schemaTag(),
             init=self.simpleConstructor(),
             klass=self.getClassName(),
             element='ElementDeclaration',
-            baseinit=self.simpleConstructor(self.sKlass),
+            baseinit=self.simpleConstructor(
+                strip_typeclass_string_to_module_class_string(self.sKlass)
+            ),
         ))
 
         #
@@ -3234,8 +3304,9 @@ class ComplexTypeSimpleContentContainer(SimpleTypeContainer,
         # TODO: Add derivation logic to constructors.
 
         if type(self.sKlass) in (type, type):
+            sklass = strip_typeclass_string_to_module_class_string(self.sKlass)
             definition = [
-                f'{ID1}class {self.getClassName()}({self.sKlass}, TypeDefinition):',
+                f'{ID1}class {self.getClassName()}({sklass}, TypeDefinition):',
                 f'{ID2}# ComplexType/SimpleContent derivation of built-in type',
                 f'{ID2}{self.schemaTag()}',
                 f'{ID2}{self.typeTag()}',
@@ -3244,7 +3315,7 @@ class ComplexTypeSimpleContentContainer(SimpleTypeContainer,
             ]
 
             definition.extend(f'{ID3}{l}' for l in self.attrComponents)
-            definition.append(f'{ID3}{self.sKlass}.__init__(self, pname, **kw)')
+            definition.append(f'{ID3}{sklass}.__init__(self, pname, **kw)')
             if self.getPythonType() is not None:
                 definition += self.getPyClassDefinition()
                 kw = KW.copy()
@@ -3279,7 +3350,7 @@ class ComplexTypeSimpleContentContainer(SimpleTypeContainer,
         if pt is not None:
             definition.append(f'{ID3}class {self.getPyClass()}({pt}):')
             if self.metaclass is not None:
-                definition.append(f'{ID4}__metaclass__ = {self.metaclass}')
+                definition[0] = f'{ID3}class {self.getPyClass()}({pt}, metaclass={self.metaclass}):'
 
             definition.append(f'{ID4}typecode = self')
         return definition

@@ -7,6 +7,11 @@ HTTP Authentication: Basic and Digest Access Authentication
 
 import unittest
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 from ZSI import digest_auth
 
 class DATestCase(unittest.TestCase):
@@ -37,11 +42,9 @@ class DATestCase(unittest.TestCase):
         expect = {'nonce': 'dcd98b7102dd2f0e8b11d0f600bfb0c093', 'challenge': 'Digest', 'opaque': '5ccc069c403ebaf9f0171e9517f40e41', 'realm': 'testrealm@host.com', 'qop': 'auth,auth-int'}
         self.assertTrue(cd == expect, 'Expected equivalent')
 
-
-
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(DATestCase, "check"))
+    suite.addTest(load_tests_from_test_case(DATestCase, "check"))
     return suite
 
 def main():
@@ -49,4 +52,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

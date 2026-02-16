@@ -20,7 +20,7 @@ import time
 import urllib.parse
 from ZSI.address import Address
 from ZSI.wstools.logging import getLogger as _GetLogger
-_b64_encode = base64.encodestring
+_b64_encode = base64.encodebytes
 
 
 class _AuthHeader:

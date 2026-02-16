@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 import base64
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 import sys
 from io import StringIO
 
@@ -27,7 +32,6 @@ class ns3:
 
             ns3.LocalPAssertionId_Def.__init__(self, **kw)
             if self.pyclass is not None: self.pyclass.__name__ = "localPAssertionId_Dec_Holder"
-
 
     class LocalPAssertionId_Def(ZSI.TC.Union, TypeDefinition):
         memberTypes = [('http://www.w3.org/2001/XMLSchema', 'long'), ('http://www.w3.org/2001/XMLSchema', 'string'), ('http://www.w3.org/2001/XMLSchema', 'anyURI')]
@@ -78,10 +82,9 @@ class UnionTestCase(unittest.TestCase):
         self.assertEqual((2002, 10, 30), date[:3], "Fail to parse dateTime")
         self.assertRaises(EvaluateException, typecode.text_to_data, "urn:string", None, _PS())
 
-
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(UnionTestCase, "check"))
+    suite.addTest(load_tests_from_test_case(UnionTestCase, "check"))
     return suite
 
 def main():
@@ -89,4 +92,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

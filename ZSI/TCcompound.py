@@ -17,6 +17,7 @@ from ZSI.wstools.Namespaces import SOAP
 from ZSI.wstools.logging import getLogger as _GetLogger
 import re
 import types
+import contextlib
 from copy import copy as _copy
 
 _find_arrayoffset = lambda E: E.getAttributeNS(SOAP.ENC, "offset") or E.getAttributeNS(SOAP.ENC12, 'offset')
@@ -24,6 +25,44 @@ _find_arrayposition = lambda E: E.getAttributeNS(SOAP.ENC, "position") or E.getA
 
 _offset_pat = re.compile(r'\[[0-9]+\]')
 _position_pat = _offset_pat
+
+
+def _instantiate_hidden_typecode(factory):
+    tc = None
+    try:
+        tc = factory()
+    except TypeError:
+        pass
+
+    if tc is None:
+        pname = getattr(factory, 'pname', None)
+        aname = getattr(factory, 'aname', None)
+        kw = {}
+        for key in ('minOccurs', 'maxOccurs', 'nillable', 'typed', 'encoded'):
+            if hasattr(factory, key):
+                kw[key] = getattr(factory, key)
+        try:
+            tc = factory(pname, aname, **kw)
+        except TypeError:
+            tc = factory(pname, aname)
+
+    if callable(tc) and not hasattr(tc, 'name_match'):
+        pname = getattr(tc, 'pname', None)
+        aname = getattr(tc, 'aname', None)
+        kw = {}
+        for key in ('minOccurs', 'maxOccurs', 'nillable', 'typed', 'encoded'):
+            if hasattr(tc, key):
+                kw[key] = getattr(tc, key)
+        try:
+            tc = tc(pname, aname, **kw)
+        except TypeError:
+            with contextlib.suppress(TypeError):
+                tc = tc(pname, aname)
+        if callable(tc) and not hasattr(tc, 'name_match'):
+            with contextlib.suppress(TypeError):
+                tc = tc()
+
+    return tc
 
 
 def _check_typecode_list(ofwhat, tcname):
@@ -194,7 +233,7 @@ class ComplexType(TypeCode):
 
                 # retrieve typecode if it is hidden
                 if callable(what):
-                    what = what()
+                    what = _instantiate_hidden_typecode(what)
 
                 # Loop over all available kids
                 if debug:
@@ -357,7 +396,7 @@ class ComplexType(TypeCode):
 
             # retrieve typecode if hidden
             if callable(what):
-                what = what()
+                what = _instantiate_hidden_typecode(what)
 
             if debug:
                 self.logger.debug('serialize what -- %s',

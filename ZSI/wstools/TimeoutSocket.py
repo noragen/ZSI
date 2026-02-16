@@ -20,18 +20,26 @@ import string, socket, select, errno
 WSAEINVAL = getattr(errno, 'WSAEINVAL', 10022)
 
 
+def _errno_from_socket_error(exc):
+    args = getattr(exc, 'args', ())
+    if not args:
+        return 0
+    code = args[0]
+    return code if isinstance(code, int) else 0
+
+
 class TimeoutSocket:
     """A socket imposter that supports timeout limits."""
 
     def __init__(self, timeout=20, sock=None):
         self.timeout = float(timeout)
-        self.inbuf = ''
+        self.inbuf = b''
         if sock is None:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock = sock
         self.sock.setblocking(0)
-        self._rbuf = ''
-        self._wbuf = ''
+        self._rbuf = b''
+        self._wbuf = b''
 
     def __getattr__(self, name):
         # Delegate to real socket attributes.
@@ -50,10 +58,7 @@ class TimeoutSocket:
             if not timeout:
                 raise
             sock.setblocking(1)
-            if len(why.args) == 1:
-                code = 0
-            else:
-                code, why = why
+            code = _errno_from_socket_error(why)
             if code not in (
                 errno.EINPROGRESS, errno.EALREADY, errno.EWOULDBLOCK
                 ):
@@ -64,10 +69,7 @@ class TimeoutSocket:
                     sock.connect(*addr)
                     return 1
                 except socket.error as why:
-                    if len(why.args) == 1:
-                        code = 0
-                    else:
-                        code, why = why
+                    code = _errno_from_socket_error(why)
                     if code in (errno.EISCONN, WSAEINVAL):
                         return 1
                     raise
@@ -116,7 +118,7 @@ class TimeoutSocket:
                 return data
             n = n - k
             L = [self._rbuf]
-            self._rbuf = ""
+            self._rbuf = b""
             while n > 0:
                 new = self.recv(max(n, self.buffsize))
                 if not new: break
@@ -127,24 +129,24 @@ class TimeoutSocket:
                     break
                 L.append(new)
                 n = n - k
-            return "".join(L)
+            return b"".join(L)
         k = max(4096, self.buffsize)
         L = [self._rbuf]
-        self._rbuf = ""
+        self._rbuf = b""
         while 1:
             new = self.recv(k)
             if not new: break
             L.append(new)
             k = min(k*2, 1024**2)
-        return "".join(L)
+        return b"".join(L)
 
     def readline(self, limit=-1):
-        data = ""
-        i = self._rbuf.find('\n')
+        data = b""
+        i = self._rbuf.find(b'\n')
         while i < 0 and not (0 < limit <= len(self._rbuf)):
             new = self.recv(self.buffsize)
             if not new: break
-            i = new.find('\n')
+            i = new.find(b'\n')
             if i >= 0: i = i + len(self._rbuf)
             self._rbuf = self._rbuf + new
         if i < 0: i = len(self._rbuf)
@@ -166,9 +168,17 @@ class TimeoutSocket:
         return list
 
     def writelines(self, list):
-        self.send(''.join(list))
+        payload = []
+        for item in list:
+            if isinstance(item, str):
+                payload.append(item.encode('utf-8'))
+            else:
+                payload.append(item)
+        self.send(b''.join(payload))
 
     def write(self, data):
+        if isinstance(data, str):
+            data = data.encode('utf-8')
         self.send(data)
 
     def flush(self):

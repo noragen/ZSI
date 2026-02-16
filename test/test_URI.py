@@ -1,8 +1,12 @@
 #!/usr/bin/env python
 import unittest
 
-from ZSI import ParsedSoap, SoapWriter, TC
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 
+from ZSI import ParsedSoap, SoapWriter, TC
 
 """Bug [ 1520092 ] URI Bug: urllib.quote escaping reserved chars
 
@@ -15,8 +19,6 @@ URI."
 reserved = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" |
 "$" | ","
 
-
-
 This implies that if ":" is used for a reserved purpose,
 
 if scheme is defined then
@@ -25,7 +27,6 @@ append ":" to result
 
 , then it should not be escaped.
 """
-
 
 class TestCase(unittest.TestCase):
     def check_uri_quoting(self):
@@ -52,8 +53,6 @@ class TestCase(unittest.TestCase):
 
         self.assertTrue(pyobj == orig, 'parsed object should be equivalent to original')
 
-
-
 #
 # Creates permutation of test options: "check", "check_any", etc
 #
@@ -67,13 +66,12 @@ for t in [i[0].split(_SEP) for i in [i for i in list(TestCase.__dict__.items()) 
             name = test
             def _makeTestSuite():
                 suite = unittest.TestSuite()
-                suite.addTest(unittest.makeSuite(TestCase, name))
+                suite.addTest(load_tests_from_test_case(TestCase, name))
                 return suite
             return _makeTestSuite
 
         globals()[test] = _closure()
         test += _SEP
-
 
 makeTestSuite = check
 def main():

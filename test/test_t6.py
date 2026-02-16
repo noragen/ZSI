@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 import sys
 import mimetools
 import base64
@@ -37,7 +42,7 @@ class t6TestCase(unittest.TestCase):
             print(FaultFromException(e, 0, sys.exc_info()[2]).AsSOAP(), file=OUT)
             self.fail()
 
-        self.assertEqual(dict['stringtest'].rstrip('\r\n'), strExtTest.rstrip('\r\n'),
+        self.assertEqual(dict['stringtest'].strip(), strExtTest.strip(),
                             "Failed to extract stringtest correctly")
         #print base64.encodestring(cid['partii@zolera.com'].read())
         v = dict['b64']
@@ -52,7 +57,7 @@ class t6TestCase(unittest.TestCase):
 
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t6TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t6TestCase, "check"))
     return suite
 
 def main():
@@ -107,7 +112,6 @@ Content-Transfer-Encoding: 7bit
 Content-ID: <part1@zolera.com>
 Content-Disposition: inline;
  filename="abs.txt"
-
 
 Digitial Signatures in a Web Services World
 

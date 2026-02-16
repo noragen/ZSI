@@ -3,12 +3,16 @@
 import os
 import unittest
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 from ZSI import version
 from ZSI.wstools.logging import gridLog
 
 os.environ['GRIDLOG_ON'] = '1'
 os.environ['GRIDLOG_DEST'] = "gridlog-udp://netlogger.lbl.gov:15100"
-
 
 class TestCase(unittest.TestCase):
     def ping(self):
@@ -17,7 +21,7 @@ class TestCase(unittest.TestCase):
 
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestCase, "ping"))
+    suite.addTest(load_tests_from_test_case(TestCase, "ping"))
     return suite
 
 def main():
@@ -25,4 +29,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

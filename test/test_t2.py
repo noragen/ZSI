@@ -3,6 +3,11 @@
 import sys
 import unittest
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 from ZSI import (
     TC,
     ParsedSoap,
@@ -15,7 +20,6 @@ from ZSI import (
     FaultFromNotUnderstood,
 )
 from functools import reduce
-
 
 class t2TestCase(unittest.TestCase):
     "Test case wrapper for old ZSI t2 test case"
@@ -43,7 +47,6 @@ class t2TestCase(unittest.TestCase):
             print(FaultFromNotUnderstood(uri, localname).AsSOAP(), file=OUT)
             self.fail()
 
-
         try:
             player = ps.Parse(Player)
         except EvaluateException as e:
@@ -61,12 +64,10 @@ class t2TestCase(unittest.TestCase):
             print(FaultFromException(e, 0, sys.exc_info()[2]).AsSOAP(), file=OUT)
             self.fail()
 
-
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t2TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t2TestCase, "check"))
     return suite
-
 
 class Player:
     '''Input class.'''
@@ -112,7 +113,6 @@ IN='''<SOAP-ENV:Envelope
 
 def main():
     unittest.main(defaultTest="makeTestSuite")
-
 
 if __name__ == "__main__" : main()
 

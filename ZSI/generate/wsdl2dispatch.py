@@ -200,14 +200,15 @@ class ServiceModuleWriter:
         portType = port.getPortType()
         action_in = ''
         for bop in binding.operations.values():
+            op_name = getattr(bop, 'name', bop)
             try:
-                op = portType.operations[bop.name]
+                op = portType.operations[op_name]
             except KeyError as ex:
                 raise WsdlGeneratorError(
-                    f'Port({port.name}) PortType({portType.name}) missing operation({bop.name}) defined in Binding({binding.name})'
+                    f'Port({port.name}) PortType({portType.name}) missing operation({op_name}) defined in Binding({binding.name})'
                 ) from ex
 
-            for ext in bop.extensions:
+            for ext in getattr(bop, 'extensions', ()):
                 if isinstance(ext, WSDLTools.SoapOperationBinding):
                     action_in = ext.soapAction
                     break
@@ -217,15 +218,18 @@ class ServiceModuleWriter:
                 )
 
             msgin = op.getInputMessage()
-            msgin_name = TextProtect(msgin.name)
+            msgin_name = TextProtect(msgin.name) if msgin is not None else None
             method_name = self.getMethodName(op.name)
 
             m = sd.newMethod()
             print('%sdef %s(self, ps, **kw):' %(self.getIndent(level=1), method_name), file=m)
-            if msgin is not None:
-                print('%srequest = ps.Parse(%s.typecode)' %(self.getIndent(level=2), msgin_name), file=m)
+            if msgin is not None and len(msgin.parts):
+                print('%sif %s is None:' %(self.getIndent(level=2), msgin_name), file=m)
+                print('%srequest = None' % self.getIndent(level=3), file=m)
+                print('%selse:' % self.getIndent(level=2), file=m)
+                print('%srequest = ps.Parse(%s.typecode)' %(self.getIndent(level=3), msgin_name), file=m)
             else:
-                print('%s# NO input' %self.getIndent(level=2), file=m)
+                print('%srequest = None' %self.getIndent(level=2), file=m)
 
             msgout = op.getOutputMessage()
             if msgout is not None:
@@ -237,8 +241,10 @@ class ServiceModuleWriter:
 
             print('', file=m)
             print('%ssoapAction[\'%s\'] = \'%s\'' %(self.getIndent(level=1), action_in, method_name), file=m)
-            print('%sroot[(%s.typecode.nspname,%s.typecode.pname)] = \'%s\'' \
-                                 %(self.getIndent(level=1), msgin_name, msgin_name, method_name), file=m)
+            if msgin_name is not None:
+                print('%sif %s is not None:' %(self.getIndent(level=1), msgin_name), file=m)
+                print('%sroot[(%s.typecode.nspname,%s.typecode.pname)] = \'%s\'' \
+                                     %(self.getIndent(level=2), msgin_name, msgin_name, method_name), file=m)
 
         return
 
@@ -334,7 +340,12 @@ class WSAServiceModuleWriter(ServiceModuleWriter):
         """
         body = []
         if msgInName is not None:
-            body.append('request = ps.Parse(%s.typecode)' %msgInName)
+            body.append('if %s is None:' % msgInName)
+            body.append('    request = None')
+            body.append('else:')
+            body.append('    request = ps.Parse(%s.typecode)' % msgInName)
+        else:
+            body.append('request = None')
 
         if msgOutName is not None:
             body.append('return request,%s()' %msgOutName)
@@ -370,11 +381,12 @@ class WSAServiceModuleWriter(ServiceModuleWriter):
         service = port.getService()
         s = self._services[service.name]
         for bop in binding.operations:
+            op_name = getattr(bop, 'name', bop)
             try:
-                op = portType.operations[bop.name]
+                op = portType.operations[op_name]
             except KeyError as ex:
                 raise WsdlGeneratorError('Port(%s) PortType(%s) missing operation(%s) defined in Binding(%s)' \
-                    %(port.name, portType.name, op.name, binding.name))
+                    %(port.name, portType.name, op_name, binding.name)) from ex
 
             soap_action = wsaction_in = wsaction_out = None
             if op.input is not None:
@@ -382,7 +394,7 @@ class WSAServiceModuleWriter(ServiceModuleWriter):
             if op.output is not None:
                 wsaction_out = op.getOutputAction()
 
-            for ext in bop.extensions:
+            for ext in getattr(bop, 'extensions', ()):
                 if isinstance(ext, WSDLTools.SoapOperationBinding) is False: continue
                 soap_action = ext.soapAction
                 if not soap_action: break
@@ -405,7 +417,8 @@ class WSAServiceModuleWriter(ServiceModuleWriter):
             msgin_name = msgout_name = None
             msgin,msgout = op.getInputMessage(),op.getOutputMessage()
             if msgin is not None:
-                msgin_name = TextProtect(msgin.name)
+                if len(msgin.parts):
+                    msgin_name = TextProtect(msgin.name)
             if msgout is not None:
                 msgout_name = TextProtect(msgout.name)
 
@@ -416,6 +429,8 @@ class WSAServiceModuleWriter(ServiceModuleWriter):
             print('', file=m)
             print('%ssoapAction[\'%s\'] = \'%s\'' %(self.getIndent(level=1), wsaction_in, method_name), file=m)
             print('%swsAction[\'%s\'] = \'%s\'' %(self.getIndent(level=1), method_name, wsaction_out), file=m)
-            print('%sroot[(%s.typecode.nspname,%s.typecode.pname)] = \'%s\'' \
-                     %(self.getIndent(level=1), msgin_name, msgin_name, method_name), file=m)
+            if msgin_name is not None:
+                print('%sif %s is not None:' %(self.getIndent(level=1), msgin_name), file=m)
+                print('%sroot[(%s.typecode.nspname,%s.typecode.pname)] = \'%s\'' \
+                         %(self.getIndent(level=2), msgin_name, msgin_name, method_name), file=m)
 

@@ -53,6 +53,18 @@ class SoapWriter:
         self._startCID = ""
 
     def __str__(self):
+        if getattr(self.dom, 'node', None) is None:
+            if self.envelope:
+                soap_env = _reserved_ns['SOAP-ENV']
+                self.dom.createDocument(soap_env, 'Envelope')
+                for prefix, nsuri in list(_reserved_ns.items()):
+                    self.dom.setNamespaceAttribute(prefix, nsuri)
+                self.writeNSdict(self.nsdict)
+                if self.header:
+                    self._header = self.dom.createAppendElement(soap_env, 'Header')
+                self.body = self.dom.createAppendElement(soap_env, 'Body')
+            else:
+                self.dom.createDocument(None, None)
         self.close()
         if len(self._attachments) == 0:
             #we have no attachment let's return the SOAP message

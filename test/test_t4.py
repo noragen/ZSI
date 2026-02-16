@@ -3,6 +3,11 @@ import unittest, sys
 from ZSI import *
 from ZSI import resolvers
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 OUT = sys.stdout
 IN='''<SOAP-ENV:Envelope
  xmlns="http://www.example.com/schemas/TEST"
@@ -49,12 +54,11 @@ class t4TestCase(unittest.TestCase):
 
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t4TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t4TestCase, "check"))
     return suite
 
 def main():
     unittest.main(defaultTest="makeTestSuite")
-
 
 if __name__ == "__main__" : main()
 

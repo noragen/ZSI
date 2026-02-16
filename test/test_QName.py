@@ -2,12 +2,16 @@
 
 import unittest
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 from ZSI import ParsedSoap, TC, FaultFromFaultMessage
 
 """Bug [ 1520092 ] URI Bug: urllib.quote escaping reserved chars
    Bug [ 2748314 ] Malformed type attribute (bad NS) with 2.1a1 but not with 2.
 """
-
 
 class TestCase(unittest.TestCase):
     def check_soapfault_faultcode(self):
@@ -43,8 +47,6 @@ class TestCase(unittest.TestCase):
         ps = ParsedSoap(msg, envelope=False)
         pyobj = ps.Parse(TC.Integer(pname=("urn:vim25","test")))
 
-
-
 #
 # Creates permutation of test options: "check", "check_any", etc
 #
@@ -58,16 +60,16 @@ for t in [i[0].split(_SEP) for i in [i for i in list(TestCase.__dict__.items()) 
             name = test
             def _makeTestSuite():
                 suite = unittest.TestSuite()
-                suite.addTest(unittest.makeSuite(TestCase, name))
+                suite.addTest(load_tests_from_test_case(TestCase, name))
                 return suite
             return _makeTestSuite
 
         globals()[test] = _closure()
         test += _SEP
 
-
 makeTestSuite = check
 def main():
     unittest.main(defaultTest="makeTestSuite")
 if __name__ == "__main__" : main()
+
 

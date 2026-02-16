@@ -10,7 +10,7 @@
 import sys
 
 from ZSI import _get_idstr
-from ZSI.generate.utility import GetModuleBaseNameFromWSDL
+from ZSI.generate.utility import GetModuleBaseNameFromWSDL, NormalizeNamespace
 from ZSI.wstools.XMLSchema import SchemaReader
 from ZSI.wstools.logging import getLogger as _GetLogger
 from .containers import *
@@ -150,7 +150,7 @@ class WriteServiceModule:
         def recommended_ns(schema):
             if schema is None:
                 return None
-            tns = schema.getTargetNamespace()
+            tns = NormalizeNamespace(schema.getTargetNamespace())
             recommended = None
             attributes = getattr(schema, 'attributes', None) or {}
             for k, v in list(attributes.get('xmlns', {}).items()):
@@ -167,7 +167,7 @@ class WriteServiceModule:
         for schema in list(self._wsdl.types.values()):
             if schema is None:
                 continue
-            tns = schema.getTargetNamespace()
+            tns = NormalizeNamespace(schema.getTargetNamespace())
             self.logger.debug(f'Register schema({_get_idstr(schema)}) -- TNS({tns})')
             if tns not in self.usedNamespaces:
                 self.usedNamespaces[tns] = []
@@ -179,11 +179,14 @@ class WriteServiceModule:
         for k, v in list(SchemaReader.namespaceToSchema.items()):
             if v is None:
                 continue
-            self.logger.debug(f'Register schema({_get_idstr(v)}) -- TNS({k})')
-            if k not in self.usedNamespaces:
-                self.usedNamespaces[k] = []
-            self.usedNamespaces[k].append(v)
-            NAD.add(k, recommended_ns(v))
+            k = NormalizeNamespace(k)
+            schema_ns = NormalizeNamespace(v.getTargetNamespace())
+            tns = schema_ns or k
+            self.logger.debug(f'Register schema({_get_idstr(v)}) -- TNS({tns})')
+            if tns not in self.usedNamespaces:
+                self.usedNamespaces[tns] = []
+            self.usedNamespaces[tns].append(v)
+            NAD.add(tns, recommended_ns(v))
 
     def writeClient(self, fd, sdClass=None, **kw):
         """write out client module to file descriptor.
@@ -289,17 +292,15 @@ class ServiceDescription:
 
         self.locator.setUp(service)
 
-        try:
-            bindings = [p.binding for p in service.ports]
-        except Exception:
-            warnings.warn('not all ports have binding declared,')
-            bindings = ()
-
+        seen_bindings = set()
         for port in service.ports.values():
-            if port.binding not in bindings:
+            binding_name = getattr(port, 'binding', None)
+            if not binding_name:
+                warnings.warn('not all ports have binding declared,')
                 continue
-            while port.binding in bindings:
-                bindings.remove(port.binding)
+            if binding_name in seen_bindings:
+                continue
+            seen_bindings.add(binding_name)
 
             desc = BindingDescription(useWSA=self.wsAddressing,
                                       do_extended=self.do_extended,
@@ -412,7 +413,7 @@ class SchemaDescription:
         """ Can be called multiple times, but will not redefine a
         previously defined type definition or element declaration.
         """
-        ns = schema.getTargetNamespace()
+        ns = NormalizeNamespace(schema.getTargetNamespace())
         assert (
                 self.targetNamespace is None or self.targetNamespace == ns
         ), f'SchemaDescription instance represents {self.targetNamespace}, not {ns}'

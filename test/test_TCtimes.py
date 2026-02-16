@@ -5,6 +5,11 @@ import os
 import time
 import unittest
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 from ZSI import TC
 try:
     import io as StringIO
@@ -191,13 +196,12 @@ for t in [i[0].split(_SEP) for i in [i for i in list(TestCase.__dict__.items()) 
             name = test
             def _makeTestSuite():
                 suite = unittest.TestSuite()
-                suite.addTest(unittest.makeSuite(TestCase, name))
+                suite.addTest(load_tests_from_test_case(TestCase, name))
                 return suite
             return _makeTestSuite
 
         globals()[test] = _closure()
         test += _SEP
-
 
 makeTestSuite = check
 def main():

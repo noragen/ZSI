@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 from ZSI import *
 #from ZSI.wstools.logging import setBasicLoggerDEBUG
 #setBasicLoggerDEBUG()
@@ -26,15 +31,13 @@ class t3TestCase(unittest.TestCase):
             self.assertTrue(f.AsSOAP().find(str(a)) > 0)
         #print '--'*20
 
-
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t3TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t3TestCase, "check"))
     return suite
 
 def main():
     unittest.main(defaultTest="makeTestSuite")
-
 
 if __name__ == "__main__" : main()
 

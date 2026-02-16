@@ -2,6 +2,11 @@
 
 import base64
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 try:
     from hashlib import sha1 as local_sha
 except ImportError:
@@ -14,11 +19,9 @@ from ZSI.wstools.c14n import Canonicalize
 from ZSI.wstools.Namespaces import WSA200403, SOAP
 from io import StringIO
 
-
 def _digest_b64(value):
     data = value.encode("utf-8") if isinstance(value, str) else value
     return base64.encodebytes(local_sha(data).digest()).strip().decode("ascii")
-
 
 class CanonicalizeFromTestCase(unittest.TestCase):
     "c14n tests, this has nothing to do with ws-addressing."
@@ -107,13 +110,11 @@ class CanonicalizeFromTestCase(unittest.TestCase):
         self.assertEqual(d2, CALDIGEST)
         self.assertEqual(d3, CALDIGEST)
 
-
 def makeTestSuite():
     suite = unittest.TestSuite()
-    #suite.addTest(unittest.makeSuite(CanonicalizeFromTestCase, "check"))
-    suite.addTest(unittest.makeSuite(CanonicalizeFromTestCase, "xcheck"))
+    #suite.addTest(load_tests_from_test_case(CanonicalizeFromTestCase, "check"))
+    suite.addTest(load_tests_from_test_case(CanonicalizeFromTestCase, "xcheck"))
     return suite
-
 
 C14N_EXCL1_DIGEST =  "xSOXT+dlQwo5uT9PbK08of6W9PM="
 C14N_EXCL1 = """<wsa:From xmlns:ns3="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" ns3:Id="id-7680063" soapenv:mustUnderstand="0"><wsa:Address>http://bosshog.lbl.gov:9999/wsrf/services/SecureCounterService</wsa:Address><wsa:ReferenceProperties><ns1:CounterKey xmlns:ns1="http://counter.com" ns3:Id="10112">10577413</ns1:CounterKey></wsa:ReferenceProperties></wsa:From>"""
@@ -124,10 +125,8 @@ C14N_INC1 = """<wsa:From xmlns:ns1="http://counter.com" xmlns:ns3="http://docs.o
 C14N_EXCL2_DIGEST = "+IEqF6DRo36Bh93A06S7C4Cmcuo="
 C14N_EXCL2 = """<wsa:From xmlns:ns3="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ns3:Id="id-7680063" soapenv:mustUnderstand="0"><wsa:Address>http://bosshog.lbl.gov:9999/wsrf/services/SecureCounterService</wsa:Address><wsa:ReferenceProperties><ns1:CounterKey xmlns:ns1="http://counter.com" ns3:Id="10112">10577413</ns1:CounterKey></wsa:ReferenceProperties></wsa:From>"""
 
-
 C14N_EXCL3_DIGEST = "VJvTr+Mx3TeWsQY6iwGbhAJ9/eA="
 C14N_EXCL3 = """<soapenv:Body xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" wsu:Id="id-28219008"><RequestSecurityTokenResponse xmlns="http://schemas.xmlsoap.org/ws/2004/04/trust"><wsa:EndpointReference xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing"><wsa:Address>http://131.243.2.147:8888/wsrf/services/DelegationService</wsa:Address><wsa:ReferenceProperties><ns1:DelegationKey xmlns:ns1="http://www.globus.org/08/2004/delegationService">8adaa710-ba01-11da-bc99-cbed73daa755</ns1:DelegationKey></wsa:ReferenceProperties></wsa:EndpointReference></RequestSecurityTokenResponse></soapenv:Body>"""
-
 
 XML_INST1 = """<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soapenv:Header>
 	<wsse:Security soapenv:mustUnderstand="1" xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
@@ -182,7 +181,6 @@ XML_INST1 = """<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/
 	<wsse:SecurityTokenReference><wsse:Reference URI="#SecurityContextToken-32970611" ValueType="http://www.globus.org/ws/2004/09/security/sc#GSSAPI_CONTEXT_TOKEN"/></wsse:SecurityTokenReference>
 	</ds:KeyInfo>
 	</ds:Signature><wsc:SecurityContextToken wsu:Id="SecurityContextToken-32970611" xmlns:wsc="http://schemas.xmlsoap.org/ws/2004/04/sc" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><wsc:Identifier>3b1ef410-ab3d-11da-9436-88b687faed94</wsc:Identifier></wsc:SecurityContextToken></wsse:Security><wsa:MessageID wsu:Id="id-11434871" soapenv:mustUnderstand="0" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">uuid:3d592ca0-ab3d-11da-9436-88b687faed94</wsa:MessageID><wsa:To wsu:Id="id-19645447" soapenv:mustUnderstand="0" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">http://schemas.xmlsoap.org/ws/2004/03/addressing/role/anonymous</wsa:To><wsa:Action wsu:Id="id-5428820" soapenv:mustUnderstand="0" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">http://counter.com/CounterPortType/addResponse</wsa:Action><wsa:From ns3:Id="id-7680063" soapenv:mustUnderstand="0" xmlns:ns1="http://counter.com" xmlns:ns3="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><wsa:Address>http://bosshog.lbl.gov:9999/wsrf/services/SecureCounterService</wsa:Address><wsa:ReferenceProperties><ns1:CounterKey ns3:Id="10112">10577413</ns1:CounterKey></wsa:ReferenceProperties></wsa:From><wsa:RelatesTo RelationshipType="wsa:Reply" wsu:Id="id-28476580" soapenv:mustUnderstand="0" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">uuid:1141449047.05</wsa:RelatesTo></soapenv:Header><soapenv:Body wsu:Id="id-8409752" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd"><addResponse xmlns="http://counter.com">13</addResponse></soapenv:Body></soapenv:Envelope>"""
-
 
 XML_INST2 = """<?xml version="1.0" encoding="UTF-8"?>
         <soapenv:Envelope
@@ -345,8 +343,6 @@ xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-ut
 xmlns="http://schemas.xmlsoap.org/ws/2004/04/trust"><wsa:EndpointReference
 xmlns:ns1="http://www.globus.org/08/2004/delegationService"><wsa:Address>http://131.243.2.147:8888/wsrf/services/DelegationService</wsa:Address><wsa:ReferenceProperties><ns1:DelegationKey>8adaa710-ba01-11da-bc99-cbed73daa755</ns1:DelegationKey></wsa:ReferenceProperties></wsa:EndpointReference></RequestSecurityTokenResponse></soapenv:Body></soapenv:Envelope>"""
 
-
-
 CORRECT = """<ns1:MessageID xmlns:ns1="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:ns2="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd" ns2:Id="10102">uuid:1143760705.98</ns1:MessageID>"""
 
 WRONG = """<ns1:MessageID xmlns:ns1="http://schemas.xmlsoap.org/ws/2004/03/addressing" xmlns:ns2="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" ns2:Id="10102">uuid:1143760705.98</ns1:MessageID>"""
@@ -371,4 +367,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

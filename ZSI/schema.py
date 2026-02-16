@@ -300,15 +300,16 @@ class _Mirage:
     parse as needed.  Mirage is callable, TypeCodes are not.  When called it returns the
     typecode.  Tightly coupled with generated code.
 
-    NOTE: **Must Use ClassType** for intended MRO of __call__ since setting it in
-    an instance attribute rather than a class attribute (will not work for object).
+    Python 3 does not support per-instance replacement of __call__ for special
+    method lookup, so dispatch is handled via an internal call target.
     '''
     def __init__(self, klass):
         self.klass = klass
         self.__reveal = False
         self.__cache = None
+        self._call_target = self._hide_type
         if issubclass(klass, ElementDeclaration):
-            self.__call__ = self._hide_element
+            self._call_target = self._hide_element
 
     def __str__(self):
         msg = "<Mirage id=%s, Local Element %s>"
@@ -318,7 +319,7 @@ class _Mirage:
 
     def _hide_type(self, pname, aname, minOccurs=0, maxOccurs=1, nillable=False,
                    **kw):
-        self.__call__ = self._reveal_type
+        self._call_target = self._reveal_type
         self.__reveal = True
 
         # store all attributes, make some visable for pyclass_type
@@ -331,7 +332,7 @@ class _Mirage:
         return self
 
     def _hide_element(self, minOccurs=0, maxOccurs=1, nillable=False, **kw):
-        self.__call__ = self._reveal_element
+        self._call_target = self._reveal_element
         self.__reveal = True
 
         # store all attributes, make some visable for pyclass_type
@@ -363,7 +364,8 @@ class _Mirage:
                             **self.__kw)
         return self.__cache
 
-    __call__ = _hide_type
+    def __call__(self, *args, **kw):
+        return self._call_target(*args, **kw)
 
 
 class _GetPyobjWrapper:

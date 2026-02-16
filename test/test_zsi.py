@@ -16,14 +16,29 @@ import test_rfc2617
 import test_QName
 import test_AnyType
 
+TEST_MODULES = (
+    test_t1,
+    test_t2,
+    test_t3,
+    test_t5,
+    test_t6,
+    test_t7,
+    test_t8,
+    test_t9,
+    test_union,
+    test_list,
+    test_TCtimes,
+    test_URI,
+    test_rfc2617,
+    test_QName,
+    test_AnyType,
+)
+
 def makeTestSuite():
-    return unittest.TestSuite(
-        [globals()[t].makeTestSuite() for t in [g for g in globals() if g.startswith('test_') and True]]
-    )
+    return unittest.TestSuite([module.makeTestSuite() for module in TEST_MODULES])
 
 def main():
     unittest.main(defaultTest="makeTestSuite")
-    suite = unittest.TestSuite()
 
 if __name__ == "__main__":
     main()

@@ -3,6 +3,11 @@ import unittest, sys, types, time
 from ZSI import TC, SoapWriter, ParsedSoap, EvaluateException, TCapache
 from ZSI.wstools.Namespaces import SCHEMA, SOAP
 
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
+
 NSDICT = {'tns':'xmlns:tns="urn:a"',
     'xsi':'xmlns:xsi="%s"' %SCHEMA.XSI3,
     'xsd':'xmlns:xsd="%s"' %SCHEMA.XSD3,
@@ -155,7 +160,7 @@ for t in [i[0].split(_SEP) for i in [i for i in list(AnyTestCase.__dict__.items(
             name = test
             def _makeTestSuite():
                 suite = unittest.TestSuite()
-                suite.addTest(unittest.makeSuite(AnyTestCase, name))
+                suite.addTest(load_tests_from_test_case(AnyTestCase, name))
                 return suite
             return _makeTestSuite
 

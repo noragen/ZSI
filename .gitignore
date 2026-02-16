@@ -3,3 +3,6 @@ dist
 build
 *.pyc
 .project
+.idea
+_run_local.log
+__pycache__

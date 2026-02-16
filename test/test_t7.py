@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 import sys
 
 from ZSI import ParsedSoap, SoapWriter, TC
@@ -35,7 +40,7 @@ class t7TestCase(unittest.TestCase):
 
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t7TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t7TestCase, "check"))
     return suite
 
 def main():
@@ -61,7 +66,6 @@ text = '''
 </SOAP-ENV:Body>
 </SOAP-ENV:Envelope>
 '''
-
 
 if __name__ == "__main__" : main()
 

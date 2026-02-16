@@ -115,15 +115,16 @@ class SchemaReader:
         schema.load(reader)
         return schema
 
-    def loadFromStream(self, file, url=None):
+    def loadFromStream(self, file, url=None, schema=None):
         """Return an XMLSchema instance loaded from a file object.
            file -- file object
            url -- base location for resolving imports/includes.
+           schema -- Optional XMLSchema instance.
         """
 
         reader = self.__readerClass()
         reader.loadDocument(file)
-        schema = XMLSchema()
+        schema = schema or XMLSchema()
         if url is not None:
             schema.setBaseUrl(url)
         schema.load(reader)
@@ -156,16 +157,17 @@ class SchemaReader:
         self.__setImports(schema)
         return schema
 
-    def loadFromFile(self, filename):
+    def loadFromFile(self, filename, schema=None):
         """Return an XMLSchema instance loaded from the given file.
            filename -- name of file to open
+           schema -- Optional XMLSchema instance.
         """
 
         if self.__base_url:
             filename = basejoin(self.__base_url, filename)
         file = open(filename, 'rb')
         try:
-            schema = self.loadFromStream(file, filename)
+            schema = self.loadFromStream(file, filename, schema=schema)
         finally:
             file.close()
 
@@ -643,10 +645,12 @@ class XMLSchemaComponent(XMLBase, MarkerInterface):
 
         parent = self
         targetNamespace = 'targetNamespace'
-        tns = self.attributes.get(targetNamespace)
-        while not tns and parent and parent._parent is not None:
+        attributes = self.attributes or {}
+        tns = attributes.get(targetNamespace)
+        while not tns and parent and getattr(parent, '_parent', None) is not None:
             parent = parent._parent()
-            tns = parent.attributes.get(targetNamespace)
+            parent_attributes = getattr(parent, 'attributes', None) or {}
+            tns = parent_attributes.get(targetNamespace)
         return tns or ''
 
     def getAttributeDeclaration(self, attribute):
@@ -779,12 +783,14 @@ class XMLSchemaComponent(XMLBase, MarkerInterface):
         if prefix == XMLSchemaComponent.xml:
             return XMLNS.XML
         parent = self
-        ns = self.attributes[XMLSchemaComponent.xmlns].get(prefix
-                or XMLSchemaComponent.xmlns_key)
+        attributes = self.attributes or {}
+        ns_dict = attributes.get(XMLSchemaComponent.xmlns, {})
+        ns = ns_dict.get(prefix or XMLSchemaComponent.xmlns_key)
         while not ns:
             parent = parent._parent()
-            ns = parent.attributes[XMLSchemaComponent.xmlns].get(prefix
-                    or XMLSchemaComponent.xmlns_key)
+            parent_attributes = getattr(parent, 'attributes', None) or {}
+            parent_ns_dict = parent_attributes.get(XMLSchemaComponent.xmlns, {})
+            ns = parent_ns_dict.get(prefix or XMLSchemaComponent.xmlns_key)
             if not ns and isinstance(parent, WSDLToolsAdapter):
                 if prefix is None:
                     return ''
@@ -795,13 +801,14 @@ class XMLSchemaComponent(XMLBase, MarkerInterface):
         """return requested attribute value or None
         """
 
+        attributes = self.attributes or {}
         if type(attribute) in (list, tuple):
             if len(attribute) != 2:
                 raise LookupError('To access attributes must use name or (namespace,name)')
 
-            ns_dict = self.attributes.get(attribute[0])
+            ns_dict = attributes.get(attribute[0])
             return None if ns_dict is None else ns_dict.get(attribute[1])
-        return self.attributes.get(attribute)
+        return attributes.get(attribute)
 
     def getAttributeQName(self, attribute):
         """return requested attribute value as (namespace,name) or None
@@ -1388,7 +1395,7 @@ class XMLSchema(XMLSchemaComponent):
                         #    %(import_ns, 'failed to load schema instance')
                         # )
 
-                        print(ex)
+                        warnings.warn(str(ex))
                         del slocd[import_ns]
 
                         class _LazyEvalImport(str):
@@ -3383,8 +3390,6 @@ class TypeDescriptionComponent(tupleClass):
         """args -- (namespace, name)
            Remove the name's prefix, irrelevant.
         """
-        print(args)
-
         if len(args) != 2:
             raise TypeError(f'expecting tuple (namespace, name), got {args}')
         elif args[1].find(':') >= 0:

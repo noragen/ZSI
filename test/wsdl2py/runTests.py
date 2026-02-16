@@ -4,6 +4,7 @@
 # See Copyright for copyright notice!
 ###########################################################################
 import unittest, warnings, os
+from urllib.parse import urlparse
 from ZSI import version
 from ZSI.wstools.logging import gridLog
 from ServiceTest import main, CONFIG_PARSER, DOCUMENT, LITERAL, BROKE, TESTS
@@ -57,6 +58,22 @@ def _dispatchTestSuite(document=None, literal=None, broke=None):
     return _makeTestSuite('dispatch', document, literal, broke)
 
 
+def _is_external_wsdl(wsdl_location):
+    """Return True for remote WSDL references (http/https)."""
+    return urlparse(wsdl_location).scheme in ('http', 'https')
+
+
+def _local_module_enabled(module_name):
+    """Allow local suite only for tests backed by non-remote WSDL entries."""
+    wsdl_section = 'WSDL'
+    cp = CONFIG_PARSER
+    if not cp.has_option(wsdl_section, module_name):
+        return True
+
+    wsdl_location = cp.get(wsdl_section, module_name).strip()
+    return not _is_external_wsdl(wsdl_location)
+
+
 def _makeTestSuite(test, document=None, literal=None, broke=None):
     """Return a test suite containing all test cases that satisfy
     the parameters. None means don't check.
@@ -86,6 +103,12 @@ def _makeTestSuite(test, document=None, literal=None, broke=None):
     suite = unittest.TestSuite()
     for section in testSections:
         moduleList = cp.get(section, TESTS).split()
+        if test == 'local':
+            moduleList = [m for m in moduleList if _local_module_enabled(m)]
+            skipped = [m for m in cp.get(section, TESTS).split() if m not in moduleList]
+            for module_name in skipped:
+                warnings.warn('Skipping remote-WSDL test "%s" for local target' % module_name)
+
         for module in  map(__import__, moduleList):
             def _warn_empty():
                 warnings.warn('"%s" has no test "%s"' %(module, test))

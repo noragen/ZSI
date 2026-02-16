@@ -67,6 +67,58 @@ class pyclass_type(type):
 
     """
 
+    @staticmethod
+    def __max_occurs_gt_one(what):
+        max_occurs = getattr(what, 'maxOccurs', 1)
+        if max_occurs == 'unbounded':
+            return True
+        try:
+            return int(max_occurs) > 1
+        except (TypeError, ValueError):
+            return False
+
+    @staticmethod
+    def __instantiate_what(what):
+        tc = None
+        try:
+            tc = what()
+        except TypeError:
+            pass
+
+        if tc is None:
+            pname = getattr(what, 'pname', None)
+            aname = getattr(what, 'aname', None)
+            kw = {}
+            for key in ('minOccurs', 'maxOccurs', 'nillable', 'typed', 'encoded'):
+                if hasattr(what, key):
+                    kw[key] = getattr(what, key)
+            try:
+                tc = what(pname, aname, **kw)
+            except TypeError:
+                tc = what(pname, aname)
+
+        if callable(tc) and not hasattr(tc, 'pyclass'):
+            pname = getattr(tc, 'pname', None)
+            aname = getattr(tc, 'aname', None)
+            kw = {}
+            for key in ('minOccurs', 'maxOccurs', 'nillable', 'typed', 'encoded'):
+                if hasattr(tc, key):
+                    kw[key] = getattr(tc, key)
+            try:
+                tc = tc(pname, aname, **kw)
+            except TypeError:
+                try:
+                    tc = tc(pname, aname)
+                except TypeError:
+                    pass
+            if callable(tc) and not hasattr(tc, 'pyclass'):
+                try:
+                    tc = tc()
+                except TypeError:
+                    pass
+
+        return tc
+
     def __new__(
         cls,
         classname,
@@ -187,7 +239,7 @@ class pyclass_type(type):
             def get(self):
                 return getattr(self, what.aname)
 
-            if what.maxOccurs > 1:
+            if pyclass_type.__max_occurs_gt_one(what):
 
                 def set(self, value):
                     if not (value is None or hasattr(value, '__iter__'
@@ -203,20 +255,20 @@ class pyclass_type(type):
         else:
 
             def get(self):
-                return getattr(self, what().aname)
+                return getattr(self, pyclass_type.__instantiate_what(what).aname)
 
-            if what.maxOccurs > 1:
+            if pyclass_type.__max_occurs_gt_one(what):
 
                 def set(self, value):
                     if not (value is None or hasattr(value, '__iter__'
                             )):
                         raise TypeError('expecting an iterable instance')
-                    setattr(self, what().aname, value)
+                    setattr(self, pyclass_type.__instantiate_what(what).aname, value)
 
             else:
 
                 def set(self, value):
-                    setattr(self, what().aname, value)
+                    setattr(self, pyclass_type.__instantiate_what(what).aname, value)
 
         #
         # new factory function
@@ -251,7 +303,7 @@ class pyclass_type(type):
                 '''returns a mutable type or None (if no pyclass).
                 '''
 
-                p = what().pyclass
+                p = getattr(pyclass_type.__instantiate_what(what), 'pyclass', None)
                 if p is None:
                     return
                 return p()
@@ -268,7 +320,7 @@ class pyclass_type(type):
                     or an immutable instance or None (if no pyclass)
                 '''
 
-                p = what().pyclass
+                p = getattr(pyclass_type.__instantiate_what(what), 'pyclass', None)
                 if p is None:
                     return
                 if value is None:

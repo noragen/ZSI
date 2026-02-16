@@ -99,7 +99,7 @@ def _test_local_serialize1():
         assert(et.tag == '{urn:test}GlobalElementLocalType'), "root GED"
 
         for i,j in zip([ 'Unqualified1', 'Unqualified2', 'Unqualified3', 'Unqualified4'],
-            [c.tag for c in et.getchildren()]):
+            [c.tag for c in list(et)]):
 
             assert(i == j), 'Match Failed: expected "%s" not "%s"' %(i,j)
 

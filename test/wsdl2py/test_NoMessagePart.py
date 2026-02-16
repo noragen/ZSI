@@ -83,12 +83,12 @@ class NoMessagePartTestCase(ServiceTestCase):
         # Core functionality required
         ps = ParsedSoap(xml)
 
-        self.assertTrue(ps.body.childNodes == 0, "Empty Body expected: " + ps.body.childNodes)
-        self.assertTrue(ps.body_root == None, "Body root should be None: " + ps.body_root)
+        self.assertTrue(len(ps.body.childNodes) == 0, "Empty Body expected")
+        self.assertTrue(ps.body_root is None, "Body root should be None")
 
         pyobj = ps.Parse(None)
 
-        self.assertTrue(pyobj == None, "pyobj should be None: " + pyobj)
+        self.assertTrue(pyobj is None, "pyobj should be None")
 
 
     def test_dispatch_NoMessagePart(self):

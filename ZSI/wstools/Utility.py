@@ -18,8 +18,6 @@
 import contextlib
 ident = '$Id: Utility.py 1483 2009-03-31 18:27:55Z lclement $'
 
-import http.client
-import socket
 import ssl
 import sys
 import urllib.error
@@ -147,7 +145,9 @@ class HTTPResponse(Exception):
     def __init__(self, response):
         self.status = response.status
         self.reason = response.reason
-        self.headers = response.msg
+        # Prefer the modern headers attribute, but keep compatibility with
+        # older response objects where only .msg is available.
+        self.headers = getattr(response, 'headers', getattr(response, 'msg', None))
         self.body = response.read() or None
         response.close()
 
@@ -222,47 +222,23 @@ def urlopen(url, timeout=20, redirects=None):
         path = f'{path}#{frag}'
 
     if scheme == 'https':
-
-        # If ssl is not compiled into Python, you will not get an exception
-        # until a conn.endheaders() call.   We need to know sooner, so use
-        # getattr.
-
-        try:
-            import M2Crypto
-        except ImportError as e:
-            if not hasattr(socket, 'ssl'):
-                raise RuntimeError('no built-in SSL Support') from e
-
-            conn = TimeoutHTTPS(host, None, timeout)
-        else:
-            ctx = M2Crypto.SSL.Context()
-            ctx.set_session_timeout(timeout)
-            conn = M2Crypto.httpslib.HTTPSConnection(host,
-                    ssl_context=ctx)
-            conn.set_debuglevel(1)
+        context = ssl.create_default_context()
+        conn = HTTPSConnection(host, timeout=timeout, context=context)
     else:
+        conn = HTTPConnection(host, timeout=timeout)
 
-        conn = TimeoutHTTP(host, None, timeout)
-
-    conn.putrequest('GET', path)
-    conn.putheader('Connection', 'close')
-    conn.endheaders()
-    response = None
-    while 1:
-        response = conn.getresponse()
-        if response.status != 100:
-            break
-        conn._HTTPConnection__state = http.client._CS_REQ_SENT
-        conn._HTTPConnection__response = None
+    conn.request('GET', path, headers={'Connection': 'close'})
+    response = conn.getresponse()
 
     status = response.status
 
     # If we get an HTTP redirect, we will follow it automatically.
 
     if 300 <= status < 400:
-        location = response.msg.getheader('location')
+        location = response.headers.get('location')
         if location is not None:
             response.close()
+            location = urljoin(url, location)
             if redirects is not None and location in redirects:
                 raise RecursionError('Circular HTTP redirection detected.'
                         )

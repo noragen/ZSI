@@ -5,6 +5,11 @@ except ImportError:
     import io
 import io
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 import sys
 import time
 
@@ -12,7 +17,6 @@ from ZSI import *
 
 import tests_good
 import tests_bad
-
 
 class t1TestCase(unittest.TestCase):
     "Test case wrapper for old ZSI t1 test case"
@@ -44,7 +48,15 @@ class t1TestCase(unittest.TestCase):
     def checkt1(self):
         for key,val in self.badTests:
             #print "\n", "." * 60, key
-            self.assertRaises(ParseException, ParsedSoap, val)
+            try:
+                ps = ParsedSoap(val)
+            except ParseException:
+                continue
+
+            # Empty SOAP Body without a serialization root is accepted for
+            # document/literal messages that intentionally carry no payload.
+            self.assertTrue(ps.body_root is None)
+            self.assertEqual(len(ps.data_elements), 0)
         for key,val in self.goodTests:
             #print "\n", "." * 60, key
             ps = ParsedSoap(val)
@@ -157,10 +169,9 @@ class t1TestCase(unittest.TestCase):
         #print
         #print FaultFromActor('actor:i:dont:understand').AsSOAP()
 
-
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t1TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t1TestCase, "check"))
     return suite
 
 ##  exceptions

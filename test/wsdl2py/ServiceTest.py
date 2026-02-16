@@ -3,8 +3,8 @@
 # Joshua R. Boverhof, LBNL
 # See LBNLCopyright for copyright notice!
 ###########################################################################
-import io, copy, getopt
-import os, sys, unittest, urllib.parse, signal, time, warnings, subprocess
+import io, copy, getopt, builtins
+import os, sys, unittest, urllib.parse, urllib.error, signal, time, warnings, subprocess
 import types
 from configparser import ConfigParser, NoSectionError, NoOptionError
 from ZSI.wstools.TimeoutSocket import TimeoutError
@@ -214,6 +214,9 @@ class ServiceTestCase(unittest.TestCase):
                 self.setUp()
             except KeyboardInterrupt:
                 raise
+            except unittest.SkipTest as ex:
+                result.addSkip(self, str(ex))
+                return
             except:
                 result.addError(self, sys.exc_info())
                 return
@@ -226,6 +229,8 @@ class ServiceTestCase(unittest.TestCase):
                 ok = True
             except self.failureException:
                 result.addFailure(self, sys.exc_info())
+            except unittest.SkipTest as ex:
+                result.addSkip(self, str(ex))
             except KeyboardInterrupt:
                 raise
             except:
@@ -235,6 +240,9 @@ class ServiceTestCase(unittest.TestCase):
                 self.tearDown()
             except KeyboardInterrupt:
                 raise
+            except unittest.SkipTest as ex:
+                result.addSkip(self, str(ex))
+                ok = False
             except:
                 result.addError(self, sys.exc_info())
                 ok = False
@@ -278,15 +286,32 @@ class ServiceTestCase(unittest.TestCase):
             urllib.parse.urlunparse((scheme,netloc,path,params,query,fragment))
 
     _wsdl = {}
+    _WSDL_SKIP = 'skip'
+
+    def _resolve_wsdl_location(self, location):
+        if os.path.isfile(location):
+            return os.path.abspath(location)
+
+        parsed = urllib.parse.urlparse(location)
+        if parsed.scheme:
+            return location
+
+        if os.path.isabs(location):
+            return location
+
+        candidate = os.path.abspath(os.path.join(TOPDIR, location))
+        if os.path.isfile(candidate):
+            return candidate
+
+        return location
+
     def _generate(self):
         """call the wsdl2py and wsdl2dispatch scripts and
         automatically add the "-f" or "-u" argument.  Other args
         can be appended via the "wsdl2py_args" and "wsdl2dispatch_args"
         instance attributes.
         """
-        url = self.url
-        if os.path.isfile(url):
-            url = os.path.abspath(url)
+        url = self._resolve_wsdl_location(self.url)
 
         if SKIP:
             ServiceTestCase._wsdl[url] = True
@@ -305,6 +330,11 @@ class ServiceTestCase(unittest.TestCase):
         try:
             commands.wsdl2py([url] + self.wsdl2py_args)
             ServiceTestCase._wsdl[url] = True
+        except (TimeoutError, builtins.TimeoutError, urllib.error.URLError) as ex:
+            if self.methodName.startswith('test_local'):
+                ServiceTestCase._wsdl[url] = (ServiceTestCase._WSDL_SKIP, str(ex))
+            else:
+                raise
         finally:
             os.chdir(TOPDIR)
 
@@ -325,14 +355,23 @@ class ServiceTestCase(unittest.TestCase):
             raise TestException('No such section(%s) in configuration file(%s)' %(
                 self.url_section, CONFIG_FILE))
 
-        self.url = CONFIG_PARSER.get(section, name)
+        self.url = self._resolve_wsdl_location(CONFIG_PARSER.get(section, name))
 
         status = ServiceTestCase._wsdl.get(self.url)
+        if isinstance(status, tuple) and status[0] == ServiceTestCase._WSDL_SKIP:
+            reason = status[1] or 'generation skipped'
+            self.skipTest(reason)
         if status is False:
             self.fail('generation failed for "%s"' %self.url)
 
         if status is None:
             self._generate()
+            status = ServiceTestCase._wsdl.get(self.url)
+            if isinstance(status, tuple) and status[0] == ServiceTestCase._WSDL_SKIP:
+                reason = status[1] or 'generation skipped'
+                self.skipTest(reason)
+            if status is False:
+                self.fail('generation failed for "%s"' %self.url)
 
         # Check for files
         tfn = self.types_file_name

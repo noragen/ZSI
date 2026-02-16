@@ -20,8 +20,19 @@ TextProtect = lambda s: re.sub('[-./:# ]', '_', s)
 TextProtectAttributeName = lambda name: TextProtect('_%s' % name)
 
 
+def NormalizeNamespace(ns):
+    """Normalize absent namespace values to an empty string."""
+    if ns is None:
+        return ''
+    return ns
+
+
 def Namespace2ModuleName(ns):
-    return TextProtect(ns.lstrip('http://').rstrip(".xsd").replace('_ws_', '')).rstrip('_')
+    ns = NormalizeNamespace(ns)
+    if ns == '':
+        return 'no_target_namespace'
+    module_name = TextProtect(ns.lstrip('http://').rstrip(".xsd").replace('_ws_', '')).rstrip('_')
+    return module_name or 'no_target_namespace'
 
 
 def GetModuleBaseNameFromWSDL(wsdl):
@@ -39,10 +50,12 @@ def namespace_name(cls, ns, recommended):
     if recommended is None:
         return 'ns%s' % len(cls.alias_list)
     else:
+        existing_aliases = [v[1] for v in cls.alias_dict.values()]
         i = 1
         alias = recommended
-        while alias in cls.alias_list:
+        while alias in existing_aliases:
             alias = recommended + str(i)
+            i += 1
 
         return alias
 
@@ -53,6 +66,9 @@ class NamespaceAliasDict:
     alias_list = []
 
     def add(cls, ns, recommended = None):
+        ns = NormalizeNamespace(ns)
+        if recommended == '':
+            recommended = None
         if ns in cls.alias_dict:
             return
         cls.alias_dict[ns] = (Namespace2ModuleName(ns), '%s' % namespace_name(cls, ns, recommended))
@@ -60,10 +76,13 @@ class NamespaceAliasDict:
     add = classmethod(add)
 
     def getModuleName(cls, ns):
+        ns = NormalizeNamespace(ns)
+        if ns == '' and ns not in cls.alias_dict:
+            cls.add(ns)
         if ns in cls.alias_dict:
             return cls.alias_dict[ns][0]
 
-        msg = 'failed to find import for schema "%s"' % ns + \
+        msg = 'failed to find import for schema "%s"' % (ns or '<empty targetNamespace>') + \
         'possibly missing @schemaLocation attribute.'
         if ns in SCHEMA.XSD_LIST:
             msg = 'missing built-in typecode for schema "%s"' % ns
@@ -73,10 +92,13 @@ class NamespaceAliasDict:
     getModuleName = classmethod(getModuleName)
 
     def getAlias(cls, ns):
+        ns = NormalizeNamespace(ns)
+        if ns == '' and ns not in cls.alias_dict:
+            cls.add(ns)
         if ns in cls.alias_dict:
             return cls.alias_dict[ns][1]
 
-        msg = 'failed to find import for schema "%s"' % ns + \
+        msg = 'failed to find import for schema "%s"' % (ns or '<empty targetNamespace>') + \
         'possibly missing @schemaLocation attribute.'
         if ns in SCHEMA.XSD_LIST:
             msg = 'missing built-in typecode for schema "%s"' % ns
@@ -146,7 +168,7 @@ def GetPartsSubNames(args, wsdl):
             for schema in l:
                 sd = SchemaDescription(do_extended=do_extended)
                 sd.fromSchema(schema)
-                argNamespace = arg.element[0]
+                argNamespace = NormalizeNamespace(arg.element[0])
                 if (sd.targetNamespace == argNamespace):
                     for i in sd.items:
                         # arg.name is the part name, but we want it's type

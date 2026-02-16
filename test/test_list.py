@@ -2,6 +2,11 @@
 
 import time
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 from io import StringIO
 
 import ZSI
@@ -59,7 +64,7 @@ class ListTestCase(unittest.TestCase):
 
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(ListTestCase, "check"))
+    suite.addTest(load_tests_from_test_case(ListTestCase, "check"))
     return suite
 
 def main():
@@ -67,4 +72,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+
 

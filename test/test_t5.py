@@ -2,6 +2,11 @@
 
 import mimetools
 import unittest
+
+def load_tests_from_test_case(test_case, method_prefix="test"):
+    loader = unittest.TestLoader()
+    loader.testMethodPrefix = method_prefix
+    return loader.loadTestsFromTestCase(test_case)
 import io
 try:
     import io as StringIO
@@ -10,7 +15,6 @@ except ImportError:
 
 from ZSI import resolvers
 from ZSI.parse import DefaultReader as Reader
-
 
 class t5TestCase(unittest.TestCase):
     "Test case wrapper for old ZSI t5 test case"
@@ -29,7 +33,7 @@ class t5TestCase(unittest.TestCase):
 
 def makeTestSuite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(t5TestCase, "check"))
+    suite.addTest(load_tests_from_test_case(t5TestCase, "check"))
     return suite
 
 def main():

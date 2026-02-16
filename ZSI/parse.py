@@ -200,8 +200,9 @@ class ParsedSoap:
             if len(maybe):
                 self.body_root = maybe[0]
             else:
-                raise ParseException('No serialization root found', 0,
-                        self.body, self.dom)
+                # Empty Body is legal for document/literal empty messages.
+                self.data_elements = []
+                return
         if not _valid_encoding(self.body_root):
             raise ParseException('Invalid encoding', 0, elt, self.dom)
 
@@ -378,6 +379,8 @@ class ParsedSoap:
         '''Parse the message.
         '''
 
+        if how is None or self.body_root is None:
+            return None
         if type(how) == type:
             how = how.typecode
         return how.parse(self.body_root, self)
