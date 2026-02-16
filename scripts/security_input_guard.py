@@ -58,7 +58,9 @@ def validate_untrusted_uri(
     if parsed.username or parsed.password:
         raise ValueError("URI must not include embedded credentials")
 
-    if allow_prefixes and not any(value.startswith(prefix) for prefix in allow_prefixes):
+    if allow_prefixes and not any(
+        value.startswith(prefix) for prefix in allow_prefixes
+    ):
         raise ValueError("URI does not match an allowed prefix")
 
 
