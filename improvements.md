@@ -124,6 +124,17 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [x] Security-Hardening für Resolver/Untrusted-Input dokumentieren und testen (`README.md`, `RELEASE.md`, `scripts/security_input_guard.py`, `test/test_security_input_guard.py`)
 - [x] DX-Doku ergänzen (Architektur-Notizen + Troubleshooting)
 
+## Refactoring Wave (abgeschlossen)
+
+- [x] Chunk 1: Parse-Matching vereinfacht und beschleunigt
+  (`ZSI/parse.py::ParseHeaderElements`, `ZSI/TCcompound.py::ComplexType.parse`)
+- [x] Chunk 2: Resolve-Caching für `ofwhat` mit sicherer Invalidation ergänzt
+  (`ZSI/TCcompound.py`)
+- [x] Chunk 3: Diagnostik-Helfer zentralisiert (shared Kontext-/Exception-Helpers)
+  (`ZSI/diagnostics.py`, Nutzung in `generate/commands.py`, `parse.py`, `schema.py`)
+- [x] Regressionen geprüft: `test\test_zsi.py`, `test\wsdl2py\runTests.py local`,
+  `test\wsdl2py\test_RuntimeDiagnostics.py`, `test\test_security_input_guard.py`
+
 ## Features (Next Next Level)
 
 - [ ] XSD Capability Matrix einführen (pro Schema: unterstützte Konstrukte, bekannte Limits, Workarounds)

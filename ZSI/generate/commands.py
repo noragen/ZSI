@@ -17,25 +17,10 @@ from ZSI.generate import containers, utility
 from ZSI.generate.utility import NCName_to_ClassName as NC_to_CN, TextProtect
 from ZSI.generate.wsdl2dispatch import ServiceModuleWriter as ServiceDescription
 from ZSI.generate.wsdl2dispatch import WSAServiceModuleWriter as ServiceDescriptionWSA
+from ZSI.diagnostics import append_context_to_exception
 
 
 warnings.filterwarnings('ignore', '', UserWarning)
-
-
-def _add_context_to_exception(ex, context):
-    """Append diagnostic context to an existing exception without changing type."""
-    if not context:
-        return
-    try:
-        text = str(ex)
-        if context in text:
-            return
-        if ex.args:
-            ex.args = ('%s [%s]' % (ex.args[0], context),) + ex.args[1:]
-        else:
-            ex.args = (context,)
-    except Exception:
-        pass
 
 
 def _describe_wsdl(wsdl):
@@ -181,7 +166,7 @@ def wsdl2py(args=None):
     try:
         wsdl = load(location)
     except Exception as ex:
-        _add_context_to_exception(ex, 'phase=load, wsdl=%s, loader=%s' % (
+        append_context_to_exception(ex, 'phase=load, wsdl=%s, loader=%s' % (
             location, load.__name__))
         raise
 
@@ -201,21 +186,21 @@ def wsdl2py(args=None):
         try:
             files = _wsdl2py(options, wsdl)
         except Exception as ex:
-            _add_context_to_exception(ex, 'phase=generate-types, %s'
+            append_context_to_exception(ex, 'phase=generate-types, %s'
                                       % _describe_wsdl(wsdl))
             raise
     else:
         try:
             files = _wsdl2py(options, wsdl)
         except Exception as ex:
-            _add_context_to_exception(ex, 'phase=generate-client-types, %s'
+            append_context_to_exception(ex, 'phase=generate-client-types, %s'
                                       % _describe_wsdl(wsdl))
             raise
         if not getattr(options, 'fast', False):
             try:
                 files.append(_wsdl2dispatch(options, wsdl))
             except Exception as ex:
-                _add_context_to_exception(ex, 'phase=generate-server, %s'
+                append_context_to_exception(ex, 'phase=generate-server, %s'
                                           % _describe_wsdl(wsdl))
                 raise
 
@@ -223,7 +208,7 @@ def wsdl2py(args=None):
         try:
             _writepydoc(os.path.join('docs', 'API'), *files)
         except Exception as ex:
-            _add_context_to_exception(ex, 'phase=generate-pydoc, files=%s'
+            append_context_to_exception(ex, 'phase=generate-pydoc, files=%s'
                                       % ','.join(files))
             raise
 

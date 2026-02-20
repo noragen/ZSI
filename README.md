@@ -122,6 +122,11 @@ integrierten Modernisierungen für Python 3 im Projekt.
 - Legacy-Tests auf moderne Python-APIs angepasst (z. B. ElementTree-Zugriffe).
 - Dev-Qualitätsstack konsolidiert mit `ruff` + `black`
   (`requirements-dev.txt`, `pyproject.toml`, CI-Lintjob).
+- Refactoring-Welle (Speedup + Vereinfachung) umgesetzt:
+  - Header-Matching in `ParsedSoap.ParseHeaderElements` auf gruppiertes QName-Mapping
+  - `ComplexType.parse` mit sicherem Fast-Path (unordered Fälle) und geringerem Matching-Overhead
+  - `ComplexType`-internes Resolve-Caching für `ofwhat` inkl. Invalidation bei Inhaltsänderungen
+  - zentrale Diagnostik-Utilities in `ZSI/diagnostics.py` statt duplizierter Kontextlogik
 
 ### Verifizierter Teststand
 
@@ -130,6 +135,8 @@ Erfolgreich ausgeführt:
 ```powershell
 python test\test_zsi.py
 python test\wsdl2py\runTests.py local
+python test\wsdl2py\test_RuntimeDiagnostics.py
+python test\test_security_input_guard.py
 ```
 
 Aktueller Status:

@@ -161,6 +161,7 @@ class ComplexType(TypeCode):
             raise TypeError(
                 'Struct ofwhat must be list or sequence, not ' + str(t))
         self.ofwhat = tuple(ofwhat)
+        self._resolved_ofwhat_cache = None
         if TypeCode.typechecks:
             # XXX Not sure how to determine if new-style class..
             if self.pyclass is not None and \
@@ -168,6 +169,15 @@ class ComplexType(TypeCode):
                 raise TypeError('pyclass must be None or an old-style/new-style class, not ' +
                         str(type(self.pyclass)))
             _check_typecode_list(self.ofwhat, 'ComplexType')
+
+    def _get_resolved_ofwhat(self):
+        """Resolve hidden/callable typecodes once and reuse until content changes."""
+        if self._resolved_ofwhat_cache is None:
+            self._resolved_ofwhat_cache = tuple(
+                _instantiate_hidden_typecode(what) if callable(what) else what
+                for what in self.ofwhat
+            )
+        return self._resolved_ofwhat_cache
 
     def parse(self, elt, ps):
         debug = self.logger.debugOn()
@@ -220,10 +230,14 @@ class ComplexType(TypeCode):
 
         # Clone list of kids (we null it out as we process)
         c, crange = c[:], list(range(len(c)))
-        resolved_ofwhat = [
-            _instantiate_hidden_typecode(what) if callable(what) else what
-            for what in self.ofwhat
-        ]
+        resolved_ofwhat = self._get_resolved_ofwhat()
+        ofwhat_by_name = {}
+        if not self.inorder:
+            for idx, what in enumerate(resolved_ofwhat):
+                if isinstance(what, AnyElement):
+                    continue
+                key = (what.nspname, what.pname)
+                ofwhat_by_name.setdefault(key, []).append((idx, what))
         # Loop over all items we're expecting
 
         if debug:
@@ -235,11 +249,40 @@ class ComplexType(TypeCode):
                 continue
 
             matched = False
-            for i, what in enumerate(resolved_ofwhat):
-                # Loop over all available kids
-                if debug:
-                    self.logger.debug("what: (%s,%s)", what.nspname, what.pname)
+            # Fast path for unordered complexTypes: test exact QName candidates first.
+            if not self.inorder:
+                key = (
+                    c_elt.namespaceURI,
+                    c_elt.localName or c_elt.tagName.rsplit(':', 1)[-1],
+                )
+                for i, what in ofwhat_by_name.get(key, ()):
+                    if debug:
+                        self.logger.debug("what: (%s,%s)", what.nspname, what.pname)
+                        self.logger.debug("child node: (%s,%s)", c_elt.namespaceURI, c_elt.tagName)
+                    value = what.parse(c_elt, ps)
+                    matched = True
+                    max_occurs = what.maxOccurs
+                    repeated = max_occurs == 'unbounded'
+                    if not repeated:
+                        try:
+                            repeated = int(max_occurs) > 1
+                        except (TypeError, ValueError):
+                            repeated = False
+                    if repeated:
+                        attr = getattr(pyobj, what.aname, None)
+                        if attr is not None:
+                            attr.append(value)
+                        else:
+                            setattr(pyobj, what.aname, [value])
+                        c[j] = None
+                    else:
+                        setattr(pyobj, what.aname, value)
+                        c[j] = None
+                    break
+                if matched:
+                    continue
 
+            for i, what in enumerate(resolved_ofwhat):
                 # Loop over all available kids
                 if debug:
                     self.logger.debug("what: (%s,%s)", what.nspname, what.pname)
@@ -387,10 +430,7 @@ class ComplexType(TypeCode):
             if TypeCode.typechecks and type(d) != dict:
                 raise TypeError("Classless complexType didn't get dictionary")
 
-        resolved_ofwhat = [
-            _instantiate_hidden_typecode(what) if callable(what) else what
-            for what in self.ofwhat
-        ]
+        resolved_ofwhat = self._get_resolved_ofwhat()
         indx, lenofwhat = 0, len(resolved_ofwhat)
         if debug:
             self.logger.debug('element declaration (%s,%s)', self.nspname,
@@ -502,6 +542,7 @@ class ComplexType(TypeCode):
         else:
             return
         self.ofwhat = tuple(ofwhat)
+        self._resolved_ofwhat_cache = None
         self.lenofwhat = len(self.ofwhat)
 
 

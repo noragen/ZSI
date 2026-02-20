@@ -4,19 +4,10 @@
 '''
 
 from ZSI import _copyright, _seqtypes, _find_type, _get_element_nsuri_name, EvaluateException
+from ZSI.diagnostics import element_context, type_context
 from ZSI.wstools.Namespaces import SCHEMA, SOAP
 from ZSI.wstools.Utility import SplitQName
 from typing import Any
-
-
-def _element_context(elt):
-    if elt is None:
-        return '(?, ?)'
-    return (elt.namespaceURI, elt.localName or elt.nodeName)
-
-
-def _type_context(namespaceURI, name):
-    return (namespaceURI, name)
 
 
 def _get_type_definition(namespaceURI, name, **kw):
@@ -286,8 +277,8 @@ class TypeDefinition(metaclass=SchemaInstanceType):
         if pyclass is None:
             raise EvaluateException(
                     'No Type registed for xsi:type=%r [element=%r]' %
-                    (_type_context(self.type[0], self.type[1]),
-                     _element_context(elt)), ps.Backtrace(elt))
+                    (type_context(self.type[0], self.type[1]),
+                     element_context(elt)), ps.Backtrace(elt))
 
         typeName = _find_type(elt)
         prefix,typeName = SplitQName(typeName)
@@ -296,15 +287,15 @@ class TypeDefinition(metaclass=SchemaInstanceType):
         if subclass is None:
             raise EvaluateException(
                     'No registered xsi:type=%r, substitute for xsi:type=%r [element=%r]' %
-                    (_type_context(uri, typeName),
-                     _type_context(self.type[0], self.type[1]),
-                     _element_context(elt)), ps.Backtrace(elt))
+                    (type_context(uri, typeName),
+                     type_context(self.type[0], self.type[1]),
+                     element_context(elt)), ps.Backtrace(elt))
 
         if not issubclass(subclass, pyclass) and subclass(None) and not issubclass(subclass, pyclass):
             raise TypeError(
                     'Substitute Type %r is not derived from %s [element=%r]' %
-                    (_type_context(self.type[0], self.type[1]),
-                     pyclass, _element_context(elt)), ps.Backtrace(elt))
+                    (type_context(self.type[0], self.type[1]),
+                     pyclass, element_context(elt)), ps.Backtrace(elt))
 
         return subclass((self.nspname, self.pname))
 

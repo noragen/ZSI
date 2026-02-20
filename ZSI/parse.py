@@ -13,6 +13,7 @@ from ZSI import _copyright, _children, _attrs, _child_elements, \
 from ZSI.TC import AnyElement
 import types
 
+from ZSI.diagnostics import element_context
 from ZSI.wstools.Namespaces import SOAP, XMLNS
 from ZSI.wstools.Utility import SplitQName
 from typing import Any
@@ -23,14 +24,8 @@ _find_root = lambda E: E.getAttributeNS(SOAP.ENC, 'root') or E.getAttributeNS(SO
 _find_id = lambda E: _find_attr(E, 'id')
 
 
-def _element_context(elt):
-    if elt is None:
-        return '(?, ?)'
-    return (elt.namespaceURI, elt.localName or elt.nodeName)
-
-
 def _format_with_element_context(message, elt):
-    return '%s [element=%r]' % (message, _element_context(elt))
+    return '%s [element=%r]' % (message, element_context(elt))
 
 
 class DefaultReader:
@@ -429,25 +424,21 @@ class ParsedSoap:
         '''
 
         d = {}
-        c = self.header_elements[:]
-        crange = range(len(c))
+        grouped = {}
+        for c_elt in self.header_elements:
+            key = (c_elt.namespaceURI, c_elt.localName or SplitQName(c_elt.tagName)[1])
+            grouped.setdefault(key, []).append(c_elt)
         for what in ofwhat:
             if isinstance(what, AnyElement):
                 raise EvaluateException('not supporting <any> as child of SOAP-ENC:Header'
                         )
 
+            key = (what.nspname, what.pname)
+            matches = grouped.get(key, ())
             v = []
-            namespaceURI, tagName = what.nspname, what.pname
-            for j in crange:
-                c_elt = c[j]
-                if c_elt is None:
-                    continue
-                name = c_elt.localName or SplitQName(c_elt.tagName)[1]
-                if tagName != name or namespaceURI != c_elt.namespaceURI:
-                    continue
+            for c_elt in matches:
                 pyobj = what.parse(c_elt, self)
                 v.append(pyobj)
-                c[j] = None
             max_occurs = what.maxOccurs
             if max_occurs == 'unbounded':
                 max_occurs_ok = True
