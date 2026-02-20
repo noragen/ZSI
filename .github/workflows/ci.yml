@@ -6,6 +6,9 @@ on:
     tags: ["v*"]
   pull_request:
 
+env:
+  ZSI_ENABLE_MYPY_PILOT: "0"
+
 jobs:
   lint:
     name: Lint
@@ -29,6 +32,12 @@ jobs:
 
       - name: Black check (scripts)
         run: python -m black --check scripts/
+
+      - name: Optional mypy pilot (opt-in)
+        if: env.ZSI_ENABLE_MYPY_PILOT == '1'
+        run: |
+          python -m pip install mypy
+          python scripts/run_mypy_pilot.py --strict-exit
 
   security-scan-smoke:
     name: Security Scan Smoke

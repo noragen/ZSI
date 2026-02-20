@@ -12,6 +12,7 @@ Modernized helper scripts for local development and release safety.
 - `scripts/benchmark_smoke.py`: runtime smoke benchmark with budgets
 - `scripts/benchmark_snapshot.py`: Trendvergleich aktueller Benchmarks gegen Snapshot-Historie
 - `scripts/build_dashboards.py`: statische Security/Release/Perf-Dashboard-Datei aus Artefakten bauen
+- `scripts/run_mypy_pilot.py`: optionaler mypy-Pilot (ohne festen Dependency-Eintrag)
 - `scripts/check_release_gate.py`: tag/release gate checks
 - `scripts/security_input_guard.py`: untrusted resolver URI validation
 - `scripts/security_policy_defaults.py`: zentrale Security-Policy-Defaults fuer URI-Validierung
@@ -28,6 +29,7 @@ python scripts\profile_baseline.py --top 20
 python scripts\benchmark_smoke.py --runs 1
 python scripts\benchmark_snapshot.py --current .perf\benchmark-smoke.json --history .perf\benchmark-history.json --update-history
 python scripts\build_dashboards.py --benchmark-smoke .perf\benchmark-smoke.json --benchmark-history .perf\benchmark-history.json --out doc\ci-artifact-dashboard.md
+python scripts\run_mypy_pilot.py
 python scripts\check_release_gate.py --tag v2.1.0
 python scripts\security_input_guard.py --uri "https://schemas.example.internal/wsdl/service.wsdl" --allow-prefix "https://schemas.example.internal/"
 python scripts\security_input_guard.py --policy-file scripts\security_policy.json.example --uri "https://schemas.example.internal/wsdl/service.wsdl"

@@ -174,7 +174,7 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [x] Golden-File-Tests für `wsdl2py`-Output (Determinismus und Diff-Stabilität über Versionen)
 - [x] Snapshot-Benchmarks mit Trendvergleich und CI-Warnschwellen erweitern
 - [x] Multi-Python-CI auf 3.10/3.11/3.12 ausbauen
-- [ ] Optionaler `mypy`-Pilot für ausgewählte Module (`generate/*`, `parse.py`, `schema.py`)
+- [x] Optionaler `mypy`-Pilot für ausgewählte Module (`generate/*`, `parse.py`, `schema.py`)
 - [x] Public-API-Vertrag definieren und per API-Surface-Test absichern
 - [x] Plugin-Hook-System für projektspezifische Generator-Anpassungen (ohne Fork-Zwang)
 - [x] Migrationsleitfaden ZSI -> Zeep (Feature-Gaps, Risiko, Parallelbetrieb, Cutover-Plan)
@@ -191,7 +191,7 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [x] Geplant (hoch): Transport-Layer modernisieren (`timeout`/`verify`/`proxies`/Retries, SOAP 1.1/1.2 Header-Korrektheit)
 - [x] Geplant (mittel): Compact-CLI/One-liner (`zsi call <wsdl> <op> key=val`) als DX-Ausbau
 - [x] Geplant (mittel): Zeep-Migrationsleitfaden mit Feature-Mapping und Cutover-Strategie
-- [ ] Nicht Teil der aktuellen Umsetzung: optionaler `mypy`-Pilot (bewusst zurückgestellt)
+- [x] Nicht Teil der aktuellen Umsetzung: optionaler `mypy`-Pilot (bewusst zurückgestellt)
 - [ ] Vorerst nicht priorisiert: vollständiger "Zeep-Mode" API-Nachbau als eigener Betriebsmodus
 
 ## Definition of Done für Verbesserungen
