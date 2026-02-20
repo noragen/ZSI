@@ -129,6 +129,37 @@ class SecurityScanSmokeTests(unittest.TestCase):
         findings = run_security_scan_smoke("https://example.internal/service", malformed)
         self.assertIn("malformed_soap_envelope", findings)
 
+    def test_detects_doctype(self):
+        payload = (
+            "<!DOCTYPE soapenv:Envelope [<!ELEMENT soapenv:Envelope ANY>]>"
+            "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>"
+            "<soapenv:Body><Echo xmlns='urn:test'>ok</Echo></soapenv:Body>"
+            "</soapenv:Envelope>"
+        )
+        findings = run_security_scan_smoke("https://example.internal/service", payload)
+        self.assertIn("xml_doctype_present", findings)
+
+    def test_detects_entity_declaration(self):
+        payload = (
+            "<!DOCTYPE soapenv:Envelope [<!ENTITY xxe 'boom'>]>"
+            "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>"
+            "<soapenv:Body><Echo xmlns='urn:test'>&xxe;</Echo></soapenv:Body>"
+            "</soapenv:Envelope>"
+        )
+        findings = run_security_scan_smoke("https://example.internal/service", payload)
+        self.assertIn("xml_entity_declaration_present", findings)
+
+    def test_detects_processing_instruction(self):
+        payload = (
+            "<?xml version='1.0'?>"
+            "<?xml-stylesheet href='http://evil.invalid/x.xsl' type='text/xsl'?>"
+            "<soapenv:Envelope xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'>"
+            "<soapenv:Body><Echo xmlns='urn:test'>ok</Echo></soapenv:Body>"
+            "</soapenv:Envelope>"
+        )
+        findings = run_security_scan_smoke("https://example.internal/service", payload)
+        self.assertIn("xml_processing_instruction_present", findings)
+
     def test_accepts_safe_inputs(self):
         findings = run_security_scan_smoke("https://example.internal/service", VALID_SOAP)
         self.assertEqual([], findings)

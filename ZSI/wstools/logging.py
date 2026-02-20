@@ -6,6 +6,8 @@
 """Logging"""
 ident = "$Id: logging.py 1395 2007-06-14 06:49:35Z boverhof $"
 import os, sys
+import json
+import time
 
 WARN = 1
 DEBUG = 2
@@ -69,7 +71,50 @@ class BasicLogger(ILogger):
         event = ''.join(*args)
 
 
+class JSONLogger(ILogger):
+    """Simple JSON-lines logger with a stable event schema."""
+
+    def __init__(self, msg, out=sys.stdout):
+        self.msg = msg
+        self.out = out
+
+    def _emit(self, level, msg, args, **kw):
+        if level == "DEBUG" and self.debugOn() is False:
+            return
+        if level == "WARN" and self.warnOn() is False:
+            return
+
+        try:
+            message = msg % args if args else str(msg)
+        except Exception:
+            message = str(msg)
+
+        event = {
+            "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "level": level,
+            "component": self.msg,
+            "event": kw.pop("event", "log"),
+            "message": message,
+        }
+        for key, value in list(kw.items()):
+            if value is None:
+                continue
+            event[key] = value
+
+        print(json.dumps(event, sort_keys=True), file=self.out)
+
+    def warning(self, msg, *args, **kw):
+        self._emit("WARN", msg, args, **kw)
+
+    def debug(self, msg, *args, **kw):
+        self._emit("DEBUG", msg, args, **kw)
+
+    def error(self, msg, *args, **kw):
+        self._emit("ERROR", msg, args, **kw)
+
+
 _LoggerClass = BasicLogger
+_structured_env_checked = False
 
 class GridLogger(ILogger):
     def debug(self, msg, *args, **kw):
@@ -269,6 +314,25 @@ def getLevel():
 def getLogger(msg):
     '''Return instance of Logging class.
     '''
+    _configure_from_env_once()
     return _LoggerClass(msg)
+
+
+def _configure_from_env_once():
+    """Allow opt-in JSON logging via environment without changing callers."""
+    global _structured_env_checked
+    if _structured_env_checked:
+        return
+    _structured_env_checked = True
+
+    fmt = os.environ.get("ZSI_LOG_FORMAT", "").strip().lower()
+    level = os.environ.get("ZSI_LOG_LEVEL", "").strip().lower()
+    if fmt == "json":
+        setLoggerClass(JSONLogger)
+
+    if level == "debug":
+        ILogger.level = DEBUG
+    elif level in ("warn", "warning"):
+        ILogger.level = WARN
 
 

@@ -8,11 +8,14 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from ZSI import *
 from ZSI import _child_elements, _copyright, _seqtypes, _find_arraytype, _find_type, resolvers
 from ZSI.auth import _auth_tc, AUTH, ClientBinding
+from ZSI.diagnostics import make_request_id, summarize_exception
+from ZSI.wstools.logging import getLogger as _GetLogger
 
 
 # Client binding information is stored in a global. We provide an accessor
 # in case later on it's not.
 _client_binding = None
+_log = _GetLogger("ZSI.dispatch")
 
 def GetClientBinding():
     '''Return the client binding object.
@@ -41,6 +44,7 @@ def _Dispatch(ps, modules, SendResponse, SendFault, nsdict={}, typesmodule=None,
 
     '''
     global _client_binding
+    request_id = kw.get("request_id") or make_request_id()
     try:
         what = str(ps.body_root.localName)
 
@@ -73,19 +77,31 @@ def _Dispatch(ps, modules, SendResponse, SendFault, nsdict={}, typesmodule=None,
             try:
                 arg = tc.parse(ps.body_root, ps)
             except EvaluateException as ex:
-                SendFault(FaultFromZSIException(ex), **kw)
+                _log.warning(
+                    "request parse failed",
+                    event="runtime.fault",
+                    request_id=request_id,
+                    method=what,
+                )
+                SendFault(FaultFromZSIException(ex, request_id=request_id), **kw)
                 return
 
             try:
                 result = handler(arg)
             except Exception as ex:
-                SendFault(FaultFromZSIException(ex), **kw)
+                _log.warning(
+                    "handler failed",
+                    event="runtime.fault",
+                    request_id=request_id,
+                    method=what,
+                )
+                SendFault(FaultFromZSIException(ex, request_id=request_id), **kw)
                 return
 
             try:
                 tc = result.typecode
             except AttributeError as ex:
-                SendFault(FaultFromZSIException(ex), **kw)
+                SendFault(FaultFromZSIException(ex, request_id=request_id), **kw)
                 return
 
         elif typesmodule is not None:
@@ -99,7 +115,7 @@ def _Dispatch(ps, modules, SendResponse, SendFault, nsdict={}, typesmodule=None,
                 try:
                     kwargs[str(e.localName)] = tc.parse(e, ps)
                 except EvaluateException as ex:
-                    SendFault(FaultFromZSIException(ex), **kw)
+                    SendFault(FaultFromZSIException(ex, request_id=request_id), **kw)
                     return
 
             result = handler(**kwargs)
@@ -134,7 +150,7 @@ def _Dispatch(ps, modules, SendResponse, SendFault, nsdict={}, typesmodule=None,
             else:
                 try: kwarg = dict([ (str(e.localName),tc.parse(e, ps)) for e in data ])
                 except EvaluateException as e:
-                    SendFault(FaultFromZSIException(e), **kw)
+                    SendFault(FaultFromZSIException(e, request_id=request_id), **kw)
                     return
 
                 result = handler(**kwarg)
@@ -150,7 +166,17 @@ def _Dispatch(ps, modules, SendResponse, SendFault, nsdict={}, typesmodule=None,
         return SendFault(e, **kw)
     except Exception as e:
         # Something went wrong, send a fault.
-        return SendFault(FaultFromException(e, 0, sys.exc_info()[2]), **kw)
+        tb = sys.exc_info()[2]
+        _log.error(
+            "dispatch crashed",
+            event="runtime.exception",
+            request_id=request_id,
+            summary=summarize_exception(e, tb),
+        )
+        return SendFault(
+            FaultFromException(e, 0, tb, request_id=request_id),
+            **kw,
+        )
 
 
 def _ModPythonSendXML(text, code=200, **kw):
@@ -223,16 +249,20 @@ class SOAPRequestHandler(BaseHTTPRequestHandler):
                 length = int(self.headers['content-length'])
                 ps = ParsedSoap(self.rfile.read(length))
         except ParseException as e:
-            self.send_fault(FaultFromZSIException(e))
+            rid = make_request_id()
+            self.send_fault(FaultFromZSIException(e, request_id=rid))
             return
         except Exception as e:
             # Faulted while processing; assume it's in the header.
-            self.send_fault(FaultFromException(e, 1, sys.exc_info()[2]))
+            rid = make_request_id()
+            self.send_fault(FaultFromException(e, 1, sys.exc_info()[2], request_id=rid))
             return
 
+        rid = make_request_id()
         _Dispatch(ps, self.server.modules, self.send_xml, self.send_fault,
                   docstyle=self.server.docstyle, nsdict=self.server.nsdict,
-                  typesmodule=self.server.typesmodule, rpc=self.server.rpc)
+                  typesmodule=self.server.typesmodule, rpc=self.server.rpc,
+                  request_id=rid)
 
 def AsServer(port=80, modules=None, docstyle=False, nsdict={}, typesmodule=None,
              rpc=False, addr=''):
@@ -261,10 +291,10 @@ def AsCGI(nsdict={}, typesmodule=None, rpc=False, modules=None):
             length = int(os.environ['CONTENT_LENGTH'])
             ps = ParsedSoap(sys.stdin.read(length))
     except ParseException as e:
-        _CGISendFault(FaultFromZSIException(e))
+        _CGISendFault(FaultFromZSIException(e, request_id=make_request_id()))
         return
     _Dispatch(ps, modules, _CGISendXML, _CGISendFault, nsdict=nsdict,
-              typesmodule=typesmodule, rpc=rpc)
+              typesmodule=typesmodule, rpc=rpc, request_id=make_request_id())
 
 def AsHandler(request=None, modules=None, **kw):
     '''Dispatch from within ModPython.'''
@@ -290,9 +320,10 @@ def AsJonPy(request=None, modules=None, **kw):
             length = int(request.environ['CONTENT_LENGTH'])
             ps = ParsedSoap(request.stdin.read(length))
     except ParseException as e:
-        _JonPySendFault(FaultFromZSIException(e), **kw)
+        _JonPySendFault(FaultFromZSIException(e, request_id=make_request_id()), **kw)
         return
-    _Dispatch(ps, modules, _JonPySendXML, _JonPySendFault, **kw)
+    _Dispatch(ps, modules, _JonPySendXML, _JonPySendFault,
+              request_id=make_request_id(), **kw)
 
 
 if __name__ == '__main__': print(_copyright)

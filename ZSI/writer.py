@@ -9,6 +9,7 @@ from ZSI.wstools.Utility import MessageInterface, ElementProxy
 from ZSI.wstools.Namespaces import XMLNS, SOAP, SCHEMA
 from ZSI.wstools.c14n import Canonicalize
 from ZSI.wstools.MIMEAttachment import MIMEMessage
+from ZSI.telemetry import span
 
 import types
 
@@ -127,40 +128,42 @@ class SoapWriter:
            header_pyobjs -- list of pyobj for soap header inclusion, each
               instance must specify the typecode attribute.
         '''
-        self.body = None
-        if self.envelope:
-            soap_env = _reserved_ns['SOAP-ENV']
-            self.dom.createDocument(soap_env, 'Envelope')
-            for prefix, nsuri in list(_reserved_ns.items()):
-                self.dom.setNamespaceAttribute(prefix, nsuri)
-            self.writeNSdict(self.nsdict)
-            if self.encodingStyle:
-                self.dom.setAttributeNS(soap_env, 'encodingStyle',
-                                        self.encodingStyle)
-            if self.header:
-                self._header = self.dom.createAppendElement(soap_env, 'Header')
+        tc_name = getattr(typecode, "pname", None)
+        with span("zsi.serialize.body", typecode_name=str(tc_name) if tc_name else None):
+            self.body = None
+            if self.envelope:
+                soap_env = _reserved_ns['SOAP-ENV']
+                self.dom.createDocument(soap_env, 'Envelope')
+                for prefix, nsuri in list(_reserved_ns.items()):
+                    self.dom.setNamespaceAttribute(prefix, nsuri)
+                self.writeNSdict(self.nsdict)
+                if self.encodingStyle:
+                    self.dom.setAttributeNS(soap_env, 'encodingStyle',
+                                            self.encodingStyle)
+                if self.header:
+                    self._header = self.dom.createAppendElement(soap_env, 'Header')
 
-                for h in header_pyobjs:
-                    self.serialize_header(h, **kw)
+                    for h in header_pyobjs:
+                        self.serialize_header(h, **kw)
 
-            self.body = self.dom.createAppendElement(soap_env, 'Body')
-        else:
-            self.dom.createDocument(None,None)
+                self.body = self.dom.createAppendElement(soap_env, 'Body')
+            else:
+                self.dom.createDocument(None,None)
 
-        if typecode is None:
-            typecode = pyobj.__class__.typecode
+            if typecode is None:
+                typecode = pyobj.__class__.typecode
 
-        if self.body is None:
-            elt = typecode.serialize(self.dom, self, pyobj, **kw)
-        else:
-            elt = typecode.serialize(self.body, self, pyobj, **kw)
+            if self.body is None:
+                elt = typecode.serialize(self.dom, self, pyobj, **kw)
+            else:
+                elt = typecode.serialize(self.body, self, pyobj, **kw)
 
-        if root is not None:
-            if root not in [ 0, 1 ]:
-                raise ValueError("SOAP-ENC root attribute not in [0,1]")
-            elt.setAttributeNS(SOAP.ENC, 'root', root)
+            if root is not None:
+                if root not in [ 0, 1 ]:
+                    raise ValueError("SOAP-ENC root attribute not in [0,1]")
+                elt.setAttributeNS(SOAP.ENC, 'root', root)
 
-        return self
+            return self
 
     def writeNSdict(self, nsdict):
         '''Write a namespace dictionary, taking care to not clobber the

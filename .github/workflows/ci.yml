@@ -96,8 +96,29 @@ jobs:
             exit 1
           fi
 
+          cat > /tmp/doctype_bad.xml <<'EOF'
+          <!DOCTYPE soapenv:Envelope [<!ENTITY xxe "boom">]>
+          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+            <soapenv:Body><Echo xmlns="urn:test">&xxe;</Echo></soapenv:Body>
+          </soapenv:Envelope>
+          EOF
+          if python scripts/security_scan_smoke.py --uri "https://example.internal/service" --xml-file /tmp/doctype_bad.xml; then
+            echo "Expected DOCTYPE/entity scan to fail"
+            exit 1
+          fi
+
       - name: Parser/typecode fuzz smoke script
         run: python scripts/parser_typecode_fuzz_smoke.py --seed 1337 --cases 24
+
+      - name: Benchmark smoke + snapshot trend check
+        run: |
+          python scripts/benchmark_smoke.py --runs 1 --json-out .perf/benchmark-smoke.json
+          python scripts/benchmark_snapshot.py \
+            --current .perf/benchmark-smoke.json \
+            --history .perf/benchmark-history.json \
+            --warn-regression 0.20 \
+            --min-history 3 \
+            --update-history
 
   tests:
     name: ${{ matrix.os }} / py${{ matrix.python-version }}

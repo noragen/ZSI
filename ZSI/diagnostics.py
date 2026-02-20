@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import traceback
+import uuid
 from typing import Any, Callable, TypeVar
 
 T = TypeVar("T")
@@ -47,3 +49,30 @@ def add_context_on_exception(context_factory: Callable[..., str]):
         return wrapper
 
     return deco
+
+
+def make_request_id() -> str:
+    """Return a short correlation id suitable for logs/fault details."""
+    return uuid.uuid4().hex[:12]
+
+
+def summarize_exception(ex: Exception, tb: Any = None, max_frames: int = 2) -> str:
+    """Build a compact, single-line exception summary for diagnostics."""
+    try:
+        name = ex.__class__.__name__
+    except Exception:
+        name = "Exception"
+    message = str(ex) or "<no-message>"
+    parts = [f"{name}: {message}"]
+    if tb is not None:
+        try:
+            frames = traceback.extract_tb(tb)
+            tail = frames[-max_frames:] if max_frames > 0 else []
+            if tail:
+                location = " | ".join(
+                    f"{frame.filename}:{frame.lineno}:{frame.name}" for frame in tail
+                )
+                parts.append(f"at {location}")
+        except Exception:
+            pass
+    return " ; ".join(parts)

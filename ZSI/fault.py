@@ -13,6 +13,8 @@ from ZSI.TC import ElementDeclaration
 
 import traceback
 
+from ZSI.diagnostics import make_request_id, summarize_exception
+
 
 class Detail:
     def __init__(self, any=None):
@@ -148,14 +150,24 @@ class Fault(ZSIException):
     Server = "SOAP-ENV:Server"
     MU     = "SOAP-ENV:MustUnderstand"
 
-    def __init__(self, code, string,
-                actor=None, detail=None, headerdetail=None):
+    def __init__(
+        self,
+        code,
+        string,
+        actor=None,
+        detail=None,
+        headerdetail=None,
+        request_id=None,
+        context_summary=None,
+    ):
         if detail is not None and type(detail) not in _seqtypes:
             detail = (detail,)
         if headerdetail is not None and type(headerdetail) not in _seqtypes:
             headerdetail = (headerdetail,)
         self.code, self.string, self.actor, self.detail, self.headerdetail = \
                 code, string, actor, detail, headerdetail
+        self.request_id = request_id
+        self.context_summary = context_summary
         ZSIException.__init__(self, code, string, actor, detail, headerdetail)
 
     def DataForSOAPHeader(self):
@@ -169,7 +181,25 @@ class Fault(ZSIException):
         detail = None
         if self.detail is not None:
             detail = Detail()
-            detail.any = self.detail
+            detail_items = list(self.detail)
+            if self.request_id:
+                detail_items.append(
+                    ZSIFaultDetail(
+                        string=f"request_id={self.request_id}",
+                        trace=self.context_summary,
+                    )
+                )
+            elif self.context_summary:
+                detail_items.append(ZSIFaultDetail(string="context", trace=self.context_summary))
+            detail.any = tuple(detail_items)
+        elif self.request_id or self.context_summary:
+            detail = Detail()
+            detail.any = (
+                ZSIFaultDetail(
+                    string=f"request_id={self.request_id or '-'}",
+                    trace=self.context_summary,
+                ),
+            )
 
         pyobj = FaultType(self.code, self.string, self.actor, detail)
         sw.serialize(pyobj, typed=False)
@@ -185,6 +215,10 @@ class Fault(ZSIException):
 
     def __str__(self):
         strng = str(self.string) + "\n"
+        if self.request_id:
+            strng += "[request_id: %s]\n" % self.request_id
+        if self.context_summary:
+            strng += "[context: %s]\n" % self.context_summary
         if hasattr(self, 'detail'):
             if hasattr(self.detail, '__len__'):
                 for d in self.detail:
@@ -211,11 +245,14 @@ def FaultFromActor(uri, actor=None):
                 actor, detail, headerdetail)
 
 
-def FaultFromZSIException(ex, actor=None):
+def FaultFromZSIException(ex, actor=None, request_id=None, context_summary=None):
     '''Return a Fault object created from a ZSI exception object.
     '''
+    request_id = request_id or make_request_id()
     mystr = getattr(ex, 'str', None) or str(ex)
     mytrace = getattr(ex, 'trace', '')
+    if context_summary:
+        mytrace = (mytrace + "\n" if mytrace else "") + context_summary
     elt = '''<ZSI:ParseFaultDetail>
 <ZSI:string>%s</ZSI:string>
 <ZSI:trace>%s</ZSI:trace>
@@ -226,10 +263,11 @@ def FaultFromZSIException(ex, actor=None):
     else:
         detail, headerdetail = elt, None
     return Fault(Fault.Client, 'Unparseable message',
-                actor, detail, headerdetail)
+                actor, detail, headerdetail,
+                request_id=request_id, context_summary=context_summary)
 
 
-def FaultFromException(ex, inheader, tb=None, actor=None):
+def FaultFromException(ex, inheader, tb=None, actor=None, request_id=None, context_summary=None):
     '''Return a Fault object created from a Python exception.
 
     <SOAP-ENV:Fault>
@@ -243,6 +281,7 @@ def FaultFromException(ex, inheader, tb=None, actor=None):
       </detail>
     </SOAP-ENV:Fault>
     '''
+    request_id = request_id or make_request_id()
     tracetext = None
     if tb:
         try:
@@ -259,12 +298,15 @@ def FaultFromException(ex, inheader, tb=None, actor=None):
     except:
         pass
     elt = ZSIFaultDetail(string=exceptionName + "\n" + str(ex), trace=tracetext)
+    if not context_summary:
+        context_summary = summarize_exception(ex, tb)
     if inheader:
         detail, headerdetail = None, elt
     else:
         detail, headerdetail = elt, None
     return Fault(Fault.Server, 'Processing Failure',
-                actor, detail, headerdetail)
+                actor, detail, headerdetail,
+                request_id=request_id, context_summary=context_summary)
 
 
 def FaultFromFaultMessage(ps):

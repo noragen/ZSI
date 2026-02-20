@@ -14,6 +14,7 @@ from ZSI.TC import AnyElement
 import types
 
 from ZSI.diagnostics import element_context
+from ZSI.telemetry import span
 from ZSI.wstools.Namespaces import SOAP, XMLNS
 from ZSI.wstools.Utility import SplitQName
 from typing import Any
@@ -396,7 +397,14 @@ class ParsedSoap:
             return None
         if type(how) == type:
             how = how.typecode
-        return how.parse(self.body_root, self)
+        tc_name = getattr(how, "pname", how.__class__.__name__)
+        tc_ns = getattr(how, "nspname", None)
+        with span(
+            "zsi.parse.body",
+            typecode_name=str(tc_name),
+            typecode_namespace=str(tc_ns) if tc_ns else None,
+        ):
+            return how.parse(self.body_root, self)
 
     def WhatMustIUnderstand(self):
         '''Return a list of (uri,localname) tuples for all elements in the
@@ -423,42 +431,43 @@ class ParsedSoap:
         ofhow -- list of typecodes w/matching nspname/pname to the header_elements.
         '''
 
-        d = {}
-        grouped = {}
-        for c_elt in self.header_elements:
-            key = (c_elt.namespaceURI, c_elt.localName or SplitQName(c_elt.tagName)[1])
-            grouped.setdefault(key, []).append(c_elt)
-        for what in ofwhat:
-            if isinstance(what, AnyElement):
-                raise EvaluateException('not supporting <any> as child of SOAP-ENC:Header'
-                        )
+        with span("zsi.parse.headers", header_count=len(self.header_elements)):
+            d = {}
+            grouped = {}
+            for c_elt in self.header_elements:
+                key = (c_elt.namespaceURI, c_elt.localName or SplitQName(c_elt.tagName)[1])
+                grouped.setdefault(key, []).append(c_elt)
+            for what in ofwhat:
+                if isinstance(what, AnyElement):
+                    raise EvaluateException('not supporting <any> as child of SOAP-ENC:Header'
+                            )
 
-            key = (what.nspname, what.pname)
-            matches = grouped.get(key, ())
-            v = []
-            for c_elt in matches:
-                pyobj = what.parse(c_elt, self)
-                v.append(pyobj)
-            max_occurs = what.maxOccurs
-            if max_occurs == 'unbounded':
-                max_occurs_ok = True
-            else:
-                try:
-                    max_occurs_ok = len(v) <= int(max_occurs)
-                except (TypeError, ValueError):
+                key = (what.nspname, what.pname)
+                matches = grouped.get(key, ())
+                v = []
+                for c_elt in matches:
+                    pyobj = what.parse(c_elt, self)
+                    v.append(pyobj)
+                max_occurs = what.maxOccurs
+                if max_occurs == 'unbounded':
                     max_occurs_ok = True
-            if len(v) < what.minOccurs or not max_occurs_ok:
-                raise EvaluateException('number of occurances(%d) doesnt fit constraints (%d,%s) [header=%r]'
-                         % (len(v), what.minOccurs, what.maxOccurs,
-                            (what.nspname, what.pname)))
-            is_single = what.maxOccurs == 1 or what.maxOccurs == '1'
-            if is_single:
-                if len(v) == 0:
-                    v = None
                 else:
-                    v = v[0]
-            d[(what.nspname, what.pname)] = v
-        return d
+                    try:
+                        max_occurs_ok = len(v) <= int(max_occurs)
+                    except (TypeError, ValueError):
+                        max_occurs_ok = True
+                if len(v) < what.minOccurs or not max_occurs_ok:
+                    raise EvaluateException('number of occurances(%d) doesnt fit constraints (%d,%s) [header=%r]'
+                             % (len(v), what.minOccurs, what.maxOccurs,
+                                (what.nspname, what.pname)))
+                is_single = what.maxOccurs == 1 or what.maxOccurs == '1'
+                if is_single:
+                    if len(v) == 0:
+                        v = None
+                    else:
+                        v = v[0]
+                d[(what.nspname, what.pname)] = v
+            return d
 
 
 if __name__ == '__main__':

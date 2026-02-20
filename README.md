@@ -152,6 +152,18 @@ integrierten Modernisierungen für Python 3 im Projekt.
   - `ComplexType.parse` mit sicherem Fast-Path (unordered Fälle) und geringerem Matching-Overhead
   - `ComplexType`-internes Resolve-Caching für `ofwhat` inkl. Invalidation bei Inhaltsänderungen
   - zentrale Diagnostik-Utilities in `ZSI/diagnostics.py` statt duplizierter Kontextlogik
+- Erweiterte Fault-Diagnostik integriert:
+  - korrelierbare `request_id` in Server-Faultpfaden
+  - kompakte Context-Summary in Fault-Details für schnellere Ursachenanalyse
+- Structured Logging (JSON, optional) ergänzt:
+  - einheitliches Event-Schema (`ts`, `level`, `component`, `event`, `message`, ...)
+  - aktivierbar über `ZSI_LOG_FORMAT=json` und optional `ZSI_LOG_LEVEL=debug|warn`
+- Telemetry-Hooks ergänzt (dependency-optional):
+  - Spans für Parse/Serialize/Resolver/Generator-Pfade
+  - nutzt OpenTelemetry automatisch, falls installiert, sonst No-Op mit Debug-Events
+- Public-API-Surface als Regressionstest abgesichert (`test/test_public_api_surface.py`)
+- `wsdl2py`-Plugin-Hooks ergänzt (`--plugin` für modul-/dateibasierte Generator-Erweiterungen ohne Fork)
+- Interop-Korpus lokal in die Regression aufgenommen (`test/wsdl2py/test_InteropCorpusLocal.py`)
 
 ### Verifizierter Teststand
 

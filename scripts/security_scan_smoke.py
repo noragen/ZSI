@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ipaddress
+import re
 import sys
 import xml.etree.ElementTree as ET
 from urllib.parse import urlsplit
@@ -28,6 +29,7 @@ DEFAULT_MAX_ATTRIBUTES_PER_ELEMENT = 64
 DEFAULT_MAX_ATTRIBUTE_NAME_LENGTH = 128
 DEFAULT_MAX_ATTRIBUTE_VALUE_LENGTH = 4096
 DEFAULT_MAX_QNAME_LENGTH = 256
+_PI_RE = re.compile(r"<\?(?P<target>[a-zA-Z_][\w:.-]*)")
 
 
 def _local_name(tag: str) -> str:
@@ -144,6 +146,17 @@ def run_security_scan_smoke(
     findings: list[str] = []
 
     findings.extend(_scan_uri(uri))
+    lower_payload = xml_payload.lower()
+
+    if "<!doctype" in lower_payload:
+        findings.append("xml_doctype_present")
+    if "<!entity" in lower_payload:
+        findings.append("xml_entity_declaration_present")
+    for match in _PI_RE.finditer(xml_payload):
+        target = (match.group("target") or "").lower()
+        if target != "xml":
+            findings.append("xml_processing_instruction_present")
+            break
 
     if len(xml_payload.encode("utf-8")) > max_xml_payload_bytes:
         findings.append("oversized_xml_payload")

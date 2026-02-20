@@ -8,6 +8,11 @@ from email.parser import Parser
 import urllib.request
 
 from ZSI import _copyright, _child_elements, EvaluateException, TC
+from ZSI.telemetry import span
+from ZSI.wstools.logging import getLogger as _GetLogger
+
+
+_log = _GetLogger("ZSI.resolvers")
 
 
 def _transfer_encoding(headers):
@@ -27,21 +32,25 @@ def _to_text(data, charset=None):
 
 def Opaque(uri, tc, ps, **keywords):
     """Resolve a URI and return its content as a string or bytes."""
-    source = urllib.request.urlopen(uri, **keywords)
-    enc = _transfer_encoding(source.info())
-    body = source.read()
-    if enc in ("7bit", "8bit", "binary"):
-        return body
-    return _to_text(body, source.info().get_content_charset())
+    _log.debug("resolve opaque", event="resolver.fetch", uri=uri)
+    with span("zsi.resolve.opaque", uri=uri):
+        source = urllib.request.urlopen(uri, **keywords)
+        enc = _transfer_encoding(source.info())
+        body = source.read()
+        if enc in ("7bit", "8bit", "binary"):
+            return body
+        return _to_text(body, source.info().get_content_charset())
 
 
 def XML(uri, tc, ps, **keywords):
     """Resolve a URI and return its content as an XML DOM element."""
-    source = urllib.request.urlopen(uri, **keywords)
-    body = source.read()
-    stream = io.StringIO(_to_text(body, source.info().get_content_charset()))
-    dom = ps.readerclass().fromStream(stream)
-    return _child_elements(dom)[0]
+    _log.debug("resolve xml", event="resolver.fetch", uri=uri)
+    with span("zsi.resolve.xml", uri=uri):
+        source = urllib.request.urlopen(uri, **keywords)
+        body = source.read()
+        stream = io.StringIO(_to_text(body, source.info().get_content_charset()))
+        dom = ps.readerclass().fromStream(stream)
+        return _child_elements(dom)[0]
 
 
 class NetworkResolver:
@@ -54,6 +63,7 @@ class NetworkResolver:
         for a in self.allowed:
             if uri.startswith(a):
                 return
+        _log.warning("resolver rejected uri", event="resolver.reject", uri=uri)
         raise EvaluateException("Disallowed URI prefix")
 
     def Opaque(self, uri, tc, ps, **keywords):

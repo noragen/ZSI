@@ -4,6 +4,8 @@
 # See Copyright for copyright notice!
 ############################################################################
 
+import importlib
+import importlib.util
 import sys, optparse, os, warnings, traceback
 from os.path import isfile, join, split
 
@@ -12,15 +14,17 @@ import ZSI
 from configparser import ConfigParser
 from ZSI.generate.wsdl2python import WriteServiceModule, ServiceDescription as wsdl2pyServiceDescription
 from ZSI.wstools import WSDLTools, XMLSchema
-from ZSI.wstools.logging import setBasicLoggerDEBUG,setBasicLoggerWARN
+from ZSI.wstools.logging import getLogger as _GetLogger, setBasicLoggerDEBUG,setBasicLoggerWARN
 from ZSI.generate import containers, utility
 from ZSI.generate.utility import NCName_to_ClassName as NC_to_CN, TextProtect
 from ZSI.generate.wsdl2dispatch import ServiceModuleWriter as ServiceDescription
 from ZSI.generate.wsdl2dispatch import WSAServiceModuleWriter as ServiceDescriptionWSA
 from ZSI.diagnostics import append_context_to_exception
+from ZSI.telemetry import span
 
 
 warnings.filterwarnings('ignore', '', UserWarning)
+_log = _GetLogger("ZSI.generate.commands")
 
 
 def _describe_wsdl(wsdl):
@@ -41,6 +45,33 @@ def _describe_wsdl(wsdl):
     if name:
         details.append('name=%s' % name)
     return ', '.join(details)
+
+
+def _load_plugin_module(spec):
+    """Load a plugin from module path or from a local .py file."""
+    if os.path.isfile(spec):
+        module_name = "zsi_plugin_" + str(abs(hash(os.path.abspath(spec))))
+        module_spec = importlib.util.spec_from_file_location(module_name, spec)
+        if module_spec is None or module_spec.loader is None:
+            raise ImportError("cannot load plugin from file: %s" % spec)
+        module = importlib.util.module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+        return module
+    return importlib.import_module(spec)
+
+
+def _load_plugins(specs):
+    plugins = []
+    for spec in specs or []:
+        plugins.append(_load_plugin_module(spec))
+    return plugins
+
+
+def _invoke_plugin_hook(plugins, hook_name, **kwargs):
+    for plugin in plugins:
+        hook = getattr(plugin, hook_name, None)
+        if callable(hook):
+            hook(**kwargs)
 
 
 def SetDebugCallback(option, opt, value, parser, *args, **kwargs):
@@ -116,7 +147,7 @@ def wsdl2py(args=None):
 
     """
     op = optparse.OptionParser(usage="USAGE: %wsdl2py [options] WSDL",
-                 description=wsdl2py.__doc__)
+             description=wsdl2py.__doc__)
 
     # Basic options
     op.add_option("-x", "--schema",
@@ -158,6 +189,17 @@ def wsdl2py(args=None):
                   action="store_true", dest="compat", default=False,
                   help="EXPERIMENTAL: compatibility mode (tolerate wsdl2dispatch generation failures)")
 
+    op.add_option(
+        "--plugin",
+        action="append",
+        dest="plugins",
+        default=[],
+        help=(
+            "Optional plugin module path or .py file. "
+            "Supported hooks: on_options, on_wsdl_loaded, before_generate, after_generate."
+        ),
+    )
+
     # Use Twisted
     op.add_option("-w", "--twisted",
                   action="store_true", dest='twisted', default=False,
@@ -175,91 +217,146 @@ def wsdl2py(args=None):
                   action="store_true", dest="pydoc", default=False,
                   help="top-level directory for pydoc documentation.")
 
-    setBasicLoggerWARN()
-    is_cmdline = args is None
-    if is_cmdline:
-        (options, args) = op.parse_args()
-    else:
-        (options, args) = op.parse_args(args)
+    with span("zsi.generator.wsdl2py"):
+        setBasicLoggerWARN()
+        is_cmdline = args is None
+        if is_cmdline:
+            (options, args) = op.parse_args()
+        else:
+            (options, args) = op.parse_args(args)
 
-    if len(args) != 1:
-        print('Expecting a file/url as argument (WSDL).', file=sys.stderr)
-        sys.exit(70)
-    if options.strict_schema and options.compat:
-        raise ValueError('--strict-schema and --compat are mutually exclusive')
+        if len(args) != 1:
+            print('Expecting a file/url as argument (WSDL).', file=sys.stderr)
+            sys.exit(70)
+        if options.strict_schema and options.compat:
+            raise ValueError('--strict-schema and --compat are mutually exclusive')
 
-    location = args[0]
-    if options.schema is True:
-        reader = XMLSchema.SchemaReader(base_url=location)
-    else:
-        reader = WSDLTools.WSDLReader()
-
-    load = reader.loadFromFile
-    if not isfile(location):
-        load = reader.loadFromURL
-
-    try:
-        wsdl = load(location)
-    except Exception as ex:
-        append_context_to_exception(ex, 'phase=load, wsdl=%s, loader=%s' % (
-            location, load.__name__))
-        raise
-    if getattr(options, 'strict_schema', False):
         try:
-            _validate_wsdl_strict(wsdl, schema_mode=bool(options.schema))
+            plugins = _load_plugins(getattr(options, "plugins", []))
+            _invoke_plugin_hook(plugins, "on_options", options=options)
         except Exception as ex:
-            append_context_to_exception(ex, 'phase=strict-validate, wsdl=%s' % location)
+            append_context_to_exception(ex, "phase=plugins-load")
             raise
 
-    """
-    try:
-        wsdl = load(location)
-    except Exception as e:
-        print("Error loading %s: \n\t%s" % (location, e), file=sys.stderr)
-        traceback.print_exc(sys.stderr)
-        # exit code UNIX specific, Windows?
-        if hasattr(os, 'EX_NOINPUT'): sys.exit(os.EX_NOINPUT)
-        sys.exit("error loading %s" %location)
-    """
+        location = args[0]
+        if options.schema is True:
+            reader = XMLSchema.SchemaReader(base_url=location)
+        else:
+            reader = WSDLTools.WSDLReader()
 
-    if isinstance(wsdl, XMLSchema.XMLSchema):
-        wsdl.location = location
+        load = reader.loadFromFile
+        if not isfile(location):
+            load = reader.loadFromURL
+
         try:
-            files = _wsdl2py(options, wsdl)
+            _log.debug(
+                "loading wsdl/schema",
+                event="generator.load.start",
+                location=location,
+                schema_mode=bool(options.schema),
+            )
+            with span("zsi.generator.load", location=location):
+                wsdl = load(location)
+            _log.debug(
+                "loaded wsdl/schema",
+                event="generator.load.end",
+                location=location,
+                schema_mode=bool(options.schema),
+            )
         except Exception as ex:
-            append_context_to_exception(ex, 'phase=generate-types, %s'
-                                      % _describe_wsdl(wsdl))
+            _log.error("load failed", event="generator.load.error", location=location)
+            append_context_to_exception(ex, 'phase=load, wsdl=%s, loader=%s' % (
+                location, load.__name__))
             raise
-    else:
+
         try:
-            files = _wsdl2py(options, wsdl)
+            _invoke_plugin_hook(plugins, "on_wsdl_loaded", options=options, wsdl=wsdl)
         except Exception as ex:
-            append_context_to_exception(ex, 'phase=generate-client-types, %s'
-                                      % _describe_wsdl(wsdl))
+            append_context_to_exception(ex, "phase=plugins-on_wsdl_loaded, wsdl=%s" % location)
             raise
-        if not getattr(options, 'fast', False):
+
+        if getattr(options, 'strict_schema', False):
             try:
-                files.append(_wsdl2dispatch(options, wsdl))
+                _validate_wsdl_strict(wsdl, schema_mode=bool(options.schema))
+                _log.debug(
+                    "strict validation passed",
+                    event="generator.strict_schema.ok",
+                    location=location,
+                )
             except Exception as ex:
-                if getattr(options, 'compat', False):
-                    warnings.warn('compat mode: skipping wsdl2dispatch failure: %s' % ex)
-                else:
-                    append_context_to_exception(ex, 'phase=generate-server, %s'
-                                              % _describe_wsdl(wsdl))
-                    raise
+                _log.error(
+                    "strict validation failed",
+                    event="generator.strict_schema.error",
+                    location=location,
+                )
+                append_context_to_exception(ex, 'phase=strict-validate, wsdl=%s' % location)
+                raise
 
-    if getattr(options, 'pydoc', False):
+        if isinstance(wsdl, XMLSchema.XMLSchema):
+            wsdl.location = location
+            try:
+                _invoke_plugin_hook(plugins, "before_generate", options=options, wsdl=wsdl)
+                _log.debug("generate types from xsd", event="generator.types.start")
+                with span("zsi.generator.types"):
+                    files = _wsdl2py(options, wsdl)
+                _log.debug("generate types from xsd finished", event="generator.types.end")
+            except Exception as ex:
+                append_context_to_exception(ex, 'phase=generate-types, %s'
+                                          % _describe_wsdl(wsdl))
+                raise
+        else:
+            try:
+                _invoke_plugin_hook(plugins, "before_generate", options=options, wsdl=wsdl)
+                _log.debug("generate client/types start", event="generator.client_types.start")
+                with span("zsi.generator.client_types"):
+                    files = _wsdl2py(options, wsdl)
+                _log.debug("generate client/types end", event="generator.client_types.end")
+            except Exception as ex:
+                append_context_to_exception(ex, 'phase=generate-client-types, %s'
+                                          % _describe_wsdl(wsdl))
+                raise
+            if not getattr(options, 'fast', False):
+                try:
+                    _log.debug("generate server start", event="generator.server.start")
+                    with span("zsi.generator.server"):
+                        files.append(_wsdl2dispatch(options, wsdl))
+                    _log.debug("generate server end", event="generator.server.end")
+                except Exception as ex:
+                    if getattr(options, 'compat', False):
+                        _log.warning(
+                            "compat mode skipped server generation",
+                            event="generator.server.skipped_compat",
+                        )
+                        warnings.warn('compat mode: skipping wsdl2dispatch failure: %s' % ex)
+                    else:
+                        append_context_to_exception(ex, 'phase=generate-server, %s'
+                                                  % _describe_wsdl(wsdl))
+                        raise
+
         try:
-            _writepydoc(os.path.join('docs', 'API'), *files)
+            _invoke_plugin_hook(
+                plugins,
+                "after_generate",
+                options=options,
+                wsdl=wsdl,
+                files=files,
+            )
         except Exception as ex:
-            append_context_to_exception(ex, 'phase=generate-pydoc, files=%s'
-                                      % ','.join(files))
+            append_context_to_exception(ex, "phase=plugins-after_generate")
             raise
 
-    if is_cmdline:
-        return
+        if getattr(options, 'pydoc', False):
+            try:
+                _writepydoc(os.path.join('docs', 'API'), *files)
+            except Exception as ex:
+                append_context_to_exception(ex, 'phase=generate-pydoc, files=%s'
+                                          % ','.join(files))
+                raise
 
-    return files
+        if is_cmdline:
+            return
+
+        return files
 
 
 #def wsdl2dispatch(args=None):
