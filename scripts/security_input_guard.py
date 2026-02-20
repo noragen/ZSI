@@ -8,20 +8,26 @@ import re
 import sys
 from urllib.parse import urlsplit
 
-BLOCKED_SCHEMES = {
-    "file",
-    "ftp",
-    "gopher",
-    "data",
-    "javascript",
-    "jar",
-}
+try:
+    from scripts.security_policy_defaults import (
+        DEFAULT_ALLOWED_SCHEMES,
+        DEFAULT_BLOCKED_SCHEMES,
+        normalize_schemes,
+    )
+except ImportError:  # pragma: no cover - fallback for direct script execution
+    from security_policy_defaults import (  # type: ignore
+        DEFAULT_ALLOWED_SCHEMES,
+        DEFAULT_BLOCKED_SCHEMES,
+        normalize_schemes,
+    )
+
+BLOCKED_SCHEMES = set(DEFAULT_BLOCKED_SCHEMES)
 
 
 def validate_untrusted_uri(
     uri: str,
     allow_prefixes: tuple[str, ...] = (),
-    allowed_schemes: tuple[str, ...] = ("https",),
+    allowed_schemes: tuple[str, ...] = DEFAULT_ALLOWED_SCHEMES,
 ) -> None:
     """Validate a URI before handing it to network-based resolvers.
 
@@ -48,7 +54,7 @@ def validate_untrusted_uri(
     if scheme in BLOCKED_SCHEMES:
         raise ValueError(f"URI scheme is blocked: {scheme}")
 
-    normalized_allowed = tuple(s.lower() for s in allowed_schemes)
+    normalized_allowed = normalize_schemes(allowed_schemes)
     if scheme not in normalized_allowed:
         raise ValueError(f"URI scheme is not allowed: {scheme}")
 
@@ -78,7 +84,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument(
         "--allow-scheme",
         action="append",
-        default=["https"],
+        default=list(DEFAULT_ALLOWED_SCHEMES),
         help="Allowed URI scheme (repeatable, default: https)",
     )
     return parser.parse_args(argv)

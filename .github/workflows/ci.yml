@@ -30,9 +30,70 @@ jobs:
       - name: Black check (scripts)
         run: python -m black --check scripts/
 
+  security-scan-smoke:
+    name: Security Scan Smoke / py3.11
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install -e .
+
+      - name: Guard unit tests
+        env:
+          PYTHONPATH: .
+        run: python test/test_security_input_guard.py
+
+      - name: Security scan smoke unit tests
+        env:
+          PYTHONPATH: .
+        run: python test/test_security_scan_smoke.py
+
+      - name: Trusted URI should pass
+        run: |
+          python scripts/security_input_guard.py \
+            --uri "https://schemas.example.internal/wsdl/service.wsdl" \
+            --allow-prefix "https://schemas.example.internal/"
+
+      - name: Blocked URI should fail
+        shell: bash
+        run: |
+          if python scripts/security_input_guard.py --uri "file:///etc/passwd"; then
+            echo "Expected blocked file:// URI to fail"
+            exit 1
+          fi
+
+      - name: Security scan smoke script checks
+        shell: bash
+        run: |
+          cat > /tmp/safe_soap.xml <<'EOF'
+          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+            <soapenv:Body><Echo xmlns="urn:test">ok</Echo></soapenv:Body>
+          </soapenv:Envelope>
+          EOF
+          python scripts/security_scan_smoke.py --uri "https://example.internal/service" --xml-file /tmp/safe_soap.xml
+
+          cat > /tmp/deep_bad.xml <<'EOF'
+          <a><b><c><d><e/></d></c></b></a>
+          EOF
+          if python scripts/security_scan_smoke.py --uri "https://example.internal/service" --xml-file /tmp/deep_bad.xml --max-depth 4; then
+            echo "Expected deep nesting scan to fail"
+            exit 1
+          fi
+
   tests:
     name: ${{ matrix.os }} / py${{ matrix.python-version }}
-    needs: lint
+    needs: [lint, security-scan-smoke]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

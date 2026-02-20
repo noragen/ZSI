@@ -10,6 +10,7 @@ Modernized helper scripts for local development and release safety.
 - `scripts/benchmark_smoke.py`: runtime smoke benchmark with budgets
 - `scripts/check_release_gate.py`: tag/release gate checks
 - `scripts/security_input_guard.py`: untrusted resolver URI validation
+- `scripts/security_policy_defaults.py`: zentrale Security-Policy-Defaults fuer URI-Validierung
 
 ## Typical usage
 

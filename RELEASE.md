@@ -74,6 +74,32 @@ Expected result:
 - exit code `0`
 - output contains `[security-uri-check] OK`
 
+Security smoke parity with CI (`security-scan-smoke`) should also be verified:
+
+```powershell
+python test\test_security_input_guard.py
+python scripts\security_input_guard.py --uri "https://schemas.example.internal/wsdl/service.wsdl" --allow-prefix "https://schemas.example.internal/"
+python scripts\security_input_guard.py --uri "file:///etc/passwd"; if ($LASTEXITCODE -eq 0) { throw "Expected blocked file:// URI to fail" }
+```
+
+Expected result:
+
+- unit test command exits with code `0`
+- trusted URI command exits with code `0`
+- blocked `file://` URI command exits with non-zero code
+
+## Security Deep Dive Baseline
+
+Before each release, validate that threat-model documentation and CI coverage are aligned:
+
+- `SECURITY.md` reflects current trust boundaries and attack surfaces:
+  - parser input handling
+  - resolver/network fetch controls
+  - generator (`wsdl2py`) input handling
+  - transport/runtime processing
+  - CI and release artifact integrity
+- `.github/workflows/ci.yml` still contains the `security-scan-smoke` job and it passes on PRs and `master`.
+
 ## Tagging
 
 Use annotated tags. Recommended format:
