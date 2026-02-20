@@ -8,7 +8,7 @@ on:
 
 jobs:
   lint:
-    name: Lint / py3.11
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,7 +31,7 @@ jobs:
         run: python -m black --check scripts/
 
   security-scan-smoke:
-    name: Security Scan Smoke / py3.11
+    name: Security Scan Smoke
     needs: lint
     runs-on: ubuntu-latest
     steps:
@@ -58,6 +58,11 @@ jobs:
         env:
           PYTHONPATH: .
         run: python test/test_security_scan_smoke.py
+
+      - name: Parser/typecode fuzz smoke unit tests
+        env:
+          PYTHONPATH: .
+        run: python test/test_parser_typecode_fuzz_smoke.py
 
       - name: Trusted URI should pass
         run: |
@@ -91,6 +96,9 @@ jobs:
             exit 1
           fi
 
+      - name: Parser/typecode fuzz smoke script
+        run: python scripts/parser_typecode_fuzz_smoke.py --seed 1337 --cases 24
+
   tests:
     name: ${{ matrix.os }} / py${{ matrix.python-version }}
     needs: [lint, security-scan-smoke]
@@ -99,7 +107,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ["3.11"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
       - name: Checkout

@@ -17,6 +17,7 @@ import test_QName
 import test_AnyType
 import test_security_input_guard
 import test_security_scan_smoke
+import test_parser_typecode_fuzz_smoke
 
 TEST_MODULES = (
     test_t1,
@@ -36,6 +37,7 @@ TEST_MODULES = (
     test_AnyType,
     test_security_input_guard,
     test_security_scan_smoke,
+    test_parser_typecode_fuzz_smoke,
 )
 
 def makeTestSuite():

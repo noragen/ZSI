@@ -159,7 +159,7 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 
 ## Features (Next Next Level)
 
-- [ ] XSD Capability Matrix einführen (pro Schema: unterstützte Konstrukte, bekannte Limits, Workarounds)
+- [x] XSD Capability Matrix einführen (pro Schema: unterstützte Konstrukte, bekannte Limits, Workarounds)
 - [ ] Kompatibilitätsmodus für branchenspezifische "Schema v1.2"-Profile dokumentieren (z. B. CAP/GDTF) inkl. Beispielvalidierung
 - [ ] Optionaler Strict-Validation-Mode (`--strict-schema`) für frühzeitige Fehlererkennung in Generator und Runtime
 - [ ] Optionaler Compatibility-Mode (`--compat`) für toleranteres Parsing bei Legacy-Partnern
@@ -170,10 +170,10 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [ ] OpenTelemetry-Hooks für Parse/Serialize/Resolver-Latenzen ergänzen
 - [ ] Security-Policy-Datei (Allowlist/Timeout/Retry/Limits) für Resolver zentral konfigurierbar machen
 - [ ] XML-Hardening-Testsuite für untrusted Input (Billion Laughs-ähnliche Muster, tiefe Rekursion, große Attribute)
-- [ ] Fuzzing-Smoke für Parser-/Typecode-Eingaben in CI (kleiner budgetierter Job)
+- [x] Fuzzing-Smoke für Parser-/Typecode-Eingaben in CI (kleiner budgetierter Job)
 - [ ] Golden-File-Tests für `wsdl2py`-Output (Determinismus und Diff-Stabilität über Versionen)
 - [ ] Snapshot-Benchmarks mit Trendvergleich und CI-Warnschwellen erweitern
-- [ ] Multi-Python-CI auf 3.10/3.11/3.12 ausbauen
+- [x] Multi-Python-CI auf 3.10/3.11/3.12 ausbauen
 - [ ] Optionaler `mypy`-Pilot für ausgewählte Module (`generate/*`, `parse.py`, `schema.py`)
 - [ ] Public-API-Vertrag definieren und per API-Surface-Test absichern
 - [ ] Plugin-Hook-System für projektspezifische Generator-Anpassungen (ohne Fork-Zwang)

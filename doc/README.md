@@ -9,6 +9,7 @@ This directory primarily contains legacy LaTeX documentation and examples.
   - `README.md` (repo-level)
   - `RELEASE.md` (release flow)
   - `doc/dx-parsing-wsdl2py-troubleshooting.md` (architecture + troubleshooting)
+  - `doc/xsd-capability-matrix.md` (initial XSD construct support matrix)
 
 ## Validation baseline
 

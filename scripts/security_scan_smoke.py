@@ -200,7 +200,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--max-attributes-per-element",
         type=int,
         default=DEFAULT_MAX_ATTRIBUTES_PER_ELEMENT,
-        help="Maximum attributes per XML element before reporting excessive_attribute_count",
+        help=(
+            "Maximum attributes per XML element before reporting "
+            "excessive_attribute_count"
+        ),
     )
     parser.add_argument(
         "--max-attribute-name-length",
@@ -212,7 +215,10 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         "--max-attribute-value-length",
         type=int,
         default=DEFAULT_MAX_ATTRIBUTE_VALUE_LENGTH,
-        help="Maximum attribute value length before reporting oversized_attribute_value",
+        help=(
+            "Maximum attribute value length before reporting "
+            "oversized_attribute_value"
+        ),
     )
     parser.add_argument(
         "--max-qname-length",
