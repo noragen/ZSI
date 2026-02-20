@@ -10,6 +10,15 @@ Fork von: http://pywebsvcs.svn.sourceforge.net/viewvc/pywebsvcs/trunk/zsi/
 - Client- und Server-Unterstützung
 - WSDL-basierte Stub-Generierung (`wsdl2py`)
 
+## Kompatibilitaets-Statement (ZSI)
+
+Dieses Repository bleibt ZSI-kompatibel. Die Modernisierung ist additiv:
+
+- bestehende ZSI-Entry-Points bleiben erhalten
+- neue Optionen/Features sind optional
+- kein erzwungener Wechsel auf Zeep zur Laufzeit
+- Migrationsdoku zu Zeep ist guidance, kein API-Bruch
+
 ## Voraussetzungen
 
 - Python `3.x`
@@ -124,6 +133,10 @@ Eine priorisierte Next-Level-Roadmap für Performance, Modernisierung und Qualit
 
 - Parsing + `wsdl2py` + Troubleshooting:
   [doc/dx-parsing-wsdl2py-troubleshooting.md](doc/dx-parsing-wsdl2py-troubleshooting.md)
+- Migration ZSI -> Zeep:
+  [doc/migration-zsi-to-zeep.md](doc/migration-zsi-to-zeep.md)
+- CI Artifact Dashboard:
+  [doc/ci-artifact-dashboard.md](doc/ci-artifact-dashboard.md)
 - Doc-Index/Status:
   [doc/README.md](doc/README.md)
 - Script-Tooling-Übersicht:

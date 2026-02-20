@@ -11,6 +11,8 @@ This directory primarily contains legacy LaTeX documentation and examples.
   - `doc/dx-parsing-wsdl2py-troubleshooting.md` (architecture + troubleshooting)
   - `doc/xsd-capability-matrix.md` (initial XSD construct support matrix)
   - `doc/schema-v12-profile-notes.md` (domain profile guidance for \"schema v1.2\" artifacts)
+  - `doc/migration-zsi-to-zeep.md` (migration guide with risks, parallel run, cutover)
+  - `doc/ci-artifact-dashboard.md` (generated static dashboard from CI/perf artifacts)
 
 ## Validation baseline
 

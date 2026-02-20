@@ -119,6 +119,10 @@ jobs:
             --warn-regression 0.20 \
             --min-history 3 \
             --update-history
+          python scripts/build_dashboards.py \
+            --benchmark-smoke .perf/benchmark-smoke.json \
+            --benchmark-history .perf/benchmark-history.json \
+            --out doc/ci-artifact-dashboard.md
 
   tests:
     name: ${{ matrix.os }} / py${{ matrix.python-version }}
@@ -149,6 +153,11 @@ jobs:
         env:
           PYTHONPATH: .
         run: python test/test_zsi.py
+
+      - name: ZSI compatibility contract
+        env:
+          PYTHONPATH: .
+        run: python test/test_zsi_compat_contract.py
 
       - name: Integration local suite
         env:

@@ -5,6 +5,7 @@
 import io
 from email import policy
 from email.parser import Parser
+import hashlib
 import urllib.request
 
 from ZSI import _copyright, _child_elements, EvaluateException, TC
@@ -13,6 +14,8 @@ from ZSI.wstools.logging import getLogger as _GetLogger
 
 
 _log = _GetLogger("ZSI.resolvers")
+_CACHE_URL_TO_KEY = {}
+_CACHE_CONTENT = {}
 
 
 def _transfer_encoding(headers):
@@ -34,12 +37,26 @@ def Opaque(uri, tc, ps, **keywords):
     """Resolve a URI and return its content as a string or bytes."""
     _log.debug("resolve opaque", event="resolver.fetch", uri=uri)
     with span("zsi.resolve.opaque", uri=uri):
+        cache_key = _CACHE_URL_TO_KEY.get(uri)
+        if cache_key and cache_key in _CACHE_CONTENT:
+            _log.debug("cache hit", event="resolver.cache.hit", uri=uri, cache_key=cache_key)
+            return _CACHE_CONTENT[cache_key]
+
         source = urllib.request.urlopen(uri, **keywords)
         enc = _transfer_encoding(source.info())
         body = source.read()
         if enc in ("7bit", "8bit", "binary"):
-            return body
-        return _to_text(body, source.info().get_content_charset())
+            value = body
+        else:
+            value = _to_text(body, source.info().get_content_charset())
+
+        digest_source = value if isinstance(value, bytes) else value.encode("utf-8", errors="replace")
+        digest = hashlib.sha256(digest_source).hexdigest()
+        cache_key = f"{uri}#{digest}"
+        _CACHE_URL_TO_KEY[uri] = cache_key
+        _CACHE_CONTENT[cache_key] = value
+        _log.debug("cache store", event="resolver.cache.store", uri=uri, cache_key=cache_key)
+        return value
 
 
 def XML(uri, tc, ps, **keywords):
@@ -78,6 +95,12 @@ class NetworkResolver:
         if isinstance(tc, TC.XML):
             return XML(uri, tc, ps, **keywords)
         return Opaque(uri, tc, ps, **keywords)
+
+
+def ClearNetworkResolverCache():
+    """Clear process-local resolver cache."""
+    _CACHE_URL_TO_KEY.clear()
+    _CACHE_CONTENT.clear()
 
 
 class MIMEResolver:

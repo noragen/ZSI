@@ -177,9 +177,22 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [ ] Optionaler `mypy`-Pilot für ausgewählte Module (`generate/*`, `parse.py`, `schema.py`)
 - [x] Public-API-Vertrag definieren und per API-Surface-Test absichern
 - [x] Plugin-Hook-System für projektspezifische Generator-Anpassungen (ohne Fork-Zwang)
-- [ ] Migrationsleitfaden ZSI -> Zeep (Feature-Gaps, Risiko, Parallelbetrieb, Cutover-Plan)
+- [x] Migrationsleitfaden ZSI -> Zeep (Feature-Gaps, Risiko, Parallelbetrieb, Cutover-Plan)
 - [x] Interop-Korpus aus realen WSDL/XSD-Beispielen als dauerhafte Regression-Suite aufbauen
-- [ ] Security/Release/Perf-Dashboards aus CI-Artefakten generieren (leichtgewichtig, statisch)
+- [x] Security/Release/Perf-Dashboards aus CI-Artefakten generieren (leichtgewichtig, statisch)
+
+## Bewertung: Vorschläge aus `vorschlaege von chatgpt.txt`
+
+- [x] Übernommen: Plugin-Hook-System für `wsdl2py` (`--plugin`, Hook-Lifecycle, Beispiel-Plugin, Tests)
+- [x] Übernommen: Interop-Korpus als dauerhafte lokale Regression (`interop/*.wsdl` in `wsdl2py local`)
+- [x] Bereits umgesetzt: Public-API-Vertrag, Security-Hardening, Snapshot-Benchmarks, strukturierte Diagnostik/Logging
+- [ ] Geplant (hoher Nutzen): Operation-Dispatch-Index + `bind(service, port)` für eindeutiges Routing
+- [x] Geplant (hoher Nutzen): Resolver-Caching mit reproduzierbarem Cache-Key (URL + Content-Hash)
+- [ ] Geplant (hoch): Transport-Layer modernisieren (`timeout`/`verify`/`proxies`/Retries, SOAP 1.1/1.2 Header-Korrektheit)
+- [ ] Geplant (mittel): Compact-CLI/One-liner (`zsi call <wsdl> <op> key=val`) als DX-Ausbau
+- [x] Geplant (mittel): Zeep-Migrationsleitfaden mit Feature-Mapping und Cutover-Strategie
+- [ ] Nicht Teil der aktuellen Umsetzung: optionaler `mypy`-Pilot (bewusst zurückgestellt)
+- [ ] Vorerst nicht priorisiert: vollständiger "Zeep-Mode" API-Nachbau als eigener Betriebsmodus
 
 ## Definition of Done für Verbesserungen
 
