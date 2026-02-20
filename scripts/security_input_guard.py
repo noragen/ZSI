@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import re
 import sys
 from urllib.parse import urlsplit
@@ -63,6 +64,22 @@ def validate_untrusted_uri(
 
     if parsed.username or parsed.password:
         raise ValueError("URI must not include embedded credentials")
+
+    hostname = (parsed.hostname or "").strip().lower()
+    if hostname:
+        if hostname == "localhost" or hostname.endswith(".localhost"):
+            raise ValueError("URI host is blocked by SSRF policy")
+        try:
+            host_ip = ipaddress.ip_address(hostname)
+        except ValueError:
+            host_ip = None
+        if host_ip is not None:
+            if host_ip.is_loopback:
+                raise ValueError("URI loopback address is blocked by SSRF policy")
+            if host_ip == ipaddress.ip_address("169.254.169.254"):
+                raise ValueError("URI metadata address is blocked by SSRF policy")
+            if host_ip.is_private:
+                raise ValueError("URI private address is blocked by SSRF policy")
 
     if allow_prefixes and not any(
         value.startswith(prefix) for prefix in allow_prefixes

@@ -64,6 +64,31 @@ Hardening-Leitlinien fuer Resolver-Input:
 - Zugriff nur auf explizit gepflegte Trusted-Prefixe erlauben.
 - Bei Resolver-Netzwerkzugriffen stets Timeouts setzen (z. B. `timeout=5`).
 
+Parser-Security-Baseline (Richtwerte fuer untrusted XML/SOAP):
+
+- Max. Elementtiefe: `64`
+- Max. Attribute pro Element: `64`
+- Max. Attributwert: `8192` Bytes
+- Max. QName-Laenge: `256`
+- Max. Textknoten: `1 MiB`
+- Max. Gesamtnutzlast: `5 MiB`
+- Max. Elementanzahl gesamt: `100000`
+
+XML-Hardening-Hinweise:
+
+- `DOCTYPE`/DTD deaktivieren.
+- Externe Entities (XXE) deaktivieren.
+- Externe Resource-/Schema-Loads nur mit expliziter Allowlist.
+- Processing Instructions (PI) in Secure-Mode blockieren oder ignorieren.
+- XInclude/Expansion-Features deaktivieren.
+
+Security-Fallback/Fehlercode-Regeln (ohne API-Bruch):
+
+- Fail-closed bei Security-Verletzungen (keine schwachere Retry-Policy).
+- Bestehende Exception-APIs bleiben unveraendert.
+- Intern stabile Reason-Codes verwenden (z. B. `ZSI-SEC-100`, `ZSI-SEC-200`, `ZSI-SEC-220`).
+- Nutzernahe Fehlermeldungen knapp halten, keine sensitiven Details leaken.
+
 Minimales Integrationsmuster:
 
 ```python

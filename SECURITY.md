@@ -52,9 +52,66 @@ Covered components:
   - allowlisted trusted URI acceptance
   - blocked-scheme rejection (`file://` must fail)
 
+## Parser Security Baseline (Normative Richtwerte)
+
+These limits are the default security baseline for untrusted XML/SOAP input.
+They are intentionally conservative and may be tightened per deployment profile.
+
+- Maximum XML element depth: `64` (hard fail)
+- Maximum attributes per element: `64` (hard fail)
+- Maximum attribute value size: `8192` bytes
+- Maximum QName length (element/attribute names): `256` chars
+- Maximum text node size: `1 MiB`
+- Maximum SOAP/XML payload size: `5 MiB` (reject above limit)
+- Maximum total parsed element count: `100000` nodes
+
+Operational guidance:
+
+- Parse untrusted data with strict limits enabled by default (fail-closed).
+- Treat these as security defaults, not parser correctness guarantees.
+- Changes to limits require a release-note entry and security sign-off in review.
+
+## XML Hardening Guidance
+
+For untrusted input, the parser/runtime baseline must enforce:
+
+- `DOCTYPE` and DTD processing disabled.
+- External entities (XXE) disabled.
+- External schema/resource loading disabled unless explicitly trusted/allowlisted.
+- XML Processing Instructions rejected or ignored in secure mode.
+- XInclude and similar expansion mechanisms disabled.
+- Resolver/network access disabled by default during parse unless explicitly required.
+
+These controls are mandatory for default operation and may only be relaxed in explicit trusted-input profiles.
+
+## Security Fallback and Error-Code Rules (No API Break)
+
+To keep behavior stable without changing public exception APIs:
+
+- Existing external exception types/messages remain source-compatible.
+- Internally, map failures to stable security reason codes for logs/diagnostics.
+- All security rejections fail closed (no permissive fallback to insecure parsing).
+- User-facing errors stay minimal; sensitive internals (paths, tokens, internal hosts) must not be disclosed.
+
+Standard security reason-code set:
+
+- `ZSI-SEC-100` `URI_SCHEME_BLOCKED`
+- `ZSI-SEC-110` `URI_CREDENTIALS_BLOCKED`
+- `ZSI-SEC-120` `URI_PREFIX_DENIED`
+- `ZSI-SEC-200` `XML_DEPTH_LIMIT_EXCEEDED`
+- `ZSI-SEC-210` `XML_ATTRIBUTE_LIMIT_EXCEEDED`
+- `ZSI-SEC-220` `XML_PAYLOAD_LIMIT_EXCEEDED`
+- `ZSI-SEC-230` `XML_DTD_FORBIDDEN`
+- `ZSI-SEC-240` `XML_PI_FORBIDDEN`
+
+Fallback contract:
+
+- CLI/tools: non-zero exit on blocked input.
+- Runtime parse/resolver paths: deterministic failure, no retry with weaker policy.
+- Logging: include reason code + bounded context only (for example input type, size bucket).
+
 ## Known Gaps / Next Hardening Steps
 
-- Formal parser limits (depth/attribute/payload caps) are not fully enforced globally.
 - SSRF protection should be expanded beyond scheme/prefix checks (redirect/IP-range policies).
 - Security-focused fuzz/smoke coverage for parser/generator can be broadened.
 - Security policy centralization (single config source for resolver limits) is pending.

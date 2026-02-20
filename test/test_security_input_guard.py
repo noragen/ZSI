@@ -38,6 +38,25 @@ class SecurityInputGuardTests(unittest.TestCase):
                 allow_prefixes=("https://schemas.example.internal/",),
             )
 
+    def test_rejects_localhost_hostnames(self):
+        with self.assertRaises(ValueError):
+            validate_untrusted_uri("https://localhost/wsdl")
+        with self.assertRaises(ValueError):
+            validate_untrusted_uri("https://api.localhost/wsdl")
+
+    def test_rejects_loopback_private_and_metadata_ips(self):
+        blocked = (
+            "https://127.0.0.1/wsdl",
+            "https://10.1.2.3/wsdl",
+            "https://172.16.8.9/wsdl",
+            "https://192.168.2.2/wsdl",
+            "https://169.254.169.254/wsdl",
+        )
+        for uri in blocked:
+            with self.subTest(uri=uri):
+                with self.assertRaises(ValueError):
+                    validate_untrusted_uri(uri)
+
 
 def makeTestSuite():
     return unittest.defaultTestLoader.loadTestsFromTestCase(SecurityInputGuardTests)

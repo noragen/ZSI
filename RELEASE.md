@@ -88,12 +88,21 @@ Expected result:
 - trusted URI command exits with code `0`
 - blocked `file://` URI command exits with non-zero code
 
+Security behavior contract to confirm before release:
+
+- parser/security defaults are fail-closed (no insecure fallback retries)
+- public exception API remains unchanged for security failures
+- diagnostics/logs use stable reason codes for blocked input (`ZSI-SEC-*`)
+
 ## Security Deep Dive Baseline
 
 Before each release, validate that threat-model documentation and CI coverage are aligned:
 
 - `SECURITY.md` reflects current trust boundaries and attack surfaces:
   - parser input handling
+  - parser baseline limits (depth/attributes/payload)
+  - XML hardening defaults (DTD/XXE/PI/XInclude)
+  - security fallback/error-code rules (`ZSI-SEC-*`, no API break)
   - resolver/network fetch controls
   - generator (`wsdl2py`) input handling
   - transport/runtime processing

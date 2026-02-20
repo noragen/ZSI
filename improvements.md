@@ -103,23 +103,23 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 ## Security Deep Dive (ZSI)
 
 - [x] Threat-Model-Basis für ZSI dokumentiert (`SECURITY.md`: Parser, Resolver, Generator, Transport, CI-Artefakte)
-- [ ] Security-Baseline für Parser definieren (max. Elementtiefe, Attributgröße, Gesamtpayload-Grenzen)
+- [x] Security-Baseline für Parser definieren (max. Elementtiefe, Attributgröße, Gesamtpayload-Grenzen)
 - [x] Resolver-Policy-Defaults zentralisieren (Allowlist/Blocklist-Basis) (`scripts/security_policy_defaults.py`)
-- [ ] Explizite SSRF-Schutzregeln für Resolver ergänzen und testen
-- [ ] XML-Input-Hardening für typische Angriffsvektoren dokumentieren (Entity-/DTD-/PI-Missbrauch, Ressourcenerschöpfung)
-- [ ] Security-Fallbacks/Fehlercodes standardisieren (klare, sichere Fehlermeldungen ohne sensitive Details)
+- [x] Explizite SSRF-Schutzregeln für Resolver ergänzen und testen
+- [x] XML-Input-Hardening für typische Angriffsvektoren dokumentieren (Entity-/DTD-/PI-Missbrauch, Ressourcenerschöpfung)
+- [x] Security-Fallbacks/Fehlercodes standardisieren (klare, sichere Fehlermeldungen ohne sensitive Details)
 
 ### Security Scan-Tests (gezielte Fälle)
 
 - [x] Scan-Test: bösartige URI-Schemata (`file:`, `data:`, `gopher:`, `jar:`, `javascript:`)
 - [x] Scan-Test: eingebettete Credentials und ungewöhnliche URI-Encodings
-- [ ] Scan-Test: SSRF-Muster (localhost/metadata-IP/private ranges/redirect chains)
-- [ ] Scan-Test: übergroße XML-Dokumente (Payload- und Memory-Stress)
+- [x] Scan-Test: SSRF-Muster (localhost/metadata-IP/private ranges/redirect chains)
+- [x] Scan-Test: übergroße XML-Dokumente (Payload- und Memory-Stress)
 - [x] Scan-Test: tiefe XML-Verschachtelung (Recursion/Depth-Stress)
-- [ ] Scan-Test: extreme Attributanzahl/-länge und QName-Kantenfälle
+- [x] Scan-Test: extreme Attributanzahl/-länge und QName-Kantenfälle
 - [x] Scan-Test: kaputte/malforme SOAP-Envelope-Strukturen
-- [ ] Scan-Test: WSDL/XSD mit problematischen Import-Ketten (Zyklen, unerreichbare Endpunkte)
-- [ ] Scan-Test: Generator-Stabilität bei adversarial WSDL/XSD-Eingaben
+- [x] Scan-Test: WSDL/XSD mit problematischen Import-Ketten (Zyklen, unerreichbare Endpunkte)
+- [x] Scan-Test: Generator-Stabilität bei adversarial WSDL/XSD-Eingaben
 - [x] CI-Job `security-scan-smoke` mit kleinem Budget (schnell, deterministisch, non-flaky)
 
 ## DX & Doku
