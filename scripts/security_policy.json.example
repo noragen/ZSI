@@ -1,0 +1,5 @@
+{
+  "allowed_schemes": ["https"],
+  "blocked_schemes": ["file", "ftp", "gopher", "data", "javascript", "jar"],
+  "allowed_prefixes": ["https://schemas.example.internal/"]
+}

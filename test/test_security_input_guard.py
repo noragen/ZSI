@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 import os
 import sys
+import tempfile
+import json
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from scripts.security_input_guard import validate_untrusted_uri
+from scripts.security_policy_defaults import load_policy_defaults
 
 
 class SecurityInputGuardTests(unittest.TestCase):
@@ -56,6 +59,50 @@ class SecurityInputGuardTests(unittest.TestCase):
             with self.subTest(uri=uri):
                 with self.assertRaises(ValueError):
                     validate_untrusted_uri(uri)
+
+    def test_policy_file_loader(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = os.path.join(td, "policy.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(
+                    {
+                        "allowed_schemes": ["https", "http"],
+                        "blocked_schemes": ["file", "data"],
+                        "allowed_prefixes": ["http://safe.local/"],
+                    },
+                    fh,
+                )
+            policy = load_policy_defaults(p)
+            self.assertEqual(("https", "http"), policy.allowed_schemes)
+            self.assertIn("file", policy.blocked_schemes)
+            self.assertEqual(("http://safe.local/",), policy.allowed_prefixes)
+
+    def test_policy_values_can_drive_validation(self):
+        with tempfile.TemporaryDirectory() as td:
+            p = os.path.join(td, "policy.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(
+                    {
+                        "allowed_schemes": ["http"],
+                        "blocked_schemes": ["https"],
+                        "allowed_prefixes": ["http://safe.local/"],
+                    },
+                    fh,
+                )
+            policy = load_policy_defaults(p)
+            validate_untrusted_uri(
+                "http://safe.local/service.wsdl",
+                allow_prefixes=policy.allowed_prefixes,
+                allowed_schemes=policy.allowed_schemes,
+                blocked_schemes=policy.blocked_schemes,
+            )
+            with self.assertRaises(ValueError):
+                validate_untrusted_uri(
+                    "https://safe.local/service.wsdl",
+                    allow_prefixes=policy.allowed_prefixes,
+                    allowed_schemes=policy.allowed_schemes,
+                    blocked_schemes=policy.blocked_schemes,
+                )
 
 
 def makeTestSuite():

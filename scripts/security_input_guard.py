@@ -13,12 +13,14 @@ try:
     from scripts.security_policy_defaults import (
         DEFAULT_ALLOWED_SCHEMES,
         DEFAULT_BLOCKED_SCHEMES,
+        load_policy_defaults,
         normalize_schemes,
     )
 except ImportError:  # pragma: no cover - fallback for direct script execution
     from security_policy_defaults import (  # type: ignore
         DEFAULT_ALLOWED_SCHEMES,
         DEFAULT_BLOCKED_SCHEMES,
+        load_policy_defaults,
         normalize_schemes,
     )
 
@@ -29,6 +31,9 @@ def validate_untrusted_uri(
     uri: str,
     allow_prefixes: tuple[str, ...] = (),
     allowed_schemes: tuple[str, ...] = DEFAULT_ALLOWED_SCHEMES,
+    blocked_schemes: tuple[str, ...] | set[str] | frozenset[str] = (
+        DEFAULT_BLOCKED_SCHEMES
+    ),
 ) -> None:
     """Validate a URI before handing it to network-based resolvers.
 
@@ -52,7 +57,8 @@ def validate_untrusted_uri(
     if not scheme:
         raise ValueError("URI must be absolute and include a scheme")
 
-    if scheme in BLOCKED_SCHEMES:
+    normalized_blocked = set(normalize_schemes(tuple(blocked_schemes)))
+    if scheme in normalized_blocked:
         raise ValueError(f"URI scheme is blocked: {scheme}")
 
     normalized_allowed = normalize_schemes(allowed_schemes)
@@ -104,16 +110,35 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         default=list(DEFAULT_ALLOWED_SCHEMES),
         help="Allowed URI scheme (repeatable, default: https)",
     )
+    parser.add_argument(
+        "--policy-file",
+        default=None,
+        help=(
+            "Optional JSON policy file with "
+            "allowed_schemes/blocked_schemes/allowed_prefixes"
+        ),
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
+    allow_prefixes = tuple(args.allow_prefix)
+    allow_schemes = tuple(args.allow_scheme)
+    blocked_schemes = DEFAULT_BLOCKED_SCHEMES
+    if args.policy_file:
+        policy = load_policy_defaults(args.policy_file)
+        if not allow_prefixes:
+            allow_prefixes = policy.allowed_prefixes
+        if args.allow_scheme == list(DEFAULT_ALLOWED_SCHEMES):
+            allow_schemes = policy.allowed_schemes
+        blocked_schemes = policy.blocked_schemes
     try:
         validate_untrusted_uri(
             args.uri,
-            allow_prefixes=tuple(args.allow_prefix),
-            allowed_schemes=tuple(args.allow_scheme),
+            allow_prefixes=allow_prefixes,
+            allowed_schemes=allow_schemes,
+            blocked_schemes=blocked_schemes,
         )
     except ValueError as exc:
         print(f"[security-uri-check] FAIL: {exc}")

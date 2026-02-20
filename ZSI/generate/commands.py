@@ -69,6 +69,31 @@ def SetUpFastGeneration(option, opt, value, parser, *args, **kwargs):
     SetUpLazyEvaluation(option, opt, value, parser, *args, **kwargs)
 
 
+def _validate_wsdl_strict(wsdl, schema_mode=False):
+    """Apply stricter structural checks to fail early on weak definitions."""
+    if schema_mode:
+        tns = wsdl.getTargetNamespace()
+        if not tns:
+            raise ValueError('strict-schema requires schema targetNamespace')
+        return
+
+    types_count = 0
+    try:
+        types_count = len(getattr(wsdl, 'types', {}) or {})
+    except Exception:
+        types_count = 0
+    if types_count == 0:
+        raise ValueError('strict-schema requires at least one WSDL types/schema entry')
+
+    services_count = 0
+    try:
+        services_count = len(getattr(wsdl, 'services', {}) or {})
+    except Exception:
+        services_count = 0
+    if services_count == 0:
+        raise ValueError('strict-schema requires at least one WSDL service')
+
+
 def wsdl2py(args=None):
     """Utility for automatically generating client/service interface code from
     a wsdl definition, and a set of classes representing element declarations
@@ -125,6 +150,14 @@ def wsdl2py(args=None):
                   callback_kwargs={},
                   help="EXPERIMENTAL: faster generation prototype (enables lazy typecodes and skips _server.py generation)")
 
+    op.add_option("--strict-schema",
+                  action="store_true", dest="strict_schema", default=False,
+                  help="EXPERIMENTAL: fail early on structurally weak schema/WSDL definitions")
+
+    op.add_option("--compat",
+                  action="store_true", dest="compat", default=False,
+                  help="EXPERIMENTAL: compatibility mode (tolerate wsdl2dispatch generation failures)")
+
     # Use Twisted
     op.add_option("-w", "--twisted",
                   action="store_true", dest='twisted', default=False,
@@ -152,6 +185,8 @@ def wsdl2py(args=None):
     if len(args) != 1:
         print('Expecting a file/url as argument (WSDL).', file=sys.stderr)
         sys.exit(70)
+    if options.strict_schema and options.compat:
+        raise ValueError('--strict-schema and --compat are mutually exclusive')
 
     location = args[0]
     if options.schema is True:
@@ -169,6 +204,12 @@ def wsdl2py(args=None):
         append_context_to_exception(ex, 'phase=load, wsdl=%s, loader=%s' % (
             location, load.__name__))
         raise
+    if getattr(options, 'strict_schema', False):
+        try:
+            _validate_wsdl_strict(wsdl, schema_mode=bool(options.schema))
+        except Exception as ex:
+            append_context_to_exception(ex, 'phase=strict-validate, wsdl=%s' % location)
+            raise
 
     """
     try:
@@ -200,9 +241,12 @@ def wsdl2py(args=None):
             try:
                 files.append(_wsdl2dispatch(options, wsdl))
             except Exception as ex:
-                append_context_to_exception(ex, 'phase=generate-server, %s'
-                                          % _describe_wsdl(wsdl))
-                raise
+                if getattr(options, 'compat', False):
+                    warnings.warn('compat mode: skipping wsdl2dispatch failure: %s' % ex)
+                else:
+                    append_context_to_exception(ex, 'phase=generate-server, %s'
+                                              % _describe_wsdl(wsdl))
+                    raise
 
     if getattr(options, 'pydoc', False):
         try:

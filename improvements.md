@@ -160,18 +160,18 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 ## Features (Next Next Level)
 
 - [x] XSD Capability Matrix einführen (pro Schema: unterstützte Konstrukte, bekannte Limits, Workarounds)
-- [ ] Kompatibilitätsmodus für branchenspezifische "Schema v1.2"-Profile dokumentieren (z. B. CAP/GDTF) inkl. Beispielvalidierung
-- [ ] Optionaler Strict-Validation-Mode (`--strict-schema`) für frühzeitige Fehlererkennung in Generator und Runtime
-- [ ] Optionaler Compatibility-Mode (`--compat`) für toleranteres Parsing bei Legacy-Partnern
+- [x] Kompatibilitätsmodus für branchenspezifische "Schema v1.2"-Profile dokumentieren (z. B. CAP/GDTF) inkl. Beispielvalidierung
+- [x] Optionaler Strict-Validation-Mode (`--strict-schema`) für frühzeitige Fehlererkennung in Generator und Runtime
+- [x] Optionaler Compatibility-Mode (`--compat`) für toleranteres Parsing bei Legacy-Partnern
 - [ ] Streaming-Parse-Prototyp für große SOAP-Payloads (geringerer Memory-Footprint)
 - [ ] Namespaces/Type-Lookups mit gezielten Caches und Messpunkten weiter optimieren
 - [ ] Erweiterte Fault-Diagnostik mit korrelierbarer Request-ID und kompakter Context-Summary
 - [ ] Structured Logging (JSON) für Generator/Runtime/Resolver mit einheitlichem Event-Schema
 - [ ] OpenTelemetry-Hooks für Parse/Serialize/Resolver-Latenzen ergänzen
-- [ ] Security-Policy-Datei (Allowlist/Timeout/Retry/Limits) für Resolver zentral konfigurierbar machen
+- [x] Security-Policy-Datei (Allowlist/Timeout/Retry/Limits) für Resolver zentral konfigurierbar machen
 - [ ] XML-Hardening-Testsuite für untrusted Input (Billion Laughs-ähnliche Muster, tiefe Rekursion, große Attribute)
 - [x] Fuzzing-Smoke für Parser-/Typecode-Eingaben in CI (kleiner budgetierter Job)
-- [ ] Golden-File-Tests für `wsdl2py`-Output (Determinismus und Diff-Stabilität über Versionen)
+- [x] Golden-File-Tests für `wsdl2py`-Output (Determinismus und Diff-Stabilität über Versionen)
 - [ ] Snapshot-Benchmarks mit Trendvergleich und CI-Warnschwellen erweitern
 - [x] Multi-Python-CI auf 3.10/3.11/3.12 ausbauen
 - [ ] Optionaler `mypy`-Pilot für ausgewählte Module (`generate/*`, `parse.py`, `schema.py`)

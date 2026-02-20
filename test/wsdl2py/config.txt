@@ -75,7 +75,7 @@ test_NoMessagePart = servers/NoMessagePartServer.py
 document = False
 literal = False
 broke = False
-tests = test_ThreatService test_GeneratorAdversarialSmoke
+tests = test_ThreatService test_GeneratorAdversarialSmoke test_CommandModes test_GoldenOutputDeterminism
 #XMethods web site is broken wsdl can not be retreived
 #tests = test_XMethodsQuery test_ThreatService
 
