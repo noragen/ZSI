@@ -272,6 +272,11 @@ def _resolve_prefix(celt, prefix):
       prefix -- xmlns:prefix, or empty str or None
     '''
 
+    cache = _resolve_prefix.cache
+    key = (id(celt), prefix or '')
+    if key in cache:
+        return cache[key]
+
     while _is_element(celt):
         if prefix:
             namespaceURI = _find_xmlns_prefix(celt, prefix)
@@ -286,7 +291,12 @@ def _resolve_prefix(celt, prefix):
         else:
             raise EvaluateException('cant resolve default namespace')
 
+    if len(cache) > _resolve_prefix.MAXLEN:
+        cache.clear()
+    cache[key] = namespaceURI
     return namespaceURI
+_resolve_prefix.cache = {}
+_resolve_prefix.MAXLEN = 2048
 
 
 def _valid_encoding(elt):

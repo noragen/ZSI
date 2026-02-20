@@ -163,8 +163,8 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [x] Kompatibilitätsmodus für branchenspezifische "Schema v1.2"-Profile dokumentieren (z. B. CAP/GDTF) inkl. Beispielvalidierung
 - [x] Optionaler Strict-Validation-Mode (`--strict-schema`) für frühzeitige Fehlererkennung in Generator und Runtime
 - [x] Optionaler Compatibility-Mode (`--compat`) für toleranteres Parsing bei Legacy-Partnern
-- [ ] Streaming-Parse-Prototyp für große SOAP-Payloads (geringerer Memory-Footprint)
-- [ ] Namespaces/Type-Lookups mit gezielten Caches und Messpunkten weiter optimieren
+- [x] Streaming-Parse-Prototyp für große SOAP-Payloads (geringerer Memory-Footprint)
+- [x] Namespaces/Type-Lookups mit gezielten Caches und Messpunkten weiter optimieren
 - [x] Erweiterte Fault-Diagnostik mit korrelierbarer Request-ID und kompakter Context-Summary
 - [x] Structured Logging (JSON) für Generator/Runtime/Resolver mit einheitlichem Event-Schema
 - [x] OpenTelemetry-Hooks für Parse/Serialize/Resolver-Latenzen ergänzen
@@ -186,10 +186,10 @@ Dieses Dokument sammelt konkrete Verbesserungen, um ZSI technisch, operativ und 
 - [x] Übernommen: Plugin-Hook-System für `wsdl2py` (`--plugin`, Hook-Lifecycle, Beispiel-Plugin, Tests)
 - [x] Übernommen: Interop-Korpus als dauerhafte lokale Regression (`interop/*.wsdl` in `wsdl2py local`)
 - [x] Bereits umgesetzt: Public-API-Vertrag, Security-Hardening, Snapshot-Benchmarks, strukturierte Diagnostik/Logging
-- [ ] Geplant (hoher Nutzen): Operation-Dispatch-Index + `bind(service, port)` für eindeutiges Routing
+- [x] Geplant (hoher Nutzen): Operation-Dispatch-Index + `bind(service, port)` für eindeutiges Routing
 - [x] Geplant (hoher Nutzen): Resolver-Caching mit reproduzierbarem Cache-Key (URL + Content-Hash)
-- [ ] Geplant (hoch): Transport-Layer modernisieren (`timeout`/`verify`/`proxies`/Retries, SOAP 1.1/1.2 Header-Korrektheit)
-- [ ] Geplant (mittel): Compact-CLI/One-liner (`zsi call <wsdl> <op> key=val`) als DX-Ausbau
+- [x] Geplant (hoch): Transport-Layer modernisieren (`timeout`/`verify`/`proxies`/Retries, SOAP 1.1/1.2 Header-Korrektheit)
+- [x] Geplant (mittel): Compact-CLI/One-liner (`zsi call <wsdl> <op> key=val`) als DX-Ausbau
 - [x] Geplant (mittel): Zeep-Migrationsleitfaden mit Feature-Mapping und Cutover-Strategie
 - [ ] Nicht Teil der aktuellen Umsetzung: optionaler `mypy`-Pilot (bewusst zurückgestellt)
 - [ ] Vorerst nicht priorisiert: vollständiger "Zeep-Mode" API-Nachbau als eigener Betriebsmodus

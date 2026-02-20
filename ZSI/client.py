@@ -187,6 +187,16 @@ class _Binding(object):
         self.endPointReference = kw.get('endPointReference', None)
         self.cookies = http.cookies.SimpleCookie()
         self.http_callbacks = {}
+        self.soap_version = kw.get('soap_version', '1.1')
+        self.transport_options = {
+            'verify': kw.get('verify', None),
+            'proxies': kw.get('proxies', None),
+            'retries': kw.get('retries', None),
+        }
+
+        timeout = kw.get('timeout', None)
+        if timeout is not None and 'timeout' not in self.transdict:
+            self.transdict['timeout'] = timeout
 
         if 'auth' in kw:
             self.SetAuth(*kw['auth'])
@@ -418,12 +428,21 @@ class _Binding(object):
         request_uri = _get_postvalue_from_absoluteURI(url)
         self.h.putrequest('POST', request_uri)
         self.h.putheader('Content-Length', '%d' % len(soapdata))
+        soap_action = soapaction or self.soapaction
+        soap_version = str(self.soap_version or '1.1')
+        is_soap12 = soap_version.startswith('1.2')
         if len(self.boundary) == 0:
 
             # no attachment
 
-            self.h.putheader('Content-Type', 'text/xml; charset="%s"'
-                             % UNICODE_ENCODING)
+            if is_soap12:
+                ctype = 'application/soap+xml; charset="%s"' % UNICODE_ENCODING
+                if soap_action:
+                    ctype += '; action="%s"' % soap_action
+                self.h.putheader('Content-Type', ctype)
+            else:
+                self.h.putheader('Content-Type', 'text/xml; charset="%s"'
+                                 % UNICODE_ENCODING)
         else:
 
             # we have attachment
@@ -439,8 +458,9 @@ class _Binding(object):
         for (header, value) in list(headers.items()):
             self.h.putheader(header, value)
 
-        SOAPActionValue = '"%s"' % (soapaction or self.soapaction)
-        self.h.putheader('SOAPAction', SOAPActionValue)
+        if not is_soap12:
+            SOAPActionValue = '"%s"' % soap_action
+            self.h.putheader('SOAPAction', SOAPActionValue)
         if self.auth_style & AUTH.httpbasic:
             val = _b64_encode(self.auth_user + ':'
                               + self.auth_pass).replace("\012", '')

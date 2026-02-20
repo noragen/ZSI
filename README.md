@@ -177,6 +177,8 @@ integrierten Modernisierungen für Python 3 im Projekt.
 - Public-API-Surface als Regressionstest abgesichert (`test/test_public_api_surface.py`)
 - `wsdl2py`-Plugin-Hooks ergänzt (`--plugin` für modul-/dateibasierte Generator-Erweiterungen ohne Fork)
 - Interop-Korpus lokal in die Regression aufgenommen (`test/wsdl2py/test_InteropCorpusLocal.py`)
+- ServiceProxy mit Operation-Index und `bind(service, port)` erweitert (eindeutigeres Routing)
+- Compact One-liner CLI ergänzt (`scripts/zsi_call.py`)
 
 ### Verifizierter Teststand
 

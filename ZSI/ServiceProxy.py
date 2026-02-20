@@ -8,8 +8,10 @@
 # FOR A PARTICULAR PURPOSE.
 
 import weakref, re, os, sys
-from configparser import SafeConfigParser as ConfigParser,\
-    NoSectionError, NoOptionError
+try:
+    from configparser import SafeConfigParser as ConfigParser, NoSectionError, NoOptionError
+except ImportError:
+    from configparser import ConfigParser, NoSectionError, NoOptionError
 from urllib.parse import urlparse
 
 from ZSI import TC
@@ -67,24 +69,46 @@ class ServiceProxy:
         self._lazy = lazy
         self._pyclass = pyclass
         self._force = force
+        self._operation_index = {}
 
         # Set up rpc methods for service/port
         port = self._port
         binding = port.getBinding()
         portType = binding.getPortType()
-        for port in self._service.ports:
-            for item in port.getPortType().operations:
+        for port_obj in self._service.ports:
+            for item in port_obj.getPortType().operations:
                 try:
-                    callinfo = wstools.WSDLTools.callInfoFromWSDL(port, item.name)
+                    callinfo = wstools.WSDLTools.callInfoFromWSDL(port_obj, item.name)
                 except:
                     # ignore non soap-1.1  bindings
                     continue
 
-                method = MethodProxy(self, callinfo)
+                method = MethodProxy(self, callinfo, service_name=self._service.name, port_name=port_obj.name)
                 setattr(self, item.name, method)
                 self._methods.setdefault(item.name, []).append(method)
+                self._operation_index.setdefault(item.name, []).append({
+                    'service': self._service.name,
+                    'port': port_obj.name,
+                    'action': callinfo.soapAction,
+                    'location': callinfo.location,
+                    'input_msg': callinfo.inmsg,
+                    'output_msg': callinfo.outmsg,
+                })
 
         self._mod = self._load(wsdl)
+
+    def get_operation_index(self):
+        """Return operation dispatch metadata for this service."""
+        return dict((k, list(v)) for k, v in self._operation_index.items())
+
+    def bind(self, service=None, port=None):
+        """Return a port-bound operation proxy.
+
+        If `service` is provided it must match this proxy's selected service.
+        """
+        if service is not None and service != self._service.name:
+            raise ValueError('unknown service "%s"; available: %s' % (service, self._service.name))
+        return BoundServiceProxy(self, port=port)
 
     def _load(self, location):
         """
@@ -189,7 +213,7 @@ class ServiceProxy:
         mod = os.path.split(types)[-1].rstrip('.py')
         return __import__(mod)
 
-    def _call(self, name, soapheaders):
+    def _call(self, name, soapheaders, method=None):
         """return the Call to the named remote web service method.
         closure used to prevent multiple values for name and soapheaders
         parameters
@@ -212,9 +236,12 @@ class ServiceProxy:
             # the same number of arguments as what was passed.  this is a weak
             # check that should probably be improved in the future to check the
             # types of the arguments to allow for polymorphism
-            for method in self._methods[name]:
-                if len(method.callinfo.inparams) == len(kwargs):
-                    callinfo = method.callinfo
+            if method is not None:
+                callinfo = method.callinfo
+            else:
+                for method in self._methods[name]:
+                    if len(method.callinfo.inparams) == len(kwargs):
+                        callinfo = method.callinfo
 
             binding = _Binding(url=self._url or callinfo.location,
                               soapaction=callinfo.soapAction,
@@ -313,15 +340,17 @@ class ServiceProxy:
 
 class MethodProxy:
     """ """
-    def __init__(self, parent, callinfo):
+    def __init__(self, parent, callinfo, service_name=None, port_name=None):
         self.__name__ = callinfo.methodName
         self.__doc__ = callinfo.documentation
         self.callinfo = callinfo
         self.parent = weakref.ref(parent)
         self.soapheaders = []
+        self.service_name = service_name
+        self.port_name = port_name
 
     def __call__(self, *args, **kwargs):
-        return self.parent()._call(self.__name__, self.soapheaders)(*args, **kwargs)
+        return self.parent()._call(self.__name__, self.soapheaders, method=self)(*args, **kwargs)
 
     def add_headers(self, **headers):
         """packing dicts into typecode pyclass, may fail if typecodes are
@@ -355,3 +384,34 @@ class MethodProxy:
                 _remap(pyobj, **v)
 
             self.soapheaders.append(pyobj)
+
+
+class BoundServiceProxy:
+    """Bound view to route calls to a specific service port."""
+
+    def __init__(self, parent, port=None):
+        self._parent = weakref.ref(parent)
+        self._port = port
+
+    def __getattr__(self, opname):
+        parent = self._parent()
+        if parent is None:
+            raise RuntimeError('ServiceProxy no longer available')
+        methods = list(parent._methods.get(opname, []))
+        if self._port is not None:
+            methods = [m for m in methods if m.port_name == self._port]
+
+        if not methods:
+            available = sorted(set(m.port_name for m in parent._methods.get(opname, [])))
+            raise ValueError(
+                'operation "%s" not available for port "%s"; available ports: %s'
+                % (opname, self._port, ', '.join([str(i) for i in available]) or '<none>')
+            )
+        if len(methods) > 1:
+            raise ValueError(
+                'operation "%s" is ambiguous on port "%s" (%d matches)'
+                % (opname, self._port, len(methods))
+            )
+
+        method = methods[0]
+        return parent._call(method.__name__, method.soapheaders, method=method)

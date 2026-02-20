@@ -159,6 +159,19 @@ jobs:
           PYTHONPATH: .
         run: python test/test_zsi_compat_contract.py
 
+      - name: Modernization regressions
+        env:
+          PYTHONPATH: .
+        run: |
+          python test/test_serviceproxy_bind.py
+          python test/test_transport_modernization.py
+          python test/test_zsi_call_cli.py
+          python test/test_zsi_cli_wrapper.py
+          python test/test_resolver_cache.py
+          python test/test_namespace_lookup_cache.py
+          python test/test_stream_parse_prototype.py
+          python test/test_build_dashboards.py
+
       - name: Integration local suite
         env:
           PYTHONPATH: .
