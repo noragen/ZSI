@@ -148,7 +148,7 @@ def main() -> int:
     if args.update_history:
         history_data["history"].append(
             {
-                "timestamp": _dt.datetime.now(_dt.timezone.utc).isoformat(),
+                "timestamp": _dt.datetime.now(_dt.UTC).isoformat(),
                 "payload": current,
             }
         )

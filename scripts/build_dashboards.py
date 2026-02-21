@@ -62,20 +62,29 @@ def build_dashboard_markdown(
     lines.append("")
     lines.append("## Security")
     lines.append("")
-    lines.append("- Source artifacts: `test/test_security_scan_smoke.py`, `scripts/security_scan_smoke.py`")
+    lines.append(
+        "- Source artifacts: `test/test_security_scan_smoke.py`, "
+        "`scripts/security_scan_smoke.py`"
+    )
     lines.append("- CI gate: workflow job `security-scan-smoke`")
 
     lines.append("")
     lines.append("## Release")
     lines.append("")
-    lines.append("- Source artifacts: `scripts/check_release_gate.py`, `RELEASE.md`, `CHANGES`")
+    lines.append(
+        "- Source artifacts: `scripts/check_release_gate.py`, "
+        "`RELEASE.md`, `CHANGES`"
+    )
     lines.append("- CI gate: workflow job `release-gates`")
 
     if include_release_note:
         lines.append("")
         lines.append("## Note")
         lines.append("")
-        lines.append("This dashboard is static and intended for quick inspection in PRs/artifacts.")
+        lines.append(
+            "This dashboard is static and intended for quick inspection "
+            "in PRs/artifacts."
+        )
 
     lines.append("")
     return "\n".join(lines)

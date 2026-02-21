@@ -13,7 +13,6 @@ import importlib.util
 import subprocess
 import sys
 
-
 DEFAULT_TARGETS = [
     "ZSI/diagnostics.py",
     "ZSI/telemetry.py",

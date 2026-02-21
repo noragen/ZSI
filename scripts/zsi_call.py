@@ -21,7 +21,7 @@ def _parse_kv(items):
     out = {}
     for item in items:
         if "=" not in item:
-            raise ValueError('arguments must be key=value, got "%s"' % item)
+            raise ValueError(f'arguments must be key=value, got "{item}"')
         key, value = item.split("=", 1)
         out[key] = _parse_value(value)
     return out
@@ -49,12 +49,24 @@ def main(argv=None):
     ns = parser.parse_args(argv)
     kwargs = _parse_kv(ns.args)
 
-    proxy = ServiceProxy(ns.wsdl, url=ns.url, service=ns.service, port=ns.port, asdict=ns.asdict)
+    proxy = ServiceProxy(
+        ns.wsdl,
+        url=ns.url,
+        service=ns.service,
+        port=ns.port,
+        asdict=ns.asdict,
+    )
     bound = proxy.bind(service=ns.service, port=ns.port)
     result = getattr(bound, ns.operation)(**kwargs)
 
     try:
-        print(json.dumps(result, default=lambda o: getattr(o, "__dict__", str(o)), indent=2))
+        print(
+            json.dumps(
+                result,
+                default=lambda o: getattr(o, "__dict__", str(o)),
+                indent=2,
+            )
+        )
     except Exception:
         print(result)
     return 0

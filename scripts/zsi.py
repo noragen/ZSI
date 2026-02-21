@@ -9,7 +9,10 @@ from scripts import zsi_call
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0] not in ("call",):
-        print("usage: zsi call <wsdl> <operation> [key=value ...] [--service ...] [--port ...]")
+        print(
+            "usage: zsi call <wsdl> <operation> [key=value ...] "
+            "[--service ...] [--port ...]"
+        )
         return 2
     cmd = argv.pop(0)
     if cmd == "call":
