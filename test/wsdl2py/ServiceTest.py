@@ -373,6 +373,9 @@ class ServiceTestCase(unittest.TestCase):
                 raise
 
             file_path = candidates[0]
+            module_dir = os.path.dirname(file_path)
+            if module_dir and module_dir not in sys.path:
+                sys.path.insert(0, module_dir)
             spec = importlib.util.spec_from_file_location(module_name, file_path)
             if spec is None or spec.loader is None:
                 raise ModuleNotFoundError(module_name)
@@ -421,7 +424,9 @@ class ServiceTestCase(unittest.TestCase):
         cfn = self.client_file_name
         sfn = self.server_file_name
 
-        files = [f for f in [cfn, tfn,sfn] if f is not None]
+        # Import generated type modules first so client modules can resolve
+        # their `from <name>_types import *` dependency reliably.
+        files = [f for f in [tfn, cfn, sfn] if f is not None]
         if None is cfn is tfn is sfn:
             return
 
