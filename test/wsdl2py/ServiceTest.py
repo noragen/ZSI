@@ -4,6 +4,7 @@
 # See LBNLCopyright for copyright notice!
 ###########################################################################
 import io, copy, getopt, builtins
+import importlib.util
 import os, sys, unittest, urllib.parse, urllib.error, signal, time, warnings, subprocess
 import types
 from configparser import ConfigParser, NoSectionError, NoOptionError
@@ -286,6 +287,7 @@ class ServiceTestCase(unittest.TestCase):
             urllib.parse.urlunparse((scheme,netloc,path,params,query,fragment))
 
     _wsdl = {}
+    _generated = {}
     _WSDL_SKIP = 'skip'
 
     def _resolve_wsdl_location(self, location):
@@ -328,7 +330,14 @@ class ServiceTestCase(unittest.TestCase):
             sys.path.append(MODULEDIR)
 
         try:
-            commands.wsdl2py([url] + self.wsdl2py_args)
+            files = commands.wsdl2py([url] + self.wsdl2py_args) or []
+            resolved = []
+            for path in files:
+                if os.path.isabs(path):
+                    resolved.append(path)
+                else:
+                    resolved.append(os.path.abspath(os.path.join(MODULEDIR, path)))
+            ServiceTestCase._generated[url] = resolved
             ServiceTestCase._wsdl[url] = True
         except (TimeoutError, builtins.TimeoutError, urllib.error.URLError) as ex:
             if self.methodName.startswith('test_local'):
@@ -337,6 +346,40 @@ class ServiceTestCase(unittest.TestCase):
                 raise
         finally:
             os.chdir(TOPDIR)
+
+    def _import_generated_module(self, module_name, url, expected_suffix):
+        try:
+            return __import__(module_name)
+        except ModuleNotFoundError:
+            generated = ServiceTestCase._generated.get(url, [])
+            if not generated:
+                raise
+
+            wanted = module_name.lower()
+            candidates = []
+            for path in generated:
+                stem = os.path.splitext(os.path.basename(path))[0]
+                if stem.lower() == wanted:
+                    candidates.append(path)
+
+            if not candidates and expected_suffix:
+                suffix = expected_suffix.lower()
+                for path in generated:
+                    stem = os.path.splitext(os.path.basename(path))[0].lower()
+                    if stem.endswith(suffix):
+                        candidates.append(path)
+
+            if not candidates:
+                raise
+
+            file_path = candidates[0]
+            spec = importlib.util.spec_from_file_location(module_name, file_path)
+            if spec is None or spec.loader is None:
+                raise ModuleNotFoundError(module_name)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+            return module
 
     _process = None
     _lastToDispatch = None
@@ -382,7 +425,25 @@ class ServiceTestCase(unittest.TestCase):
         if None is cfn is tfn is sfn:
             return
 
-        for n,m in [(i, __import__(os.path.splitext(i)[0])) for i in files]:
+        for n, m in [
+            (
+                i,
+                self._import_generated_module(
+                    os.path.splitext(i)[0],
+                    self.url,
+                    (
+                        "_client"
+                        if cfn is not None and cfn == i
+                        else "_types"
+                        if tfn is not None and tfn == i
+                        else "_server"
+                        if sfn is not None and sfn == i
+                        else ""
+                    ),
+                ),
+            )
+            for i in files
+        ]:
             if tfn is not None and tfn == n:
                 self.types_module = m
             elif cfn is not None and cfn == n:
