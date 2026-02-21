@@ -24,13 +24,16 @@ class BenchmarkCase:
 
 
 def default_cases() -> list[BenchmarkCase]:
+    return [BenchmarkCase("test_zsi", [sys.executable, "test/test_zsi.py"], 30.0)]
+
+
+def integration_cases() -> list[BenchmarkCase]:
     return [
-        BenchmarkCase("test_zsi", [sys.executable, "test/test_zsi.py"], 30.0),
         BenchmarkCase(
             "wsdl2py_local",
             [sys.executable, "test/wsdl2py/runTests.py", "local"],
             180.0,
-        ),
+        )
     ]
 
 
@@ -44,15 +47,39 @@ def run_once(case: BenchmarkCase) -> float:
 
 def run_case(case: BenchmarkCase, runs: int) -> dict:
     samples = []
+    failures: list[int] = []
     for idx in range(runs):
-        duration = run_once(case)
-        samples.append(duration)
-        print(f"[bench] {case.name} run {idx + 1}/{runs}: {duration:.3f}s")
+        try:
+            duration = run_once(case)
+            samples.append(duration)
+            print(f"[bench] {case.name} run {idx + 1}/{runs}: {duration:.3f}s")
+        except subprocess.CalledProcessError as ex:
+            failures.append(ex.returncode)
+            print(
+                f"[bench] {case.name} run {idx + 1}/{runs}: FAILED "
+                f"(exit={ex.returncode})"
+            )
+            continue
+
+    if not samples:
+        return {
+            "name": case.name,
+            "runs": runs,
+            "budget_seconds": case.budget_seconds,
+            "min_seconds": 0.0,
+            "mean_seconds": 0.0,
+            "max_seconds": 0.0,
+            "ok": False,
+            "execution_ok": False,
+            "failed_runs": len(failures),
+            "failure_codes": failures,
+        }
 
     mean = statistics.mean(samples)
     max_t = max(samples)
     min_t = min(samples)
-    ok = max_t <= case.budget_seconds
+    execution_ok = not failures
+    ok = execution_ok and max_t <= case.budget_seconds
     return {
         "name": case.name,
         "runs": runs,
@@ -61,12 +88,21 @@ def run_case(case: BenchmarkCase, runs: int) -> dict:
         "mean_seconds": mean,
         "max_seconds": max_t,
         "ok": ok,
+        "execution_ok": execution_ok,
+        "failed_runs": len(failures),
+        "failure_codes": failures,
     }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runs", type=int, default=2, help="Runs per case.")
+    parser.add_argument(
+        "--include-wsdl2py-local",
+        action="store_true",
+        default=False,
+        help="Include legacy wsdl2py local integration benchmark case.",
+    )
     parser.add_argument(
         "--json-out",
         default=".perf/benchmark-smoke.json",
@@ -77,7 +113,11 @@ def main() -> int:
     out_path = (ROOT / args.json_out).resolve()
     out_path.parent.mkdir(parents=True, exist_ok=True)
 
-    results = [run_case(case, args.runs) for case in default_cases()]
+    cases = default_cases()
+    if args.include_wsdl2py_local:
+        cases.extend(integration_cases())
+
+    results = [run_case(case, args.runs) for case in cases]
     payload = {"results": results}
     out_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     print(f"[bench] wrote summary: {out_path}")

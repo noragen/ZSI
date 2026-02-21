@@ -27,6 +27,7 @@ Modernized helper scripts for local development and release safety.
 ```powershell
 python scripts\profile_baseline.py --top 20
 python scripts\benchmark_smoke.py --runs 1
+python scripts\benchmark_smoke.py --runs 1 --include-wsdl2py-local
 python scripts\benchmark_snapshot.py --current .perf\benchmark-smoke.json --history .perf\benchmark-history.json --update-history
 python scripts\build_dashboards.py --benchmark-smoke .perf\benchmark-smoke.json --benchmark-history .perf\benchmark-history.json --out doc\ci-artifact-dashboard.md
 python scripts\run_mypy_pilot.py
